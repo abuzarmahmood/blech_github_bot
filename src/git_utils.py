@@ -53,3 +53,11 @@ def get_issue_details(issue: Issue) -> Dict:
 def search_issues(repo: Repository, query: str) -> List[Issue]:
     """Search for issues in repository matching query"""
     return list(repo.get_issues(state='all', labels=[query]))
+
+if __name__ == '__main__':
+    client = get_github_client()
+    repo = get_repository(client, 'katzlabbrandeis/blech_clust')
+    issues = get_open_issues(repo)
+    print(f"Found {len(issues)} open issues")
+    for issue in issues:
+        print(get_issue_details(issue))
