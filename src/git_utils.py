@@ -61,3 +61,6 @@ if __name__ == '__main__':
     print(f"Found {len(issues)} open issues")
     for issue in issues:
         print(get_issue_details(issue))
+        comments = get_issue_comments(issue)
+        for comment in comments:
+            print(f"Comment by {comment.user.login}: {comment.body}")
