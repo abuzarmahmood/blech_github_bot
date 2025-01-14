@@ -29,7 +29,15 @@ git clone https://github.com/yourusername/github-monitor-bot.git
 cd github-monitor-bot
 ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Linux/Mac
+# OR
+.\venv\Scripts\activate  # On Windows
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
