@@ -1,6 +1,6 @@
 # GitHub Monitor Bot
 
-A Python bot that monitors registered GitHub repositories and automatically responds to issues and pull requests with comments and suggested edits.
+A Python bot that monitors registered GitHub repositories and automatically responds to issues and pull requests with comments and suggested edits using autogen as LLM backend.
 
 ## Features
 
@@ -16,6 +16,7 @@ A Python bot that monitors registered GitHub repositories and automatically resp
 - Python 3.8+
 - GitHub API access token
 - Required Python packages:
+  - pyautogen
   - PyGithub
   - python-dotenv
   - requests
