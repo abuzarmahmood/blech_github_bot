@@ -1,3 +1,5 @@
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/abuzarmahmood/blech_github_bot/main.svg)](https://results.pre-commit.ci/latest/github/abuzarmahmood/blech_github_bot/main)
+
 # GitHub Monitor Bot
 
 A Python bot that monitors registered GitHub repositories and automatically responds to issues and pull requests with comments and suggested edits using autogen as LLM backend.
