@@ -23,7 +23,7 @@ def create_agents():
         raise ValueError("OpenAI API key not found in environment variables")
         
     llm_config = {
-        "model": "gpt-4",
+        "model": "gpt-4o",
         "api_key": api_key,
         "temperature": 0.7
     }
@@ -75,13 +75,14 @@ Generate a helpful and specific response addressing the issue contents."""
     # Get response from assistant
     chat_result = executor.initiate_chat(
         assistant,
-        message=prompt
+        message=prompt,
+        max_turns=1
     )
     
     # Extract response from chat history
     response = None
     for message in chat_result.chat_history:
-        if message["role"] == "assistant":
+        if message["role"] == "user":
             response = message["content"]
             break
             
