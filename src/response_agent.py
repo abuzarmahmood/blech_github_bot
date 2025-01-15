@@ -100,6 +100,10 @@ def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
         Tuple of (whether response was posted, optional error message)
     """
     try:
+        # Check if issue has blech_bot tag
+        if not has_blech_bot_tag(issue):
+            return False, "Issue does not have blech_bot tag"
+            
         # Check if already responded
         if has_bot_response(issue):
             return False, "Issue already has bot response"

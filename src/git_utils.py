@@ -69,6 +69,18 @@ def write_issue_response(issue: Issue, response_text: str) -> IssueComment:
     full_response = response_text + signature
     return create_issue_comment(issue, full_response)
 
+def has_blech_bot_tag(issue: Issue) -> bool:
+    """
+    Check if the issue has the blech_bot tag
+    
+    Args:
+        issue: The GitHub issue to check
+        
+    Returns:
+        True if the issue has the blech_bot tag, False otherwise
+    """
+    return any(label.name == "blech_bot" for label in issue.labels)
+
 def has_bot_response(issue: Issue) -> bool:
     """
     Check if the latest comment on an issue contains the bot signature
