@@ -11,6 +11,7 @@ from git_utils import (
     get_github_client,
     get_repository,
     has_bot_response,
+    has_blech_bot_tag,
     write_issue_response,
     get_issue_details
 )
