@@ -17,7 +17,11 @@ from git_utils import (
 )
 
 import bot_tools
-tool_funcs = [func for func in dir(bot_tools) if callable(getattr(bot_tools, func))]
+# tool_funcs = [func for func in dir(bot_tools) if callable(getattr(bot_tools, func))]
+tool_funcs = []
+for func in dir(bot_tools):
+    if callable(getattr(bot_tools, func)):
+        tool_funcs.append(eval(f'bot_tools.{func}'))
 
 user = autogen.UserProxyAgent(
     name="User",
@@ -30,36 +34,75 @@ user = autogen.UserProxyAgent(
     },  # Please set use_docker=True if docker is available to run the generated code. Using docker is safer than running the generated code directly.
 )
 
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OpenAI API key not found in environment variables")
+
+llm_config = {
+    "model": "gpt-4o",
+    "api_key": api_key,
+    "temperature": 0.7
+}
+
+# Create assistant agent for generating responses
+file_assistant = AssistantAgent(
+    name="file_assistant",
+    llm_config=llm_config,
+    system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    Analyze the issue details carefully check which files (if any) need to be modified.
+    If not files are given by user, use the tools you have to find and suggest the files that need to be modified.
+    Reply "TERMINATE" in the end when everything is done.
+    """,
+)
+
+edit_assistant = AssistantAgent(
+    name="edit_assistant",
+    llm_config=llm_config,
+    system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    Analyze the issue details carefully and suggest the changes that need to be made.
+    If no changes are needed, respond accordingly.
+    Reply "TERMINATE" in the end when everything is done.
+    """,
+)
+
 for this_func in tool_funcs:
-    assistant.register_for_llm(
+    file_assistant.register_for_llm(
+            name = this_func.__name__, 
+            description = this_func.__doc__,
+            )(this_func)
+    edit_assistant.register_for_llm(
             name = this_func.__name__, 
             description = this_func.__doc__,
             )(this_func)
     user.register_for_execution(
             name=this_func.__name__)(this_func)
 
+message = 'Create a file index in blech_clust to help LLMs better understand the file structure of the repository.'
+
+chat_results = user.initiate_chats(
+    [
+        {
+            "recipient": file_assistant,
+            "message": message, 
+            "silent": False,
+            "summary_method": "reflection_with_llm",
+        },
+        {
+            "recipient": edit_assistant,
+            "message": 'Suggest what changes can be made to resolve this issue',  
+            "summary_method": "reflection_with_llm",
+        },
+    ]
+)
+
+# Get cost
+sum([x['usage_including_cached_inference']['gpt-4o-2024-08-06']['cost'] for x in [x.cost for x in chat_results]])
+
 
 
 def create_agents():
     """Create and configure the autogen agents"""
-    api_key = os.getenv('OPENAI_API_KEY')
-    if not api_key:
-        raise ValueError("OpenAI API key not found in environment variables")
         
-    llm_config = {
-        "model": "gpt-4o",
-        "api_key": api_key,
-        "temperature": 0.7
-    }
-
-    # Create assistant agent for generating responses
-    assistant = AssistantAgent(
-        name="github_assistant",
-        llm_config=llm_config,
-        system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
-        Analyze the issue details carefully and provide specific, constructive feedback.
-        Be professional and courteous in your responses."""
-    )
     
     # Create executor agent that doesn't use LLM
     executor = ConversableAgent(
