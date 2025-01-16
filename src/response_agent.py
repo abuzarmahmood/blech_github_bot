@@ -53,6 +53,9 @@ file_assistant = AssistantAgent(
     system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
     Analyze the issue details carefully check which files (if any) need to be modified.
     If not files are given by user, use the tools you have to find and suggest the files that need to be modified.
+    DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
+    NEVER ask for user input and NEVER expect it.
+    Return file names that are relevant, and if possible, specific lines where changes can be made.
     Reply "TERMINATE" in the end when everything is done.
     """,
 )
@@ -62,7 +65,11 @@ edit_assistant = AssistantAgent(
     llm_config=llm_config,
     system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
     Analyze the issue details carefully and suggest the changes that need to be made.
+    Use to tools available to you to gather information and suggest the necessary changes.
+    DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
     If no changes are needed, respond accordingly.
+    NEVER ask for user input and NEVER expect it.
+    If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
     Reply "TERMINATE" in the end when everything is done.
     """,
 )
@@ -79,26 +86,65 @@ for this_func in tool_funcs:
     user.register_for_execution(
             name=this_func.__name__)(this_func)
 
-message = 'Create a file index in blech_clust to help LLMs better understand the file structure of the repository.'
+# message = 'Create a file index in blech_clust to help LLMs better understand the file structure of the repository.'
+message = 'Tweak selection of autoprocessed clusters to include assessment of skew of probability distribution'
 
 chat_results = user.initiate_chats(
     [
         {
             "recipient": file_assistant,
             "message": message, 
-            "silent": False,
+            "max_turns": 10,
             "summary_method": "reflection_with_llm",
         },
         {
             "recipient": edit_assistant,
-            "message": 'Suggest what changes can be made to resolve this issue',  
+            "message": f'Suggest what changes can be made to resolve this issue: {message}',  
+            "max_turns": 10,
             "summary_method": "reflection_with_llm",
         },
     ]
 )
 
+# Output results to json
+import json
+from pprint import pprint
+with open('chat_results.txt', 'w') as f:
+    pprint(chat_results, stream=f)
+
 # Get cost
 sum([x['usage_including_cached_inference']['gpt-4o-2024-08-06']['cost'] for x in [x.cost for x in chat_results]])
+
+# Summarize results using reflection_with_llm
+summary_assistant = AssistantAgent(
+    name="summary_assistant",
+    llm_config=llm_config,
+    system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
+    """,
+)
+
+# Grab everything but tool calls
+results_to_summarize = [
+        [
+            x for x in this_result.chat_history if 'tool' not in str(x)
+            ] 
+        for this_result in chat_results
+        ]
+
+summary_results = summary_assistant.initiate_chats(
+    [
+        {
+            "recipient": summary_assistant,
+            "message": f"Summarize the suggestions and changes made by the other agents.\n\n{results_to_summarize}",
+            "silent": False,
+            "max_turns": 1,
+        },
+    ]
+)
+
+summary_message = summary_results[0].chat_history[-1]['content']
+
 
 
 
@@ -208,7 +254,7 @@ def process_repository(repo_name: str, local_path: str = "repos") -> None:
     repo = get_repository(client, repo_name)
     
     # Ensure repository is cloned and up to date
-    repo_dir = clone_repository(repo, local_path)
+    repo_dir = clone_repository(repo)
     update_repository(repo_dir)
     
     # Get open issues

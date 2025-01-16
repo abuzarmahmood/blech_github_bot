@@ -11,12 +11,19 @@ base_dir = os.path.dirname(src_dir)
 def get_local_repo_path(repo_name : str) -> str:
     """
     Get the path to the local repository
+
+    Args:
+        - repo_name : Name of repository (owner/repo)
+    
+    Returns:
+        - Path to the local repository
     """
-    repo_path = os.path.join(base_dir, 'repos', repo_name)
+    repo_name_split = repo_name.split('/')
+    repo_path = os.path.join(src_dir, 'repos', repo_name_split[0], repo_name_split[1]) 
     if os.path.exists(repo_path):
         return repo_path
     else:
-        return "Repository not found"
+        return f"Repository {repo_name} not found @ {repo_path}"
 
 def get_tracked_repos() -> str:
     """
@@ -192,24 +199,25 @@ def readlines(
 
     return "".join(lines[start_line:end_line])
 
-def listdir(
-        directory : str, 
-        extension : str = None, 
-        ) -> str: 
-    """List contents of a directory
-    Inputs:
-        - Directory : Path to directory
-        - Extension (optional) : Only return files with the given extension
-    """
-    if extension:
-        ext_str = f"-iname '*{extension}'"
-    else:
-        ext_str = ""
-    run_str = f"find {directory} " + ext_str
-    print(run_str)
-    # out = os.system(run_str)
-    out = os.popen(run_str).read() 
-    return out
+# Tends to muddy the output too much
+# def listdir(
+#         directory : str, 
+#         extension : str = None, 
+#         ) -> str: 
+#     """List contents of a directory
+#     Inputs:
+#         - Directory : Path to directory
+#         - Extension (optional) : Only return files with the given extension
+#     """
+#     if extension:
+#         ext_str = f"-iname '*{extension}'"
+#     else:
+#         ext_str = ""
+#     run_str = f"find {directory} " + ext_str
+#     print(run_str)
+#     # out = os.system(run_str)
+#     out = os.popen(run_str).read() 
+#     return out
 
 def search_for_file(
         directory : str,

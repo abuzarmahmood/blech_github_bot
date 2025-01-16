@@ -32,9 +32,17 @@ def get_issue_comments(issue: Issue) -> List[IssueComment]:
     """Get all comments for a specific issue"""
     return list(issue.get_comments())
 
-def create_issue_comment(issue: Issue, comment_text: str) -> IssueComment:
+def create_issue_comment(
+        issue: Issue, 
+        comment_text: str,
+        attachment: Optional[str] = None,
+        ) -> IssueComment:
     """Create a new comment on an issue"""
-    return issue.create_comment(comment_text)
+    if attachment:
+        return issue.create_comment(comment_text, attachment)
+    else:
+        return issue.create_comment(comment_text)
+
 
 def get_issue_details(issue: Issue) -> Dict:
     """Extract relevant details from an issue"""
@@ -112,7 +120,7 @@ def iterate_issues(repo: Repository):
         comments = get_issue_comments(issue)
         yield issue, comments
 
-def clone_repository(repo: Repository, local_path: str) -> str:
+def clone_repository(repo: Repository) -> str:
     """
     Clone a GitHub repository to local filesystem
     
@@ -124,6 +132,10 @@ def clone_repository(repo: Repository, local_path: str) -> str:
         Path to the cloned repository
     """
     import git
+
+    full_repo_name = repo.full_name
+    repo_split = full_repo_name.split('/')
+    local_path = os.path.join('repos', repo_split[0])
     
     # Create directory if it doesn't exist
     os.makedirs(local_path, exist_ok=True)
@@ -134,6 +146,7 @@ def clone_repository(repo: Repository, local_path: str) -> str:
     # Clone if doesn't exist, or return existing path
     if not os.path.exists(repo_dir):
         git.Repo.clone_from(repo.clone_url, repo_dir)
+        print(f"Cloned repository {full_repo_name} to {repo_dir}")
     
     return repo_dir
 
