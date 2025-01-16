@@ -112,6 +112,44 @@ def iterate_issues(repo: Repository):
         comments = get_issue_comments(issue)
         yield issue, comments
 
+def clone_repository(repo: Repository, local_path: str) -> str:
+    """
+    Clone a GitHub repository to local filesystem
+    
+    Args:
+        repo: The GitHub repository to clone
+        local_path: Local directory path where repo should be cloned
+        
+    Returns:
+        Path to the cloned repository
+    """
+    import git
+    
+    # Create directory if it doesn't exist
+    os.makedirs(local_path, exist_ok=True)
+    
+    # Construct full path for clone
+    repo_dir = os.path.join(local_path, repo.name)
+    
+    # Clone if doesn't exist, or return existing path
+    if not os.path.exists(repo_dir):
+        git.Repo.clone_from(repo.clone_url, repo_dir)
+    
+    return repo_dir
+
+def update_repository(repo_path: str) -> None:
+    """
+    Pull latest changes for a local repository
+    
+    Args:
+        repo_path: Path to local git repository
+    """
+    import git
+    
+    git_repo = git.Repo(repo_path)
+    origin = git_repo.remotes.origin
+    origin.pull()
+
 if __name__ == '__main__':
     client = get_github_client()
     repo = get_repository(client, 'katzlabbrandeis/blech_clust')
