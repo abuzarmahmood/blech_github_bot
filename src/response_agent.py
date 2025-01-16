@@ -185,16 +185,21 @@ def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
     except Exception as e:
         return False, f"Error processing issue: {str(e)}"
 
-def process_repository(repo_name: str) -> None:
+def process_repository(repo_name: str, local_path: str = "repos") -> None:
     """
     Process all open issues in a repository
     
     Args:
         repo_name: Full name of repository (owner/repo)
+        local_path: Local directory path where repo should be cloned
     """
     # Initialize GitHub client
     client = get_github_client()
     repo = get_repository(client, repo_name)
+    
+    # Ensure repository is cloned and up to date
+    repo_dir = clone_repository(repo, local_path)
+    update_repository(repo_dir)
     
     # Get open issues
     open_issues = repo.get_issues(state='open')
