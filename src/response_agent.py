@@ -13,7 +13,9 @@ from git_utils import (
     has_bot_response,
     has_blech_bot_tag,
     write_issue_response,
-    get_issue_details
+    get_issue_details,
+    clone_repository,
+    update_repository
 )
 
 import bot_tools
@@ -102,7 +104,15 @@ sum([x['usage_including_cached_inference']['gpt-4o-2024-08-06']['cost'] for x in
 
 def create_agents():
     """Create and configure the autogen agents"""
-        
+    
+    # Create assistant agent for responses
+    assistant = AssistantAgent(
+        name="assistant",
+        llm_config=llm_config,
+        system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+        Analyze the issue details carefully and generate a helpful response.
+        """
+    )
     
     # Create executor agent that doesn't use LLM
     executor = ConversableAgent(
