@@ -18,6 +18,18 @@ def get_local_repo_path(repo_name : str) -> str:
     else:
         return "Repository not found"
 
+def get_tracked_repos() -> str:
+    """
+    Get the tracked repositories
+
+    Returns:
+        - List of tracked repositories
+    """
+    tracked_repos_path = os.path.join(base_dir, 'config', 'repos.txt')
+    with open(tracked_repos_path, 'r') as file:
+        tracked_repos = file.read()
+    return tracked_repos
+
 def search_for_pattern(
         search_dir : str,
         pattern : str,

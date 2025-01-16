@@ -16,6 +16,30 @@ from git_utils import (
     get_issue_details
 )
 
+import bot_tools
+tool_funcs = [func for func in dir(bot_tools) if callable(getattr(bot_tools, func))]
+
+user = autogen.UserProxyAgent(
+    name="User",
+    human_input_mode="NEVER",
+    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
+    code_execution_config={
+        "last_n_messages": 1,
+        "work_dir": "tasks",
+        "use_docker": False,
+    },  # Please set use_docker=True if docker is available to run the generated code. Using docker is safer than running the generated code directly.
+)
+
+for this_func in tool_funcs:
+    assistant.register_for_llm(
+            name = this_func.__name__, 
+            description = this_func.__doc__,
+            )(this_func)
+    user.register_for_execution(
+            name=this_func.__name__)(this_func)
+
+
+
 def create_agents():
     """Create and configure the autogen agents"""
     api_key = os.getenv('OPENAI_API_KEY')
