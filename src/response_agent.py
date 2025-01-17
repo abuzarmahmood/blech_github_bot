@@ -1,6 +1,8 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
 """
+from pprint import pprint
+import json
 from typing import Optional, Tuple
 import os
 import autogen
@@ -26,18 +28,18 @@ for func in dir(bot_tools):
         tool_funcs.append(eval(f'bot_tools.{func}'))
 
 # Output results to json
-import json
-from pprint import pprint
 with open('chat_results.txt', 'w') as f:
     pprint(chat_results, stream=f)
 
+
 def create_agents():
     """Create and configure the autogen agents"""
-    
+
     user = autogen.UserProxyAgent(
         name="User",
         human_input_mode="NEVER",
-        is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
+        is_termination_msg=lambda x: x.get("content", "") and x.get(
+            "content", "").rstrip().endswith("TERMINATE"),
         code_execution_config={
             "last_n_messages": 1,
             "work_dir": "tasks",
@@ -85,15 +87,15 @@ def create_agents():
 
     for this_func in tool_funcs:
         file_assistant.register_for_llm(
-                name = this_func.__name__, 
-                description = this_func.__doc__,
-                )(this_func)
+            name=this_func.__name__,
+            description=this_func.__doc__,
+        )(this_func)
         edit_assistant.register_for_llm(
-                name = this_func.__name__, 
-                description = this_func.__doc__,
-                )(this_func)
+            name=this_func.__name__,
+            description=this_func.__doc__,
+        )(this_func)
         user.register_for_execution(
-                name=this_func.__name__)(this_func)
+            name=this_func.__name__)(this_func)
 
     # Summarize results using reflection_with_llm
     summary_assistant = AssistantAgent(
@@ -106,22 +108,23 @@ def create_agents():
 
     return user, file_assistant, edit_assistant, summary_assistant
 
+
 def generate_issue_response(issue: Issue) -> str:
     """
     Generate an appropriate response for a GitHub issue using autogen agents
-    
+
     Args:
         issue: The GitHub issue to respond to
-        
+
     Returns:
         Generated response text
     """
     # Get issue details
     details = get_issue_details(issue)
-    
+
     # Create agents
     user, file_assistant, edit_assistant, summary_assistant = create_agents()
-    
+
     # Construct prompt with issue details
     prompt = f"""Please analyze this GitHub issue and generate an appropriate response:
 
@@ -141,7 +144,7 @@ Use the tools you have. Do not ask for user input or expect it."""
         [
             {
                 "recipient": file_assistant,
-                "message": prompt, 
+                "message": prompt,
                 "max_turns": 10,
                 "summary_method": "reflection_with_llm",
             },
@@ -164,11 +167,11 @@ Use the tools you have. Do not ask for user input or expect it."""
 
     # Grab everything but tool calls
     results_to_summarize = [
-            [
-                x for x in this_result.chat_history if 'tool' not in str(x)
-                ] 
-            for this_result in chat_results
-            ]
+        [
+            x for x in this_result.chat_history if 'tool' not in str(x)
+        ]
+        for this_result in chat_results
+    ]
 
     summary_results = summary_assistant.initiate_chats(
         [
@@ -181,22 +184,23 @@ Use the tools you have. Do not ask for user input or expect it."""
         ]
     )
 
-    # summary_cost = summary_results[0].cost['usage_excluding_cached_inference']['gpt-4o-2024-08-06']['cost'] 
+    # summary_cost = summary_results[0].cost['usage_excluding_cached_inference']['gpt-4o-2024-08-06']['cost']
 
     response = summary_results[0].chat_history[-1]['content']
     all_content = results_to_summarize + [response]
 
     # total_cost = main_cost + summary_cost
-            
+
     return response, all_content
+
 
 def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
-    
+
     Args:
         issue: The GitHub issue to process
-        
+
     Returns:
         Tuple of (whether response was posted, optional error message)
     """
@@ -204,23 +208,24 @@ def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
         # Check if issue has blech_bot tag
         if not has_blech_bot_tag(issue):
             return False, "Issue does not have blech_bot tag"
-            
+
         # Check if already responded
         if has_bot_response(issue):
             return False, "Issue already has bot response"
-            
+
         # Generate and post response
         response, all_content = generate_issue_response(issue)
         write_issue_response(issue, response)
         return True, None
-        
+
     except Exception as e:
         return False, f"Error processing issue: {str(e)}"
+
 
 def process_repository(repo_name: str, local_path: str = "repos") -> None:
     """
     Process all open issues in a repository
-    
+
     Args:
         repo_name: Full name of repository (owner/repo)
         local_path: Local directory path where repo should be cloned
@@ -228,14 +233,14 @@ def process_repository(repo_name: str, local_path: str = "repos") -> None:
     # Initialize GitHub client
     client = get_github_client()
     repo = get_repository(client, repo_name)
-    
+
     # Ensure repository is cloned and up to date
     repo_dir = clone_repository(repo)
     update_repository(repo_dir)
-    
+
     # Get open issues
     open_issues = repo.get_issues(state='open')
-    
+
     # Process each issue
     for issue in open_issues:
         success, error = process_issue(issue)
@@ -243,6 +248,7 @@ def process_repository(repo_name: str, local_path: str = "repos") -> None:
             print(f"Successfully processed issue #{issue.number}")
         else:
             print(f"Skipped issue #{issue.number}: {error}")
+
 
 if __name__ == '__main__':
     # Example usage
