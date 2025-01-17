@@ -35,13 +35,9 @@ def get_issue_comments(issue: Issue) -> List[IssueComment]:
 def create_issue_comment(
         issue: Issue, 
         comment_text: str,
-        attachment: Optional[str] = None,
         ) -> IssueComment:
     """Create a new comment on an issue"""
-    if attachment:
-        return issue.create_comment(comment_text, attachment)
-    else:
-        return issue.create_comment(comment_text)
+    return issue.create_comment(comment_text)
 
 
 def get_issue_details(issue: Issue) -> Dict:
