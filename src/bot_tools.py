@@ -385,17 +385,17 @@ def run_bash_script(
 
 # def read_merged_docstrings(repo_name: str) -> str:
 #     """Read the merged docstrings JSON file from a repository
-# 
+#
 #     Inputs:
 #         - repo_name : Name of repository (owner/repo)
-# 
+#
 #     Returns:
-#         - Text containing merged docstrings data 
+#         - Text containing merged docstrings data
 #     """
 #     # import json
 #     repo_path = get_local_repo_path(repo_name)
 #     docstrings_path = os.path.join(repo_path, 'file_index', 'data', 'merged_docstrings.json')
-#     
+#
 #     try:
 #         with open(docstrings_path, 'r') as f:
 #             return f.read()
@@ -419,8 +419,9 @@ def read_merged_summary(repo_name: str) -> str:
     """
     # import json
     repo_path = get_local_repo_path(repo_name)
-    summary_path = os.path.join(repo_path, 'file_index', 'data', 'merged_summary.json')
-    
+    summary_path = os.path.join(
+        repo_path, 'file_index', 'data', 'merged_summary.json')
+
     try:
         with open(summary_path, 'r') as f:
             return f.read()
@@ -433,6 +434,7 @@ def read_merged_summary(repo_name: str) -> str:
     # except json.JSONDecodeError:
     #     print(f"Error decoding JSON from: {summary_path}")
     #     return {}
+
 
 def get_func_code(
         module_path: str,

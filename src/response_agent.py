@@ -114,7 +114,7 @@ def create_agents():
 def generate_issue_response(
         issue: Issue,
         repo_name: str,
-        ) -> str:
+) -> str:
     """
     Generate an appropriate response for a GitHub issue using autogen agents
 
@@ -135,7 +135,7 @@ def generate_issue_response(
     user, file_assistant, edit_assistant, summary_assistant = create_agents()
 
     # Construct prompt with issue details
-    prompt = f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue. 
+    prompt = f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
 
 Repository: {repo_name}
 Local path: {repo_path}
@@ -201,9 +201,9 @@ Provide code blocks which will address the issue where you can and suggest speci
 
 
 def process_issue(
-        issue: Issue,
-        repo_name: str,
-                  ) -> Tuple[bool, Optional[str]]:
+    issue: Issue,
+    repo_name: str,
+) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
 
@@ -232,9 +232,9 @@ def process_issue(
 
 
 def process_repository(
-        repo_name: str, 
-        local_path: str = "repos",
-    ) -> None:
+    repo_name: str,
+    local_path: str = "repos",
+) -> None:
     """
     Process all open issues in a repository
 
