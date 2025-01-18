@@ -383,6 +383,59 @@ def run_bash_script(
     return out
 
 
+# def read_merged_docstrings(repo_name: str) -> str:
+#     """Read the merged docstrings JSON file from a repository
+#
+#     Inputs:
+#         - repo_name : Name of repository (owner/repo)
+#
+#     Returns:
+#         - Text containing merged docstrings data
+#     """
+#     # import json
+#     repo_path = get_local_repo_path(repo_name)
+#     docstrings_path = os.path.join(repo_path, 'file_index', 'data', 'merged_docstrings.json')
+#
+#     try:
+#         with open(docstrings_path, 'r') as f:
+#             return f.read()
+#             # return json.load(f)
+#     except FileNotFoundError:
+#         print(f"Docstrings file not found at: {docstrings_path}")
+#         return ''
+#         # return {}
+#     # except json.JSONDecodeError:
+#     #     print(f"Error decoding JSON from: {docstrings_path}")
+#     #     return {}
+
+def read_merged_summary(repo_name: str) -> str:
+    """Read the merged summary JSON file from a repository
+
+    Inputs:
+        - repo_name : Name of repository (owner/repo)
+
+    Returns:
+        - Text containing merged summary data
+    """
+    # import json
+    repo_path = get_local_repo_path(repo_name)
+    summary_path = os.path.join(
+        repo_path, 'file_index', 'data', 'merged_summary.json')
+
+    try:
+        with open(summary_path, 'r') as f:
+            return f.read()
+        #     return json.load(f)
+
+    except FileNotFoundError:
+        print(f"Summary file not found at: {summary_path}")
+        return ''
+        # return {}
+    # except json.JSONDecodeError:
+    #     print(f"Error decoding JSON from: {summary_path}")
+    #     return {}
+
+
 def get_func_code(
         module_path: str,
         func_name: str,

@@ -27,9 +27,9 @@ for func in dir(bot_tools):
     if callable(getattr(bot_tools, func)):
         tool_funcs.append(eval(f'bot_tools.{func}'))
 
-# Output results to json
-with open('chat_results.txt', 'w') as f:
-    pprint(chat_results, stream=f)
+# # Output results to json
+# with open('chat_results.txt', 'w') as f:
+#     pprint(chat_results, stream=f)
 
 
 def create_agents():
@@ -67,6 +67,7 @@ def create_agents():
         DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
         NEVER ask for user input and NEVER expect it.
         Return file names that are relevant, and if possible, specific lines where changes can be made.
+        Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
         """,
     )
@@ -81,6 +82,7 @@ def create_agents():
         If no changes are needed, respond accordingly.
         NEVER ask for user input and NEVER expect it.
         If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
+        Provide code blocks where you can.
         Reply "TERMINATE" in the end when everything is done.
         """,
     )
@@ -109,16 +111,23 @@ def create_agents():
     return user, file_assistant, edit_assistant, summary_assistant
 
 
-def generate_issue_response(issue: Issue) -> str:
+def generate_issue_response(
+        issue: Issue,
+        repo_name: str,
+) -> str:
     """
     Generate an appropriate response for a GitHub issue using autogen agents
 
     Args:
         issue: The GitHub issue to respond to
+        repo_name: Full name of repository (owner/repo)
 
     Returns:
         Generated response text
     """
+    # Get path to repository
+    repo_path = bot_tools.get_local_repo_path(repo_name)
+
     # Get issue details
     details = get_issue_details(issue)
 
@@ -126,18 +135,27 @@ def generate_issue_response(issue: Issue) -> str:
     user, file_assistant, edit_assistant, summary_assistant = create_agents()
 
     # Construct prompt with issue details
-    prompt = f"""Please analyze this GitHub issue and generate an appropriate response:
+    prompt = f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
 
+Repository: {repo_name}
+Local path: {repo_path}
 Title: {details['title']}
 Body: {details['body']}
 Labels: {', '.join(details['labels'])}
 Assignees: {', '.join(details['assignees'])}
 
 Generate a helpful and specific response addressing the issue contents.
-Use the tools you have. Do not ask for user input or expect it."""
+Use the tools you have. Do not ask for user input or expect it.
+Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings"""
 
-    edit_assistant_prompt = f"""Suggest what changes can be made to resolve this issue: {prompt}
-Use the tools you have. Do not ask for user input or expect it."""
+    edit_assistant_prompt = f"""Suggest what changes can be made to resolve this issue:
+Repository: {repo_name}
+Local path: {repo_path}
+Issue Title: {details['title']}
+Issue Body: {details['body']}
+Use the tools you have. Do not ask for user input or expect it.
+Do not look for files again. Use the files suggested by the previous agent.
+Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made."""
 
     # Extract response from chat history
     chat_results = user.initiate_chats(
@@ -156,14 +174,6 @@ Use the tools you have. Do not ask for user input or expect it."""
             },
         ]
     )
-
-    # Get cost
-    # main_cost = sum(
-    #         [
-    #             x['usage_excluding_cached_inference']['gpt-4o-2024-08-06']['cost'] \
-    #                     for x in [x.cost for x in chat_results]
-    #                     ]
-    #         )
 
     # Grab everything but tool calls
     results_to_summarize = [
@@ -184,17 +194,16 @@ Use the tools you have. Do not ask for user input or expect it."""
         ]
     )
 
-    # summary_cost = summary_results[0].cost['usage_excluding_cached_inference']['gpt-4o-2024-08-06']['cost']
-
     response = summary_results[0].chat_history[-1]['content']
     all_content = results_to_summarize + [response]
-
-    # total_cost = main_cost + summary_cost
 
     return response, all_content
 
 
-def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
+def process_issue(
+    issue: Issue,
+    repo_name: str,
+) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
 
@@ -214,7 +223,7 @@ def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
             return False, "Issue already has bot response"
 
         # Generate and post response
-        response, all_content = generate_issue_response(issue)
+        response, all_content = generate_issue_response(issue, repo_name)
         write_issue_response(issue, response)
         return True, None
 
@@ -222,7 +231,10 @@ def process_issue(issue: Issue) -> Tuple[bool, Optional[str]]:
         return False, f"Error processing issue: {str(e)}"
 
 
-def process_repository(repo_name: str, local_path: str = "repos") -> None:
+def process_repository(
+    repo_name: str,
+    local_path: str = "repos",
+) -> None:
     """
     Process all open issues in a repository
 
@@ -243,7 +255,7 @@ def process_repository(repo_name: str, local_path: str = "repos") -> None:
 
     # Process each issue
     for issue in open_issues:
-        success, error = process_issue(issue)
+        success, error = process_issue(issue, repo_name)
         if success:
             print(f"Successfully processed issue #{issue.number}")
         else:
@@ -253,4 +265,16 @@ def process_repository(repo_name: str, local_path: str = "repos") -> None:
 if __name__ == '__main__':
     # Example usage
     repo_name = "katzlabbrandeis/blech_clust"
-    process_repository(repo_name)
+    # process_repository(repo_name)
+    client = get_github_client()
+    repo = get_repository(client, repo_name)
+
+    # Ensure repository is cloned and up to date
+    repo_dir = clone_repository(repo)
+    update_repository(repo_dir)
+
+    # Get open issues
+    open_issues = repo.get_issues(state='open')
+    issue = open_issues[2]
+
+    response, all_content = generate_issue_response(issue, repo_name)
