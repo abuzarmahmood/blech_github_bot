@@ -233,14 +233,12 @@ def process_issue(
 
 def process_repository(
     repo_name: str,
-    local_path: str = "repos",
 ) -> None:
     """
     Process all open issues in a repository
 
     Args:
         repo_name: Full name of repository (owner/repo)
-        local_path: Local directory path where repo should be cloned
     """
     # Initialize GitHub client
     client = get_github_client()
