@@ -146,7 +146,18 @@ Assignees: {', '.join(details['assignees'])}
 
 Generate a helpful and specific response addressing the issue contents.
 Use the tools you have. Do not ask for user input or expect it.
-Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings"""
+Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
+
+Return response in format:
+    - File: path/to/file1.py
+    - Description: Brief description of function of file1
+
+    - File: path/to/file2.py
+    - Description: Brief description of function of file2
+
+Reply "TERMINATE" in the end when everything is done.
+"""
+
 
     edit_assistant_prompt = f"""Suggest what changes can be made to resolve this issue:
 Repository: {repo_name}
@@ -155,7 +166,8 @@ Issue Title: {details['title']}
 Issue Body: {details['body']}
 Use the tools you have. Do not ask for user input or expect it.
 Do not look for files again. Use the files suggested by the previous agent.
-Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made."""
+Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
+Reply "TERMINATE" in the end when everything is done."""
 
     # Extract response from chat history
     chat_results = user.initiate_chats(
@@ -164,7 +176,8 @@ Provide code blocks which will address the issue where you can and suggest speci
                 "recipient": file_assistant,
                 "message": prompt,
                 "max_turns": 10,
-                "summary_method": "reflection_with_llm",
+                # "summary_method": "reflection_with_llm",
+                "summary_method": "last_msg",
             },
             {
                 "recipient": edit_assistant,
@@ -203,6 +216,7 @@ Provide code blocks which will address the issue where you can and suggest speci
 def process_issue(
     issue: Issue,
     repo_name: str,
+    ignore_checks: bool = False,
 ) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
@@ -215,11 +229,11 @@ def process_issue(
     """
     try:
         # Check if issue has blech_bot tag
-        if not has_blech_bot_tag(issue):
+        if not has_blech_bot_tag(issue) and not ignore_checks:
             return False, "Issue does not have blech_bot tag"
 
         # Check if already responded
-        if has_bot_response(issue):
+        if has_bot_response(issue) and not ignore_checks:
             return False, "Issue already has bot response"
 
         # Generate and post response
@@ -273,6 +287,45 @@ if __name__ == '__main__':
 
     # Get open issues
     open_issues = repo.get_issues(state='open')
-    issue = open_issues[2]
 
-    response, all_content = generate_issue_response(issue, repo_name)
+    # Get all issues which haven't been touched:
+    # 1) without a response
+    # 2) without the last response being from the bot
+    # 3) without an associated branch
+    # 4) without an associated PR
+
+    branches = repo.get_branches()
+    open_branch_names = [branch.name for branch in branches]
+
+    def branch_checker(branch, issue):
+        return str(issue.number) in branch.name or \
+                issue.title.lower().replace(" ", "-") in branch.name.lower()
+
+    success_list = []
+    max_success = 10
+    for issue in open_issues:
+        if len(success_list) > max_success:
+            print(f"Reached max success limit of {max_success}")
+            break
+
+        bot_bool = not has_bot_response(issue)
+        # comment_bool = issue.comments == 0
+        found_branches = [branch for branch in branches if branch_checker(branch, issue)]
+
+        if len(found_branches) == 0:
+            branch_bool = True
+        else:
+            branch_bool = False
+            print(f"Branch found for issue {issue.number} = {found_branches}")
+
+        pr_bool = issue.pull_request is None
+
+        fin_bool = bot_bool and branch_bool and pr_bool
+
+        if fin_bool: 
+            success, error = process_issue(issue, repo_name, ignore_checks=True)
+            if success:
+                print(f"Successfully processed issue #{issue.number}")
+                success_list.append(issue.number)
+            else:
+                print(f"Skipped issue #{issue.number}: {error}")
