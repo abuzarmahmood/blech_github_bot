@@ -158,7 +158,6 @@ Return response in format:
 Reply "TERMINATE" in the end when everything is done.
 """
 
-
     edit_assistant_prompt = f"""Suggest what changes can be made to resolve this issue:
 Repository: {repo_name}
 Local path: {repo_path}
@@ -299,7 +298,7 @@ if __name__ == '__main__':
 
     def branch_checker(branch, issue):
         return str(issue.number) in branch.name or \
-                issue.title.lower().replace(" ", "-") in branch.name.lower()
+            issue.title.lower().replace(" ", "-") in branch.name.lower()
 
     success_list = []
     max_success = 10
@@ -310,7 +309,8 @@ if __name__ == '__main__':
 
         bot_bool = not has_bot_response(issue)
         # comment_bool = issue.comments == 0
-        found_branches = [branch for branch in branches if branch_checker(branch, issue)]
+        found_branches = [
+            branch for branch in branches if branch_checker(branch, issue)]
 
         if len(found_branches) == 0:
             branch_bool = True
@@ -322,8 +322,9 @@ if __name__ == '__main__':
 
         fin_bool = bot_bool and branch_bool and pr_bool
 
-        if fin_bool: 
-            success, error = process_issue(issue, repo_name, ignore_checks=True)
+        if fin_bool:
+            success, error = process_issue(
+                issue, repo_name, ignore_checks=True)
             if success:
                 print(f"Successfully processed issue #{issue.number}")
                 success_list.append(issue.number)
