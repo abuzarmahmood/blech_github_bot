@@ -2,25 +2,28 @@
 
 # GitHub Monitor Bot
 
-A Python bot that monitors registered GitHub repositories and automatically responds to issues and pull requests with comments and suggested edits using autogen as LLM backend.
+A Python bot that monitors GitHub repositories and automatically responds to issues using OpenAI's GPT-4 through Autogen. The bot analyzes issues, suggests relevant files and code changes, and provides detailed responses.
 
 ## Features
 
-- Monitors multiple GitHub repositories
-- Responds to new issues and pull requests
-- Provides automated code review comments
-- Suggests fixes and improvements
-- Configurable response templates
-- Rate limiting and API usage optimization
+- Monitors configured GitHub repositories from `config/repos.txt`
+- Automatically responds to issues with the `blech_bot` label
+- Analyzes issue content using GPT-4
+- Suggests relevant files and code changes
+- Clones and updates local repository copies
+- Provides detailed code review and suggestions
+- Tracks response history to avoid duplicates
 
 ## Requirements
 
 - Python 3.8+
+- OpenAI API key
 - GitHub API access token
-- Required Python packages:
+- Required Python packages (see requirements.txt):
   - pyautogen
   - PyGithub
   - python-dotenv
+  - gitpython
   - requests
   - pyyaml
 
@@ -28,8 +31,8 @@ A Python bot that monitors registered GitHub repositories and automatically resp
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/github-monitor-bot.git
-cd github-monitor-bot
+git clone https://github.com/abuzarmahmood/blech_github_bot.git
+cd blech_github_bot
 ```
 
 2. Create and activate a virtual environment:
@@ -45,36 +48,40 @@ source venv/bin/activate  # On Linux/Mac
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file with your GitHub token:
+4. Create a `.env` file with your API tokens:
 ```
-GITHUB_TOKEN=your_token_here
+GITHUB_TOKEN=your_github_token_here
+OPENAI_API_KEY=your_openai_key_here
 ```
 
-4. Configure repositories to monitor in `config.yaml`:
-```yaml
-repositories:
-  - owner/repo1
-  - owner/repo2
+5. Configure repositories to monitor in `config/repos.txt`:
+```
+owner/repo1
+owner/repo2
 ```
 
 ## Usage
 
 Run the bot:
 ```bash
-python bot.py
+python src/response_agent.py
 ```
 
 The bot will:
 1. Connect to GitHub using your API token
-2. Monitor configured repositories
-3. Respond to new issues and PRs
-4. Log all activities
+2. Clone/update configured repositories locally
+3. Process open issues that:
+   - Have the `blech_bot` label
+   - Don't already have a bot response
+   - Don't have associated branches/PRs
+4. Generate and post responses using GPT-4
 
-## Configuration
+## Code Structure
 
-- `config.yaml`: Repository list and monitoring settings
-- `templates/`: Response templates for different events
-- `rules/`: Custom rules for automated responses
+- `src/response_agent.py`: Main bot logic and Autogen agents
+- `src/git_utils.py`: GitHub API interaction utilities
+- `src/bot_tools.py`: Helper functions for file operations
+- `config/repos.txt`: List of repositories to monitor
 
 ## Contributing
 
