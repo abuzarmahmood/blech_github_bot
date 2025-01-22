@@ -198,7 +198,8 @@ Reply "TERMINATE" in the end when everything is done."""
     ]
 
     if any([len(x) == 0 for x in results_to_summarize]):
-        raise ValueError("Something went wrong with collecting results to summarize")
+        raise ValueError(
+            "Something went wrong with collecting results to summarize")
 
     summary_results = summary_assistant.initiate_chats(
         [
