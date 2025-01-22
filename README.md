@@ -79,7 +79,7 @@ The bot will:
 ## Code Structure
 
 - `src/response_agent.py`: Main bot logic and Autogen agents
-- `src/git_utils.py`: GitHub API interaction utilities 
+- `src/git_utils.py`: GitHub API interaction utilities
 - `src/bot_tools.py`: Helper functions for file operations
 - `config/repos.txt`: List of repositories to monitor
 
@@ -96,7 +96,7 @@ The bot uses multiple specialized GPT-4 agents working together through Autogen:
   - Reviews files identified by File Assistant
   - Proposes concrete code modifications with line numbers
   - Provides code snippets and implementation details
-  
+
 - **Summary Assistant**: Synthesizes agent responses
   - Combines insights from other agents
   - Generates clear, actionable summaries

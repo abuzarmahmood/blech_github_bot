@@ -146,7 +146,8 @@ Assignees: {', '.join(details['assignees'])}
 
 Generate a helpful and specific response addressing the issue contents.
 Use the tools you have. Do not ask for user input or expect it.
-Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
+To find details of files use read_merged_summary or read_merged_docstrings
+If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
 
 Return response in format:
     - File: path/to/file1.py
@@ -158,7 +159,6 @@ Return response in format:
 Reply "TERMINATE" in the end when everything is done.
 """
 
-
     edit_assistant_prompt = f"""Suggest what changes can be made to resolve this issue:
 Repository: {repo_name}
 Local path: {repo_path}
@@ -167,6 +167,7 @@ Issue Body: {details['body']}
 Use the tools you have. Do not ask for user input or expect it.
 Do not look for files again. Use the files suggested by the previous agent.
 Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
+Try to read the whole file to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
 Reply "TERMINATE" in the end when everything is done."""
 
     # Extract response from chat history
@@ -299,18 +300,19 @@ if __name__ == '__main__':
 
     def branch_checker(branch, issue):
         return str(issue.number) in branch.name or \
-                issue.title.lower().replace(" ", "-") in branch.name.lower()
+            issue.title.lower().replace(" ", "-") in branch.name.lower()
 
     success_list = []
     max_success = 10
-    for issue in open_issues:
+    for issue in open_issues[:1]:
         if len(success_list) > max_success:
             print(f"Reached max success limit of {max_success}")
             break
 
         bot_bool = not has_bot_response(issue)
         # comment_bool = issue.comments == 0
-        found_branches = [branch for branch in branches if branch_checker(branch, issue)]
+        found_branches = [
+            branch for branch in branches if branch_checker(branch, issue)]
 
         if len(found_branches) == 0:
             branch_bool = True
@@ -322,8 +324,9 @@ if __name__ == '__main__':
 
         fin_bool = bot_bool and branch_bool and pr_bool
 
-        if fin_bool: 
-            success, error = process_issue(issue, repo_name, ignore_checks=True)
+        if fin_bool:
+            success, error = process_issue(
+                issue, repo_name, ignore_checks=True)
             if success:
                 print(f"Successfully processed issue #{issue.number}")
                 success_list.append(issue.number)
