@@ -146,7 +146,8 @@ Assignees: {', '.join(details['assignees'])}
 
 Generate a helpful and specific response addressing the issue contents.
 Use the tools you have. Do not ask for user input or expect it.
-Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
+To find details of files use read_merged_summary or read_merged_docstrings
+If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have. 
 
 Return response in format:
     - File: path/to/file1.py
@@ -167,6 +168,7 @@ Issue Body: {details['body']}
 Use the tools you have. Do not ask for user input or expect it.
 Do not look for files again. Use the files suggested by the previous agent.
 Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
+Try to read the whole file to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
 Reply "TERMINATE" in the end when everything is done."""
 
     # Extract response from chat history
@@ -303,7 +305,7 @@ if __name__ == '__main__':
 
     success_list = []
     max_success = 10
-    for issue in open_issues:
+    for issue in open_issues[:1]:
         if len(success_list) > max_success:
             print(f"Reached max success limit of {max_success}")
             break
