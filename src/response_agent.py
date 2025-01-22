@@ -192,10 +192,14 @@ Reply "TERMINATE" in the end when everything is done."""
     # Grab everything but tool calls
     results_to_summarize = [
         [
-            x for x in this_result.chat_history if 'tool' not in str(x)
+            x for x in this_result.chat_history if 'tool_call' not in str(x)
         ]
         for this_result in chat_results
     ]
+
+    if any([len(x) == 0 for x in results_to_summarize]):
+        raise ValueError(
+            "Something went wrong with collecting results to summarize")
 
     summary_results = summary_assistant.initiate_chats(
         [
@@ -277,7 +281,9 @@ def process_repository(
 
 if __name__ == '__main__':
     # Example usage
-    repo_name = "katzlabbrandeis/blech_clust"
+    # repo_name = "katzlabbrandeis/blech_clust"
+    tracked_repos = bot_tools.get_tracked_repos()
+    repo_name = tracked_repos[1]
     # process_repository(repo_name)
     client = get_github_client()
     repo = get_repository(client, repo_name)
