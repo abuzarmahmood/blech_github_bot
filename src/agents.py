@@ -12,6 +12,7 @@ for func in dir(bot_tools):
     if callable(getattr(bot_tools, func)):
         tool_funcs.append(eval(f'bot_tools.{func}'))
 
+
 def create_agents():
     """Create and configure the autogen agents"""
 
@@ -81,33 +82,35 @@ def create_agents():
 
     return user, file_assistant, edit_assistant
 
+
 def create_summary_agent(llm_config: dict) -> AssistantAgent:
     """Create and configure the summary agent
-    
+
     Args:
         llm_config: Configuration for the LLM
-        
+
     Returns:
         Configured summary assistant agent
     """
     summary_assistant = AssistantAgent(
-        name="summary_assistant", 
+        name="summary_assistant",
         llm_config=llm_config,
         system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
         """,
     )
-    
+
     return summary_assistant
+
 
 def get_file_analysis_prompt(repo_name: str, repo_path: str, details: dict) -> str:
     """Generate prompt for file analysis agent
-    
+
     Args:
         repo_name: Name of repository
         repo_path: Path to repository
         details: Dictionary of issue details
-        
+
     Returns:
         Formatted prompt string
     """
@@ -135,14 +138,15 @@ Return response in format:
 Reply "TERMINATE" in the end when everything is done.
 """
 
+
 def get_edit_suggestion_prompt(repo_name: str, repo_path: str, details: dict) -> str:
     """Generate prompt for edit suggestion agent
-    
+
     Args:
         repo_name: Name of repository
         repo_path: Path to repository
         details: Dictionary of issue details
-        
+
     Returns:
         Formatted prompt string
     """
@@ -157,16 +161,17 @@ Provide code blocks which will address the issue where you can and suggest speci
 Try to read the whole file to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
 Reply "TERMINATE" in the end when everything is done."""
 
+
 def get_feedback_prompt(repo_name: str, repo_path: str, original_response: str, feedback_text: str, max_turns: int) -> str:
     """Generate prompt for feedback processing
-    
+
     Args:
         repo_name: Name of repository
         repo_path: Path to repository
         original_response: Original bot response
         feedback_text: User feedback text
         max_turns: Maximum conversation turns
-        
+
     Returns:
         Formatted prompt string
     """
@@ -192,12 +197,13 @@ Please generate an updated response that addresses the feedback while maintainin
 Reply "TERMINATE" when done.
 """
 
+
 def create_feedback_agent(llm_config: dict) -> AssistantAgent:
     """Create and configure the feedback processing agent
-    
+
     Args:
         llm_config: Configuration for the LLM
-        
+
     Returns:
         Configured feedback assistant agent
     """
@@ -222,5 +228,5 @@ def create_feedback_agent(llm_config: dict) -> AssistantAgent:
             name=this_func.__name__,
             description=this_func.__doc__,
         )(this_func)
-        
+
     return feedback_assistant
