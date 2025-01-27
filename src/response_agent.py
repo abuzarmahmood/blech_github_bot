@@ -11,7 +11,6 @@ from github.Repository import Repository
 from git_utils import (
     get_github_client,
     get_repository,
-    has_bot_response,
     has_blech_bot_tag,
     write_issue_response,
     get_issue_details,
@@ -237,10 +236,6 @@ def process_issue(
         # Check if issue has blech_bot tag
         if not has_blech_bot_tag(issue) and not ignore_checks:
             return False, "Issue does not have blech_bot tag"
-
-        # Check if already responded
-        if has_bot_response(issue) and not ignore_checks:
-            return False, "Issue already has bot response"
 
         # Generate and post response
         response, all_content = generate_issue_response(issue, repo_name, feedback_text)
