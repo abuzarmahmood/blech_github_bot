@@ -21,6 +21,7 @@ from git_utils import (
 )
 import bot_tools
 from autogen import AssistantAgent
+import agents
 from agents import (
     create_agents,
     create_summary_agent,
