@@ -170,11 +170,13 @@ def generate_issue_response(
     Args:
         issue: The GitHub issue to respond to
         repo_name: Full name of repository (owner/repo)
-        feedback_text: Optional feedback text to process
 
     Returns:
         Tuple of (response text, conversation history)
     """
+    # Initialize feedback text as None
+    feedback_text = None
+    
     # Handle feedback case
     if has_user_feedback(issue) or feedback_text:
         # Get the latest bot response
