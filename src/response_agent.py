@@ -2,6 +2,7 @@
 Agent for generating responses to GitHub issues using pyautogen
 """
 from pprint import pprint
+import traceback
 import json
 from typing import Optional, Tuple
 import os
@@ -125,9 +126,9 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
 
     # Get prompts and run agents
     file_prompt = agents.get_file_analysis_prompt(
-        repo_name, repo_path, details)
+        repo_name, repo_path, details, issue)
     edit_prompt = agents.get_edit_suggestion_prompt(
-        repo_name, repo_path, details)
+        repo_name, repo_path, details, issue)
 
     chat_results = user.initiate_chats(
         [
@@ -146,15 +147,19 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
         ]
     )
 
-    # Process results
+    # Keep everything but tool calls
+    def is_tool_related(x):
+        if 'tool_calls' in x.keys() or x['role'] == 'tool':
+            return True
+
     results_to_summarize = [
-        [x for x in this_result.chat_history if 'tool_call' not in str(x)]
+        [x for x in this_result.chat_history if not is_tool_related(x)]
         for this_result in chat_results
     ]
 
     if any([len(x) == 0 for x in results_to_summarize]):
         raise ValueError(
-            "Something went wrong with collecting results to summarize")
+            "Got no results to summarize, likely an error in agent responses")
 
     # Summarize results
     llm_config = {
@@ -269,7 +274,7 @@ def process_issue(
         return True, None
 
     except Exception as e:
-        return False, f"Error processing issue: {str(e)}"
+        return False, f"Error processing issue: {traceback.format_exc()}"
 
 
 def process_repository(
