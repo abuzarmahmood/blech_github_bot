@@ -7,6 +7,7 @@ from autogen import ConversableAgent, AssistantAgent
 import bot_tools
 from git_utils import get_issue_comments
 from github.Issue import Issue
+import random
 
 # Get callable tool functions
 tool_funcs = []
@@ -37,7 +38,7 @@ def create_agents():
     llm_config = {
         "model": "gpt-4o",
         "api_key": api_key,
-        "temperature": 0
+        "temperature": random.uniform(0, 0.05),
     }
 
     # Create assistant agent for generating responses
