@@ -19,6 +19,8 @@ from git_utils import (
     update_repository,
     get_issue_comments
 )
+import bot_tools
+from autogen import AssistantAgent
 from agents import (
     create_agents,
     create_summary_agent,
