@@ -257,8 +257,8 @@ def process_issue(
         if not ignore_checks:
             if not has_blech_bot_tag(issue):
                 return False, "Issue does not have blech_bot tag"
-            if has_bot_response(issue):
-                return False, "Issue already has a bot response"
+            if has_bot_response(issue) and not has_user_feedback(issue):
+                return False, "Issue already has a bot response without feedback from user"
 
         # Generate and post response
         response, all_content = generate_issue_response(issue, repo_name)
@@ -302,6 +302,7 @@ if __name__ == '__main__':
     # Get list of repositories to process
     tracked_repos = bot_tools.get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
+    pprint(tracked_repos)
 
     # Process each repository
     for repo_name in tracked_repos:
