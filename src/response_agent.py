@@ -108,12 +108,30 @@ def create_agents():
         """,
     )
 
-    return user, file_assistant, edit_assistant, summary_assistant
+    feedback_assistant = AssistantAgent(
+        name="feedback_assistant",
+        llm_config=llm_config,
+        system_message="""You are a helpful GitHub bot that processes user feedback on previous bot responses.
+        Analyze the user's feedback carefully and suggest improvements to the original response.
+        Focus on addressing specific concerns raised by the user.
+        Maintain a professional and helpful tone.
+        Include any relevant code snippets or technical details from the original response that should be preserved.
+        """,
+    )
+
+    for this_func in tool_funcs:
+        feedback_assistant.register_for_llm(
+            name=this_func.__name__,
+            description=this_func.__doc__,
+        )(this_func)
+
+    return user, file_assistant, edit_assistant, summary_assistant, feedback_assistant
 
 
 def generate_issue_response(
         issue: Issue,
         repo_name: str,
+        feedback_text: str = None,
 ) -> str:
     """
     Generate an appropriate response for a GitHub issue using autogen agents
@@ -215,6 +233,35 @@ Reply "TERMINATE" in the end when everything is done."""
     response = summary_results[0].chat_history[-1]['content']
     all_content = results_to_summarize + [response]
 
+    # If there's feedback, process it
+    if feedback_text:
+        feedback_prompt = f"""Process this user feedback on the previous bot response and generate an improved response:
+
+Previous Response:
+{response}
+
+User Feedback:
+{feedback_text}
+
+Please generate an updated response that addresses the feedback while maintaining any useful information from the original response.
+Reply "TERMINATE" when done.
+"""
+        
+        feedback_results = user.initiate_chats(
+            [
+                {
+                    "recipient": feedback_assistant,
+                    "message": feedback_prompt,
+                    "max_turns": 5,
+                    "summary_method": "last_msg",
+                }
+            ]
+        )
+        
+        updated_response = feedback_results[0].chat_history[-1]['content']
+        all_content.extend([feedback_text, updated_response])
+        return updated_response, all_content
+
     return response, all_content
 
 
@@ -222,6 +269,7 @@ def process_issue(
     issue: Issue,
     repo_name: str,
     ignore_checks: bool = False,
+    feedback_text: str = None,
 ) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
@@ -242,7 +290,7 @@ def process_issue(
             return False, "Issue already has bot response"
 
         # Generate and post response
-        response, all_content = generate_issue_response(issue, repo_name)
+        response, all_content = generate_issue_response(issue, repo_name, feedback_text)
         write_issue_response(issue, response)
         return True, None
 
