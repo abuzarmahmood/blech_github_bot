@@ -253,7 +253,7 @@ def generate_issue_response(
 
         # Process feedback
         updated_response, all_content = generate_feedback_response(
-            user, feedback_assistant, original_response, feedback_text)
+            user, feedback_assistant, latest_bot_response, feedback_text)
         return updated_response, all_content
 
     # Construct prompt with issue details
