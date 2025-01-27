@@ -71,27 +71,7 @@ def generate_feedback_response(
     Returns:
         Tuple of (updated response text, full conversation history)
     """
-    feedback_prompt = f"""Process this user feedback on the previous bot response and generate an improved response:
-Repository: {repo_name}
-Local path: {repo_path}
-
-Use the tools you have. Do not ask for user input or expect it.
-DO NOT SUGGEST CODE EXECUTIONS. Only make code editing suggestions.
-To find details of files use read_merged_summary or read_merged_docstrings
-If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
-Read relevant files to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
-Finish the job by suggesting specific lines in specific files where changes can be made.
-You have {max_turns} turns to complete this task.
-
-Previous Response:
-{original_response}
-
-User Feedback:
-{feedback_text}
-
-Please generate an updated response that addresses the feedback while maintaining any useful information from the original response.
-Reply "TERMINATE" when done.
-"""
+    feedback_prompt = agents.get_feedback_prompt(repo_name, repo_path, original_response, feedback_text, max_turns)
     
     feedback_results = user.initiate_chats(
         [
@@ -127,43 +107,9 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
     # Create base agents
     user, file_assistant, edit_assistant = create_agents()
 
-    # Construct prompts
-    file_prompt = f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
-
-Repository: {repo_name}
-Local path: {repo_path}
-Title: {details['title']}
-Body: {details['body']}
-Labels: {', '.join(details['labels'])}
-Assignees: {', '.join(details['assignees'])}
-
-Generate a helpful and specific response addressing the issue contents.
-Use the tools you have. Do not ask for user input or expect it.
-To find details of files use read_merged_summary or read_merged_docstrings
-If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
-
-Return response in format:
-    - File: path/to/file1.py
-    - Description: Brief description of function of file1
-
-    - File: path/to/file2.py
-    - Description: Brief description of function of file2
-
-Reply "TERMINATE" in the end when everything is done.
-"""
-
-    edit_prompt = f"""Suggest what changes can be made to resolve this issue:
-Repository: {repo_name}
-Local path: {repo_path}
-Issue Title: {details['title']}
-Issue Body: {details['body']}
-Use the tools you have. Do not ask for user input or expect it.
-Do not look for files again. Use the files suggested by the previous agent.
-Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
-Try to read the whole file to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
-Reply "TERMINATE" in the end when everything is done."""
-
-    # Run agents
+    # Get prompts and run agents
+    file_prompt = agents.get_file_analysis_prompt(repo_name, repo_path, details)
+    edit_prompt = agents.get_edit_suggestion_prompt(repo_name, repo_path, details)
     chat_results = user.initiate_chats(
         [
             {
