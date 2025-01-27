@@ -6,6 +6,7 @@ import autogen
 from autogen import ConversableAgent, AssistantAgent
 import bot_tools
 from git_utils import get_issue_comments
+from github.Issue import Issue
 
 # Get callable tool functions
 tool_funcs = []
@@ -104,19 +105,35 @@ def create_summary_agent(llm_config: dict) -> AssistantAgent:
     return summary_assistant
 
 
-def get_file_analysis_prompt(repo_name: str, repo_path: str, details: dict) -> str:
+def get_file_analysis_prompt(
+        repo_name: str, 
+        repo_path: str, 
+        details: dict,
+        issue: Issue
+        ) -> str:
     """Generate prompt for file analysis agent
 
     Args:
         repo_name: Name of repository
         repo_path: Path to repository
         details: Dictionary of issue details
+        issue: Issue object
 
     Returns:
         Formatted prompt string
     """
     comments_objs = get_issue_comments(issue)
-    comments = "\n".join([c.body for c in comments_objs[:-1]])
+    all_comments = [c.body for c in comments_objs]
+    if len(all_comments) == 0:
+        last_comment_str = ""
+        comments_str = ""
+    elif len(all_comments) == 1:
+        last_comment_str = f"Last comment: {all_comments[0]}"
+        comments_str = ""
+    else:
+        comments = "\n".join([c.body for c in comments_objs[:-1]])
+        last_comment_str = f"Last comment: {comments_objs[-1].body}" 
+        comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
 
     return f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
 
@@ -124,7 +141,7 @@ Repository: {repo_name}
 Local path: {repo_path}
 Title: {details['title']}
 Body: {details['body']}
-Last comment: {comments_objs[-1].body}
+{last_comment_str}
 
 Generate a helpful and specific response addressing the issue contents.
 Use the tools you have. Do not ask for user input or expect it.
@@ -138,14 +155,18 @@ Return response in format:
     - File: path/to/file2.py
     - Description: Brief description of function of file2
 
-Also think of these comments as part of the response context:
-    {comments}
+{comments_str}
 
 Reply "TERMINATE" in the end when everything is done.
 """
 
 
-def get_edit_suggestion_prompt(repo_name: str, repo_path: str, details: dict) -> str:
+def get_edit_suggestion_prompt(
+        repo_name: str, 
+        repo_path: str, 
+        details: dict,
+        issue: Issue,
+        ) -> str:
     """Generate prompt for edit suggestion agent
 
     Args:
@@ -157,15 +178,27 @@ def get_edit_suggestion_prompt(repo_name: str, repo_path: str, details: dict) ->
         Formatted prompt string
     """
     comments_objs = get_issue_comments(issue)
-    comments = "\n".join([c.body for c in comments_objs[:-1]])
+    all_comments = [c.body for c in comments_objs]
+    if len(all_comments) == 0:
+        last_comment_str = ""
+        comments_str = ""
+    elif len(all_comments) == 1:
+        last_comment_str = f"Last comment: {all_comments[0]}"
+        comments_str = ""
+    else:
+        comments = "\n".join([c.body for c in comments_objs[:-1]])
+        last_comment_str = f"Last comment: {comments_objs[-1].body}" 
+        comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
+
     return f"""Suggest what changes can be made to resolve this issue:
 Repository: {repo_name}
 Local path: {repo_path}
 Issue Title: {details['title']}
 Issue Body: {details['body']}
-Last comment: {comments_objs[-1].body}
-Also think of these comments as part of the response context:
-    {comments}
+{last_comment_str}
+
+{comments_str}
+
 
 Use the tools you have. Do not ask for user input or expect it.
 Do not look for files again. Use the files suggested by the previous agent.
