@@ -15,6 +15,7 @@ def get_local_repo_path(repo_name: str) -> str:
 
     Args:
         - repo_name : Name of repository (owner/repo)
+            - Example: "openai/autogen"
 
     Returns:
         - Path to the local repository

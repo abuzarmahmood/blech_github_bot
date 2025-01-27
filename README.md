@@ -83,29 +83,72 @@ The bot will:
 - `src/bot_tools.py`: Helper functions for file operations
 - `config/repos.txt`: List of repositories to monitor
 
+## Get Started
+
+1. Set up your environment:
+```bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+2. Configure your environment variables in `.env`:
+```
+GITHUB_TOKEN=your_github_token
+OPENAI_API_KEY=your_openai_key
+```
+
+3. Add repositories to monitor in `config/repos.txt`:
+```
+owner/repo1
+owner/repo2
+```
+
+4. Run the bot:
+```bash
+# Run once
+python src/response_agent.py
+
+# Or run continuously with the shell script
+./src/run_response_agent.sh --delay 300  # Check every 5 minutes
+```
+
 ## AI Agent Architecture
 
-The bot uses multiple specialized GPT-4 agents working together through Autogen:
+The bot uses specialized GPT-4 agents working together through Autogen:
 
-- **File Assistant**: Analyzes issues and identifies relevant files that need modification
-  - Reviews issue content and repository structure
-  - Uses repository tools to locate affected files
-  - Provides file paths and descriptions of their functions
+- **File Assistant**: Analyzes repository structure
+  - Reviews issue content and codebase
+  - Uses repository tools to locate relevant files
+  - Provides file paths and functional descriptions
+  - Leverages merged summaries and docstrings
 
-- **Edit Assistant**: Suggests specific code changes
+- **Edit Assistant**: Proposes code changes
   - Reviews files identified by File Assistant
-  - Proposes concrete code modifications with line numbers
-  - Provides code snippets and implementation details
+  - Suggests concrete modifications with line numbers
+  - Provides implementation details and code snippets
+  - Uses repository tools to validate changes
 
-- **Summary Assistant**: Synthesizes agent responses
+- **Summary Assistant**: Creates final responses
   - Combines insights from other agents
   - Generates clear, actionable summaries
-  - Maintains code snippets and key details
+  - Maintains technical accuracy
+  - Ensures consistent response format
 
-The agents work sequentially to:
-1. Identify affected files
-2. Propose specific changes
-3. Generate a comprehensive response
+- **Feedback Assistant**: Handles user feedback
+  - Processes user comments on bot responses
+  - Improves suggestions based on feedback
+  - Maintains context from original response
+  - Generates updated recommendations
+
+The agents work together to:
+1. Analyze issues and identify affected files
+2. Propose specific code changes
+3. Generate comprehensive responses
+4. Process user feedback and improve suggestions
 
 ## Contributing
 
