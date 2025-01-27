@@ -100,16 +100,27 @@ def create_agents():
         user.register_for_execution(
             name=this_func.__name__)(this_func)
 
-    # Summarize results using reflection_with_llm
+    return user, file_assistant, edit_assistant
+
+
+def create_summary_agent(llm_config: dict) -> AssistantAgent:
+    """Create and configure the summary agent
+    
+    Args:
+        llm_config: Configuration for the LLM
+        
+    Returns:
+        Configured summary assistant agent
+    """
     summary_assistant = AssistantAgent(
-        name="summary_assistant",
+        name="summary_assistant", 
         llm_config=llm_config,
         system_message="""You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
         """,
     )
-
-    return user, file_assistant, edit_assistant, summary_assistant
+    
+    return summary_assistant
 
 
 def create_feedback_agent(llm_config: dict) -> AssistantAgent:
@@ -208,7 +219,7 @@ def generate_issue_response(
     details = get_issue_details(issue)
 
     # Create base agents
-    user, file_assistant, edit_assistant, summary_assistant = create_agents()
+    user, file_assistant, edit_assistant = create_agents()
 
     # Check if this is a feedback response
     if has_user_feedback(issue) or feedback_text:
@@ -301,7 +312,15 @@ Reply "TERMINATE" in the end when everything is done."""
         raise ValueError(
             "Something went wrong with collecting results to summarize")
 
-    summary_results = summary_assistant.initiate_chats(
+    # Create summary agent
+    llm_config = {
+        "model": "gpt-4o",
+        "api_key": os.getenv('OPENAI_API_KEY'),
+        "temperature": 0
+    }
+    summary_agent = create_summary_agent(llm_config)
+    
+    summary_results = summary_agent.initiate_chats(
         [
             {
                 "recipient": summary_assistant,
