@@ -323,7 +323,7 @@ Reply "TERMINATE" in the end when everything is done."""
     summary_results = summary_agent.initiate_chats(
         [
             {
-                "recipient": summary_assistant,
+                "recipient": summary_agent,
                 "message": f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}",
                 "silent": False,
                 "max_turns": 1,
