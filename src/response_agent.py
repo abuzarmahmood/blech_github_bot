@@ -2,6 +2,7 @@
 Agent for generating responses to GitHub issues using pyautogen
 """
 from pprint import pprint
+import random
 import traceback
 import json
 from typing import Optional, Tuple
@@ -227,7 +228,7 @@ def generate_issue_response(
         llm_config = {
             "model": "gpt-4o",
             "api_key": os.getenv('OPENAI_API_KEY'),
-            "temperature": 0
+            "temperature": random.uniform(0, 0.05),
         }
         feedback_assistant = create_feedback_agent(llm_config)
         print('===============================')
