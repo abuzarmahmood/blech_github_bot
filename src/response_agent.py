@@ -276,66 +276,18 @@ def process_repository(
 
 
 if __name__ == '__main__':
-    # Example usage
-    # repo_name = "katzlabbrandeis/blech_clust"
+    # Get list of repositories to process
     tracked_repos = bot_tools.get_tracked_repos()
-    print(f'Tracked repositories: {tracked_repos}')
-    repo_name = tracked_repos[0]
-    print(f'Processing repository: {repo_name}')
-    # process_repository(repo_name)
-    client = get_github_client()
-    repo = get_repository(client, repo_name)
-
-    # Ensure repository is cloned and up to date
-    repo_dir = clone_repository(repo)
-    update_repository(repo_dir)
-
-    # Get open issues
-    open_issues = repo.get_issues(state='open')
-
-    # Get all issues which haven't been touched:
-    # 1) without a response
-    # 2) without the last response being from the bot
-    # 3) without an associated branch
-    # 4) without an associated PR
-
-    branches = repo.get_branches()
-    open_branch_names = [branch.name for branch in branches]
-
-    def branch_checker(branch, issue):
-        return str(issue.number) in branch.name or \
-            issue.title.lower().replace(" ", "-") in branch.name.lower()
-
-    issue = open_issues[0]
-    # generate_issue_response(issue, repo_name)
-    process_issue(issue, repo_name)
-
-    # success_list = []
-    # max_success = 10
-    # for issue in open_issues[:1]:
-    #     if len(success_list) > max_success:
-    #         print(f"Reached max success limit of {max_success}")
-    #         break
-
-    #     # comment_bool = issue.comments == 0
-    #     found_branches = [
-    #         branch for branch in branches if branch_checker(branch, issue)]
-
-    #     if len(found_branches) == 0:
-    #         branch_bool = True
-    #     else:
-    #         branch_bool = False
-    #         print(f"Branch found for issue {issue.number} = {found_branches}")
-
-    #     pr_bool = issue.pull_request is None
-
-    #     fin_bool = bot_bool and branch_bool and pr_bool
-
-    #     if fin_bool:
-    #         success, error = process_issue(
-    #             issue, repo_name, ignore_checks=True)
-    #         if success:
-    #             print(f"Successfully processed issue #{issue.number}")
-    #             success_list.append(issue.number)
-    #         else:
-    #             print(f"Skipped issue #{issue.number}: {error}")
+    print(f'Found {len(tracked_repos)} tracked repositories')
+    
+    # Process each repository
+    for repo_name in tracked_repos:
+        print(f'\n=== Processing repository: {repo_name} ===')
+        try:
+            process_repository(repo_name)
+            print(f'Completed processing {repo_name}')
+        except Exception as e:
+            print(f'Error processing {repo_name}: {str(e)}')
+            continue
+    
+    print('\nCompleted processing all repositories')
