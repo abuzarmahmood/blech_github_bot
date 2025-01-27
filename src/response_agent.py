@@ -150,7 +150,7 @@ def generate_issue_response(
     details = get_issue_details(issue)
 
     # Create agents
-    user, file_assistant, edit_assistant, summary_assistant = create_agents()
+    user, file_assistant, edit_assistant, summary_assistant, feedback_assistant = create_agents()
 
     # Construct prompt with issue details
     prompt = f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
