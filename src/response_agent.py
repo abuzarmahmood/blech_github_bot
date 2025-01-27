@@ -163,7 +163,6 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
 def generate_issue_response(
         issue: Issue,
         repo_name: str,
-        feedback_text: str = None,
 ) -> Tuple[str, list]:
     """
     Generate an appropriate response for a GitHub issue using autogen agents
@@ -221,7 +220,6 @@ def process_issue(
     issue: Issue,
     repo_name: str,
     ignore_checks: bool = False,
-    feedback_text: str = None,
 ) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
@@ -238,7 +236,7 @@ def process_issue(
             return False, "Issue does not have blech_bot tag"
 
         # Generate and post response
-        response, all_content = generate_issue_response(issue, repo_name, feedback_text)
+        response, all_content = generate_issue_response(issue, repo_name)
         write_issue_response(issue, response)
         return True, None
 
