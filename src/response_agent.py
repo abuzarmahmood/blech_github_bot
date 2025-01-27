@@ -317,7 +317,6 @@ if __name__ == '__main__':
     #         print(f"Reached max success limit of {max_success}")
     #         break
 
-    #     bot_bool = not has_bot_response(issue)
     #     # comment_bool = issue.comments == 0
     #     found_branches = [
     #         branch for branch in branches if branch_checker(branch, issue)]
