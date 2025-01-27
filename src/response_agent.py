@@ -95,7 +95,7 @@ def generate_feedback_response(
                 "recipient": feedback_assistant,
                 "message": feedback_prompt,
                 "max_turns": max_turns,
-                "summary_method": "last_msg",
+                "summary_method": "reflection_with_llm",
             }
         ]
     )
