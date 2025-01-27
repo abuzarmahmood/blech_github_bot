@@ -106,11 +106,11 @@ def create_summary_agent(llm_config: dict) -> AssistantAgent:
 
 
 def get_file_analysis_prompt(
-        repo_name: str, 
-        repo_path: str, 
+        repo_name: str,
+        repo_path: str,
         details: dict,
         issue: Issue
-        ) -> str:
+) -> str:
     """Generate prompt for file analysis agent
 
     Args:
@@ -132,7 +132,7 @@ def get_file_analysis_prompt(
         comments_str = ""
     else:
         comments = "\n".join([c.body for c in comments_objs[:-1]])
-        last_comment_str = f"Last comment: {comments_objs[-1].body}" 
+        last_comment_str = f"Last comment: {comments_objs[-1].body}"
         comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
 
     return f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
@@ -162,11 +162,11 @@ Reply "TERMINATE" in the end when everything is done.
 
 
 def get_edit_suggestion_prompt(
-        repo_name: str, 
-        repo_path: str, 
+        repo_name: str,
+        repo_path: str,
         details: dict,
         issue: Issue,
-        ) -> str:
+) -> str:
     """Generate prompt for edit suggestion agent
 
     Args:
@@ -187,7 +187,7 @@ def get_edit_suggestion_prompt(
         comments_str = ""
     else:
         comments = "\n".join([c.body for c in comments_objs[:-1]])
-        last_comment_str = f"Last comment: {comments_objs[-1].body}" 
+        last_comment_str = f"Last comment: {comments_objs[-1].body}"
         comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
 
     return f"""Suggest what changes can be made to resolve this issue:
