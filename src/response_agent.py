@@ -14,7 +14,6 @@ from git_utils import (
     has_blech_bot_tag,
     write_issue_response,
     get_issue_details,
-    get_issue_comments,
     clone_repository,
     update_repository,
     get_issue_comments
@@ -120,8 +119,6 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
-    comments_objs = get_issue_comments(issue)
-    comments = "\n".join([c.body for c in comments_objs[:-1]])
 
     # Create base agents
     user, file_assistant, edit_assistant = create_agents()
