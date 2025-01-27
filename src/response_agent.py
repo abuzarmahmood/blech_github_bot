@@ -174,11 +174,8 @@ def generate_issue_response(
     Returns:
         Tuple of (response text, conversation history)
     """
-    # Initialize feedback text as None
-    feedback_text = None
-    
     # Handle feedback case
-    if has_user_feedback(issue) or feedback_text:
+    if has_user_feedback(issue):
         # Get the latest bot response
         comments = get_issue_comments(issue)
         latest_bot_response = None
