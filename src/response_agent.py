@@ -108,6 +108,18 @@ def create_agents():
         """,
     )
 
+    return user, file_assistant, edit_assistant, summary_assistant
+
+
+def create_feedback_agent(llm_config: dict) -> AssistantAgent:
+    """Create and configure the feedback processing agent
+    
+    Args:
+        llm_config: Configuration for the LLM
+        
+    Returns:
+        Configured feedback assistant agent
+    """
     feedback_assistant = AssistantAgent(
         name="feedback_assistant",
         llm_config=llm_config,
@@ -124,8 +136,52 @@ def create_agents():
             name=this_func.__name__,
             description=this_func.__doc__,
         )(this_func)
+        
+    return feedback_assistant
 
-    return user, file_assistant, edit_assistant, summary_assistant, feedback_assistant
+
+def generate_feedback_response(
+        user: autogen.UserProxyAgent,
+        feedback_assistant: AssistantAgent,
+        original_response: str,
+        feedback_text: str) -> Tuple[str, list]:
+    """Generate an improved response based on user feedback
+    
+    Args:
+        user: The user proxy agent
+        feedback_assistant: The feedback processing assistant
+        original_response: The original bot response
+        feedback_text: The user's feedback text
+        
+    Returns:
+        Tuple of (updated response text, full conversation history)
+    """
+    feedback_prompt = f"""Process this user feedback on the previous bot response and generate an improved response:
+
+Previous Response:
+{original_response}
+
+User Feedback:
+{feedback_text}
+
+Please generate an updated response that addresses the feedback while maintaining any useful information from the original response.
+Reply "TERMINATE" when done.
+"""
+    
+    feedback_results = user.initiate_chats(
+        [
+            {
+                "recipient": feedback_assistant,
+                "message": feedback_prompt,
+                "max_turns": 5,
+                "summary_method": "last_msg",
+            }
+        ]
+    )
+    
+    updated_response = feedback_results[0].chat_history[-1]['content']
+    all_content = [original_response, feedback_text, updated_response]
+    return updated_response, all_content
 
 
 def generate_issue_response(
@@ -233,33 +289,17 @@ Reply "TERMINATE" in the end when everything is done."""
     response = summary_results[0].chat_history[-1]['content']
     all_content = results_to_summarize + [response]
 
-    # If there's feedback, process it
+    # If there's feedback, process it using feedback agent
     if feedback_text:
-        feedback_prompt = f"""Process this user feedback on the previous bot response and generate an improved response:
-
-Previous Response:
-{response}
-
-User Feedback:
-{feedback_text}
-
-Please generate an updated response that addresses the feedback while maintaining any useful information from the original response.
-Reply "TERMINATE" when done.
-"""
-        
-        feedback_results = user.initiate_chats(
-            [
-                {
-                    "recipient": feedback_assistant,
-                    "message": feedback_prompt,
-                    "max_turns": 5,
-                    "summary_method": "last_msg",
-                }
-            ]
-        )
-        
-        updated_response = feedback_results[0].chat_history[-1]['content']
-        all_content.extend([feedback_text, updated_response])
+        llm_config = {
+            "model": "gpt-4o",
+            "api_key": os.getenv('OPENAI_API_KEY'),
+            "temperature": 0
+        }
+        feedback_assistant = create_feedback_agent(llm_config)
+        updated_response, feedback_content = generate_feedback_response(
+            user, feedback_assistant, response, feedback_text)
+        all_content.extend(feedback_content)
         return updated_response, all_content
 
     return response, all_content
