@@ -255,7 +255,7 @@ def process_issue(
     try:
         # Check if issue has blech_bot tag or blech_bot in title, and no existing response
         if not ignore_checks:
-            has_bot_mention = has_blech_bot_tag(issue) or "blech_bot" in issue.title.lower()
+            has_bot_mention = has_blech_bot_tag(issue) or "[ blech_bot ]" in issue.title.lower()
             if not has_bot_mention:
                 return False, "Issue does not have blech_bot tag or mention in title"
             if has_bot_response(issue) and not has_user_feedback(issue):
