@@ -116,6 +116,11 @@ def create_feedback_agent(llm_config: dict) -> AssistantAgent:
         Analyze the user's feedback carefully and suggest improvements to the original response.
         Focus on addressing specific concerns raised by the user.
         Maintain a professional and helpful tone.
+        DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
+        If no changes are needed, respond accordingly.
+        NEVER ask for user input and NEVER expect it.
+        If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
+        Provide code blocks where you can.
         Include any relevant code snippets or technical details from the original response that should be preserved.
         """,
     )
