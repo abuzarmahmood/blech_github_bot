@@ -16,6 +16,7 @@ from git_utils import (
     has_blech_bot_tag,
     write_issue_response,
     get_issue_details,
+    get_issue_comments,
     clone_repository,
     update_repository
 )
@@ -130,6 +131,8 @@ def generate_issue_response(
 
     # Get issue details
     details = get_issue_details(issue)
+    comments_objs = get_issue_comments(issue)
+    comments = "\n".join([c.body for c in comments_objs[:-1]])
 
     # Create agents
     user, file_assistant, edit_assistant, summary_assistant = create_agents()
@@ -142,12 +145,14 @@ Local path: {repo_path}
 Title: {details['title']}
 Body: {details['body']}
 Labels: {', '.join(details['labels'])}
+Last comment: {comments_objs[-1].body}
 Assignees: {', '.join(details['assignees'])}
 
 Generate a helpful and specific response addressing the issue contents.
 Use the tools you have. Do not ask for user input or expect it.
 To find details of files use read_merged_summary or read_merged_docstrings
 If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
+If files are already known, simply return them.
 
 Return response in format:
     - File: path/to/file1.py
@@ -155,6 +160,9 @@ Return response in format:
 
     - File: path/to/file2.py
     - Description: Brief description of function of file2
+
+Build on these prior comments on the issue:
+    {comments}
 
 Reply "TERMINATE" in the end when everything is done.
 """
@@ -164,6 +172,8 @@ Repository: {repo_name}
 Local path: {repo_path}
 Issue Title: {details['title']}
 Issue Body: {details['body']}
+Last comment: {comments_objs[-1].body}
+Context: {comments}
 Use the tools you have. Do not ask for user input or expect it.
 Do not look for files again. Use the files suggested by the previous agent.
 Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
@@ -283,7 +293,7 @@ if __name__ == '__main__':
     # Example usage
     # repo_name = "katzlabbrandeis/blech_clust"
     tracked_repos = bot_tools.get_tracked_repos()
-    repo_name = tracked_repos[1]
+    repo_name = tracked_repos[-1]
     # process_repository(repo_name)
     client = get_github_client()
     repo = get_repository(client, repo_name)

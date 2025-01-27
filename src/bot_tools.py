@@ -37,7 +37,8 @@ def get_tracked_repos() -> str:
     """
     tracked_repos_path = os.path.join(base_dir, 'config', 'repos.txt')
     with open(tracked_repos_path, 'r') as file:
-        tracked_repos = file.read()
+        tracked_repos = file.readlines()
+    tracked_repos = [repo.strip() for repo in tracked_repos]
     return tracked_repos
 
 
