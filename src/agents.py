@@ -5,6 +5,7 @@ import os
 import autogen
 from autogen import ConversableAgent, AssistantAgent
 import bot_tools
+from git_utils import get_issue_comments
 
 # Get callable tool functions
 tool_funcs = []
