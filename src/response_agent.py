@@ -302,6 +302,7 @@ if __name__ == '__main__':
     # Get list of repositories to process
     tracked_repos = bot_tools.get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
+    pprint(tracked_repos)
 
     # Process each repository
     for repo_name in tracked_repos:
