@@ -17,14 +17,6 @@ for func in dir(bot_tools):
         tool_funcs.append(eval(f'bot_tools.{func}'))
 
 
-agent_names = [
-    "file_assistant",
-    "edit_assistant",
-    "summary_assistant",
-    "generate_edit_command_assistant",
-    "feedback_assistant",
-]
-
 agent_system_messages = {
     "file_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully check which files (if any) need to be modified.
@@ -229,7 +221,8 @@ def generate_prompt(
     """
 
     elif agent_name == "summary_assistant":
-        return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}",
+        results_to_summarize = "\n".join(results_to_summarize)
+        return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}\n"
 
     elif agent_name == "generate_edit_command_assistant":
         return f"""Please analyze this GitHub issue and generate a detailed edit command:
