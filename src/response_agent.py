@@ -134,7 +134,7 @@ def generate_new_response(
     user = create_user_agent()
     file_assistant = create_agent("file_assistant", llm_config)
     edit_assistant = create_agent("edit_assistant", llm_config)
-    summary_agent = create_agent("summary_agent", llm_config)
+    summary_agent = create_agent("summary_assistant", llm_config)
     # user, file_assistant, edit_assistant = create_agents()
 
     # Get prompts and run agents
@@ -175,7 +175,7 @@ def generate_new_response(
             "Got no results to summarize, likely an error in agent responses")
 
     summary_prompt = generate_prompt(
-        "summary_agent",
+        "summary_assistant",
         **prompt_kwargs,
         results_to_summarize=results_to_summarize,
     )

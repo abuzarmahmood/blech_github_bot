@@ -17,14 +17,6 @@ for func in dir(bot_tools):
         tool_funcs.append(eval(f'bot_tools.{func}'))
 
 
-agent_names = [
-    "file_assistant",
-    "edit_assistant",
-    "summary_assistant",
-    "generate_edit_command_assistant",
-    "feedback_assistant",
-]
-
 agent_system_messages = {
     "file_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully check which files (if any) need to be modified.
