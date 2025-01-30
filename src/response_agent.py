@@ -126,9 +126,7 @@ def generate_new_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
     user, file_assistant, edit_assistant = create_agents()
 
     # Get prompts and run agents
-    file_prompt = agents.get_file_analysis_prompt(
-        repo_name, repo_path, details, issue)
-    edit_prompt = agents.get_edit_suggestion_prompt(
+    edit_command_prompt = agents.get_generate_edit_command_prompt(
         repo_name, repo_path, details, issue)
 
     chat_results = user.initiate_chats(
@@ -230,7 +228,7 @@ def generate_issue_response(
             "api_key": os.getenv('OPENAI_API_KEY'),
             "temperature": random.uniform(0, 0.05),
         }
-        feedback_assistant = create_feedback_agent(llm_config)
+        generate_edit_command_assistant = agents.create_generate_edit_command_agent(llm_config)
         print('===============================')
         print('Generating feedback response')
         print('===============================')
