@@ -31,8 +31,9 @@ from agents import (
 import triggers
 
 ############################################################
-# Response patterns 
+# Response patterns
 ############################################################
+
 
 def generate_feedback_response(
         repo_name: str,
@@ -53,11 +54,11 @@ def generate_feedback_response(
     repo_path = bot_tools.get_local_repo_path(repo_name)
 
     prompt_kwargs = {
-            "repo_name": repo_name,
-            "repo_path": repo_path,
-            "details": details,
-            "issue": issue,
-            }
+        "repo_name": repo_name,
+        "repo_path": repo_path,
+        "details": details,
+        "issue": issue,
+    }
     user = create_user_agent()
     feedback_assistant = create_agent("feedback_assistant", llm_config)
 
@@ -72,11 +73,11 @@ def generate_feedback_response(
             break
 
     feedback_prompt = generate_prompt(
-            "feedback_assistant",
-            **prompt_kwargs,
-            original_response=original_response,
-            feedback_text=feedback_text,
-            )
+        "feedback_assistant",
+        **prompt_kwargs,
+        original_response=original_response,
+        feedback_text=feedback_text,
+    )
 
     feedback_results = user.initiate_chats(
         [
@@ -96,8 +97,8 @@ def generate_feedback_response(
 
 def generate_new_response(
         repo_name: str,
-        issue: Issue, 
-        ) -> Tuple[str, list]:
+        issue: Issue,
+) -> Tuple[str, list]:
     """
     Generate a fresh response for a GitHub issue using autogen agents
 
@@ -124,11 +125,11 @@ def generate_new_response(
 
     # Get prompts and run agents
     prompt_kwargs = {
-            "repo_name": repo_name,
-            "repo_path": repo_path,
-            "details": details,
-            "issue": issue,
-            }
+        "repo_name": repo_name,
+        "repo_path": repo_path,
+        "details": details,
+        "issue": issue,
+    }
     file_prompt = generate_prompt("file_assistant", **prompt_kwargs)
     edit_prompt = generate_prompt("edit_assistant", **prompt_kwargs)
 
@@ -150,7 +151,8 @@ def generate_new_response(
     )
 
     results_to_summarize = [
-        [x for x in this_result.chat_history if not bot_tools.is_tool_related(x)]
+        [x for x in this_result.chat_history if not bot_tools.is_tool_related(
+            x)]
         for this_result in chat_results
     ]
 
@@ -159,16 +161,16 @@ def generate_new_response(
             "Got no results to summarize, likely an error in agent responses")
 
     summary_prompt = generate_prompt(
-            "summary_agent", 
-            **prompt_kwargs,
-            results_to_summarize=results_to_summarize,
-            )
+        "summary_agent",
+        **prompt_kwargs,
+        results_to_summarize=results_to_summarize,
+    )
 
     summary_results = summary_agent.initiate_chats(
         [
             {
                 "recipient": summary_agent,
-                "message": summary_prompt, 
+                "message": summary_prompt,
                 "silent": False,
                 "max_turns": 1,
             },
@@ -179,6 +181,7 @@ def generate_new_response(
     all_content = results_to_summarize + [response]
 
     return response, all_content
+
 
 def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
     """
@@ -200,9 +203,9 @@ def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, l
     details = get_issue_details(issue)
 
     generate_edit_command_assistant = create_agent(
-        "generate_edit_command_assistant", llm_config) 
+        "generate_edit_command_assistant", llm_config)
     generate_edit_command_prompt = generate_prompt(
-            "generate_edit_command_assistant", repo_name, repo_path, details, issue)
+        "generate_edit_command_assistant", repo_name, repo_path, details, issue)
 
     chat_results = user.initiate_chats(
         [
@@ -220,10 +223,11 @@ def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, l
     return response, all_content
 
 ############################################################
-# Processing logic 
+# Processing logic
 ############################################################
 
-def check_triggers(issue: Issue) -> str: 
+
+def check_triggers(issue: Issue) -> str:
     """
     Check if the issue contains any triggers for generating a response
 
@@ -240,7 +244,8 @@ def check_triggers(issue: Issue) -> str:
     else:
         return "new_response"
 
-def response_selector(trigger: str) -> function: 
+
+def response_selector(trigger: str) -> function:
     """
     Generate a response for a GitHub issue using autogen agents
 
@@ -255,6 +260,7 @@ def response_selector(trigger: str) -> function:
         return generate_edit_command_response
     else:
         return generate_new_response
+
 
 def process_issue(
     issue: Issue,
