@@ -134,7 +134,7 @@ def generate_new_response(
     user = create_user_agent()
     file_assistant = create_agent("file_assistant", llm_config)
     edit_assistant = create_agent("edit_assistant", llm_config)
-    summary_agent = create_agent("summary_assistant", llm_config)
+    summary_assistant = create_agent("summary_assistant", llm_config)
     # user, file_assistant, edit_assistant = create_agents()
 
     # Get prompts and run agents
@@ -169,6 +169,9 @@ def generate_new_response(
             x)]
         for this_result in chat_results
     ]
+    # Convert to flat list
+    results_to_summarize = [
+        str(item) for sublist in results_to_summarize for item in sublist]
 
     if any([len(x) == 0 for x in results_to_summarize]):
         raise ValueError(
@@ -180,18 +183,13 @@ def generate_new_response(
         results_to_summarize=results_to_summarize,
     )
 
-    summary_results = summary_agent.initiate_chats(
-        [
-            {
-                "recipient": summary_agent,
-                "message": summary_prompt,
-                "silent": False,
-                "max_turns": 1,
-            },
-        ]
+    summary_results = summary_assistant.initiate_chat(
+        summary_assistant,
+        message=summary_prompt,
+        max_turns=1,
     )
 
-    response = summary_results[0].chat_history[-1]['content']
+    response = summary_results.chat_history[-1]['content']
     all_content = results_to_summarize + [response]
 
     return response, all_content

@@ -221,7 +221,8 @@ def generate_prompt(
     """
 
     elif agent_name == "summary_assistant":
-        return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}",
+        results_to_summarize = "\n".join(results_to_summarize)
+        return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}\n"
 
     elif agent_name == "generate_edit_command_assistant":
         return f"""Please analyze this GitHub issue and generate a detailed edit command:
