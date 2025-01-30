@@ -81,19 +81,6 @@ def write_issue_response(issue: Issue, response_text: str) -> IssueComment:
     return create_issue_comment(issue, full_response)
 
 
-def has_blech_bot_tag(issue: Issue) -> bool:
-    """
-    Check if the issue has the blech_bot tag
-
-    Args:
-        issue: The GitHub issue to check
-
-    Returns:
-        True if the issue has the blech_bot tag, False otherwise
-    """
-    return any(label.name == "blech_bot" for label in issue.labels)
-
-
 def iterate_issues(repo: Repository):
     """
     Generator that yields each issue along with its comments
