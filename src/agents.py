@@ -106,11 +106,7 @@ def create_user_agent():
         human_input_mode="NEVER",
         is_termination_msg=lambda x: x.get("content", "") and x.get(
             "content", "").rstrip().endswith("TERMINATE"),
-        code_execution_config={
-            "last_n_messages": 1,
-            "work_dir": "tasks",
-            "use_docker": False,
-        },
+        code_execution_config=False
     )
 
     user = register_functions(user, register_how="execution")
