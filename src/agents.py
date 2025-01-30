@@ -208,6 +208,49 @@ Try to read the whole file to understand context where possible. If file is too 
 Reply "TERMINATE" in the end when everything is done."""
 
 
+def get_generate_edit_command_prompt(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
+    """Generate prompt for generate_edit_command agent
+
+    Args:
+        repo_name: Name of repository
+        repo_path: Path to repository
+        details: Dictionary of issue details
+        issue: Issue object
+
+    Returns:
+        Formatted prompt string
+    """
+    comments_objs = get_issue_comments(issue)
+    all_comments = [c.body for c in comments_objs]
+    if len(all_comments) == 0:
+        last_comment_str = ""
+        comments_str = ""
+    elif len(all_comments) == 1:
+        last_comment_str = f"Last comment: {all_comments[0]}"
+        comments_str = ""
+    else:
+        comments = "\n".join([c.body for c in comments_objs[:-1]])
+        last_comment_str = f"Last comment: {comments_objs[-1].body}"
+        comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
+
+    return f"""Please analyze this GitHub issue and generate a detailed edit command:
+
+Repository: {repo_name}
+Local path: {repo_path}
+Title: {details['title']}
+Body: {details['body']}
+{last_comment_str}
+
+Generate a specific and detailed edit command that captures all the changes needed.
+Include file paths, line numbers, and exact code changes where possible.
+Format the command in a way that can be parsed by automated tools.
+
+{comments_str}
+
+Reply "TERMINATE" in the end when everything is done.
+"""
+
+
 def get_feedback_prompt(repo_name: str, repo_path: str, original_response: str, feedback_text: str, max_turns: int) -> str:
     """Generate prompt for feedback processing
 
@@ -276,3 +319,33 @@ def create_feedback_agent(llm_config: dict) -> AssistantAgent:
         )(this_func)
 
     return feedback_assistant
+
+
+def create_generate_edit_command_agent(llm_config: dict) -> AssistantAgent:
+    """Create and configure the generate_edit_command agent
+
+    Args:
+        llm_config: Configuration for the LLM
+
+    Returns:
+        Configured generate_edit_command assistant agent
+    """
+    generate_edit_command_assistant = AssistantAgent(
+        name="generate_edit_command_assistant",
+        llm_config=llm_config,
+        system_message="""You are a helpful GitHub bot that synthesizes all discussion in an issue thread to generate a command for a bot to make edits.
+        Analyze the issue details and comments carefully to generate a detailed and well-organized command.
+        Ensure the command provides enough information for the downstream bot to make changes accurately.
+        NEVER ask for user input and NEVER expect it.
+        Provide code blocks where you can.
+        Reply "TERMINATE" in the end when everything is done.
+        """,
+    )
+
+    for this_func in tool_funcs:
+        generate_edit_command_assistant.register_for_llm(
+            name=this_func.__name__,
+            description=this_func.__doc__,
+        )(this_func)
+
+    return generate_edit_command_assistant
