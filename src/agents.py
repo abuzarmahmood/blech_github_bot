@@ -163,6 +163,8 @@ def generate_prompt(
         details: dict,
         issue: Issue,
         results_to_summarize: list,
+        original_response: str,
+        feedback_text: str,
         ) -> str:
     """Generate prompt for the agent"""
     last_comment_str, comments_str = parse_comments(repo_name, repo_path, details, issue)
