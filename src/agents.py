@@ -34,7 +34,7 @@ agent_names = [
 ]
 
 agent_system_messages = {
-        "file_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    "file_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully check which files (if any) need to be modified.
         If not files are given by user, use the tools you have to find and suggest the files that need to be modified.
         DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
@@ -43,7 +43,7 @@ agent_system_messages = {
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
         """,
-        "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and suggest the changes that need to be made.
         Use to tools available to you to gather information and suggest the necessary changes.
         DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
@@ -53,10 +53,10 @@ agent_system_messages = {
         Provide code blocks where you can.
         Reply "TERMINATE" in the end when everything is done.
         """,
-        "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+    "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
         """,
-        "feedback_assistant":"""You are a helpful GitHub bot that processes user feedback on previous bot responses.
+    "feedback_assistant": """You are a helpful GitHub bot that processes user feedback on previous bot responses.
         Analyze the user's feedback carefully and suggest improvements to the original response.
         Focus on addressing specific concerns raised by the user.
         Maintain a professional and helpful tone.
@@ -67,20 +67,21 @@ agent_system_messages = {
         Provide code blocks where you can.
         Include any relevant code snippets or technical details from the original response that should be preserved.
         """,
-        "generate_edit_command_assistant":"""You are a helpful GitHub bot that synthesizes all discussion in an issue thread to generate a command for a bot to make edits.
+    "generate_edit_command_assistant": """You are a helpful GitHub bot that synthesizes all discussion in an issue thread to generate a command for a bot to make edits.
         Analyze the issue details and comments carefully to generate a detailed and well-organized command.
         Ensure the command provides enough information for the downstream bot to make changes accurately.
         NEVER ask for user input and NEVER expect it.
         Provide code blocks where you can.
         Reply "TERMINATE" in the end when everything is done.
         """,
-        }
+}
+
 
 def register_functions(
         agent: ConversableAgent | AssistantAgent | UserProxyAgent,
         register_how: str = "llm",
         tool_funcs: list = tool_funcs,
-        ) -> ConversableAgent | AssistantAgent | UserProxyAgent: 
+) -> ConversableAgent | AssistantAgent | UserProxyAgent:
     """Register tool functions with the agent
 
     Args:
@@ -96,12 +97,14 @@ def register_functions(
             agent.register_for_execution(
                 name=this_func.__name__)(this_func)
         else:
-            raise ValueError("Invalid registration method, must be 'llm' or 'execution'")
+            raise ValueError(
+                "Invalid registration method, must be 'llm' or 'execution'")
     return agent
 
 ############################################################
 # Agent creation and configuration
 ############################################################
+
 
 def create_user_agent():
     """Create and configure the user agent"""
@@ -122,14 +125,15 @@ def create_user_agent():
 
     return
 
-def create_agent(agent_name : str, llm_config: dict) -> AssistantAgent:
+
+def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
     """Create and configure the autogen agents"""
 
     agent = AssistantAgent(
         name=agent_name,
         llm_config=llm_config,
-        system_message= agent_system_messages[agent_name],
-        )
+        system_message=agent_system_messages[agent_name],
+    )
 
     agent = register_functions(agent, register_how="llm")
 
@@ -138,6 +142,7 @@ def create_agent(agent_name : str, llm_config: dict) -> AssistantAgent:
 ############################################################
 # Prompt generation
 ############################################################
+
 
 def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
     """Parse comments for the issue"""
@@ -156,6 +161,7 @@ def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) 
 
     return last_comment_str, comments_str
 
+
 def generate_prompt(
         agent_name: str,
         repo_name: str,
@@ -165,9 +171,10 @@ def generate_prompt(
         results_to_summarize: list,
         original_response: str,
         feedback_text: str,
-        ) -> str:
+) -> str:
     """Generate prompt for the agent"""
-    last_comment_str, comments_str = parse_comments(repo_name, repo_path, details, issue)
+    last_comment_str, comments_str = parse_comments(
+        repo_name, repo_path, details, issue)
 
     boilerplate_text = f"""
         Repository: {repo_name}
@@ -176,7 +183,6 @@ def generate_prompt(
         Body: {details['body']}
         {last_comment_str}
         """
-
 
     if agent_name == "file_assistant":
         return f"""Please analyze this GitHub issue and suggest files that need to be modified to address the issue.
