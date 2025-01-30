@@ -84,95 +84,8 @@ def has_user_feedback(issue: Issue) -> bool:
     return latest_bot_idx >= 0 and latest_bot_idx < len(comments) - 1
 
 ############################################################
-# Generate responses 
+# Response patterns 
 ############################################################
-
-def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
-    """
-    Generate a command for a bot to make edits based on issue discussion
-
-    Args:
-        issue: The GitHub issue to respond to
-        repo_name: Full name of repository (owner/repo)
-
-    Returns:
-        Tuple of (response text, conversation history)
-    """
-    # Get path to repository and issue details
-    repo_path = bot_tools.get_local_repo_path(repo_name)
-    details = get_issue_details(issue)
-
-    generate_edit_command_assistant = create_agent(
-        "generate_edit_command_assistant", llm_config) 
-    generate_edit_command_prompt = generate_prompt(
-            "generate_edit_command_assistant", repo_name, repo_path, details, issue)
-
-    chat_results = user.initiate_chats(
-        [
-            {
-                "recipient": generate_edit_command_assistant,
-                "message": generate_edit_command_prompt,
-                "max_turns": 10,
-                "summary_method": "reflection_with_llm",
-            },
-        ]
-    )
-
-    response = chat_results[0].chat_history[-1]['content']
-    all_content = [response]
-    return response, all_content
-
-def check_triggers(issue: Issue) -> str: 
-    """
-    Check if the issue contains any triggers for generating a response
-
-    Args:
-        issue: The GitHub issue to check
-
-    Returns:
-        The trigger phrase found in the issue
-    """
-    if has_user_feedback(issue):
-        return "feedback"
-    elif has_generate_edit_command_trigger(issue):
-        return "generate_edit_command"
-    else:
-        return "new_response"
-
-def generate_response(
-        issue: Issue, 
-        repo_name: str,
-        trigger: str
-        ) -> Tuple[str, list]: 
-    """
-    Generate a response for a GitHub issue using autogen agents
-
-    Args:
-        issue: The GitHub issue to respond to
-        repo_name: Full name of repository (owner/repo)
-        trigger: The trigger phrase for generating the response
-
-    Returns:
-        Tuple of (response text, conversation history)
-    """
-    if trigger == "feedback":
-        print('===============================')
-        print('Generating feedback response')
-        print('===============================')
-        return generate_feedback_response(
-            repo_name, 
-            issue,
-            )
-    else:
-        print('===============================')
-        print('Generating new response')
-        print('===============================')
-        return generate_new_response(
-            repo_name,
-            issue,
-            )
-
-
 def generate_feedback_response(
         repo_name: str,
         repo_path: str,
@@ -195,6 +108,9 @@ def generate_feedback_response(
     Returns:
         Tuple of (updated response text, full conversation history)
     """
+    print('===============================')
+    print('Generating feedback response')
+    print('===============================')
     prompt_kwargs = {
             "repo_name": repo_name,
             "repo_path": repo_path,
@@ -241,6 +157,9 @@ def generate_new_response(
     Returns:
         Tuple of (response text, conversation history)
     """
+    print('===============================')
+    print('Generating new response')
+    print('===============================')
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
@@ -261,8 +180,6 @@ def generate_new_response(
             }
     file_prompt = generate_prompt("file_assistant", **prompt_kwargs)
     edit_prompt = generate_prompt("edit_assistant", **prompt_kwargs)
-    # edit_command_prompt = agents.get_generate_edit_command_prompt(
-    #     repo_name, repo_path, details, issue)
 
     chat_results = user.initiate_chats(
         [
@@ -295,13 +212,6 @@ def generate_new_response(
         raise ValueError(
             "Got no results to summarize, likely an error in agent responses")
 
-    # Summarize results
-    # llm_config = {
-    #     "model": "gpt-4o",
-    #     "api_key": os.getenv('OPENAI_API_KEY'),
-    #     "temperature": 0
-    # }
-    # summary_agent = create_summary_agent(llm_config)
     summary_prompt = generate_prompt(
             "summary_agent", 
             **prompt_kwargs,
@@ -324,57 +234,77 @@ def generate_new_response(
 
     return response, all_content
 
+def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
+    """
+    Generate a command for a bot to make edits based on issue discussion
 
-# def generate_issue_response(
-#         issue: Issue,
-#         repo_name: str,
-# ) -> Tuple[str, list]:
-#     """
-#     Generate an appropriate response for a GitHub issue using autogen agents
-#
-#     Args:
-#         issue: The GitHub issue to respond to
-#         repo_name: Full name of repository (owner/repo)
-#
-#     Returns:
-#         Tuple of (response text, conversation history)
-#     """
-#     # Handle feedback case
-#     if has_user_feedback(issue):
-#         # Get the latest bot response
-#         comments = get_issue_comments(issue)
-#         latest_bot_response = None
-#         for comment in reversed(comments):
-#             if "generated by blech_bot" in comment.body:
-#                 latest_bot_response = comment.body
-#                 break
-#
-#         if not latest_bot_response:
-#             raise ValueError("No bot response found")
-#
-#         # Get latest feedback text
-#         feedback_text = None
-#         for comment in reversed(comments):
-#             if "generated by blech_bot" not in comment.body:
-#                 feedback_text = comment.body
-#                 break
-#
-#         if not feedback_text:
-#             raise ValueError("No feedback comment found")
-#
-#         print('===============================')
-#         print('Generating feedback response')
-#         print('===============================')
-#         return generate_feedback_response(
-#             repo_name, bot_tools.get_local_repo_path(repo_name),
-#             create_agents()[0], feedback_assistant, latest_bot_response, feedback_text)
-#
-#     # Generate new response
-#     print('===============================')
-#     print('Generating new response')
-#     print('===============================')
-#     return generate_new_response(issue, repo_name)
+    Args:
+        issue: The GitHub issue to respond to
+        repo_name: Full name of repository (owner/repo)
 
+    Returns:
+        Tuple of (response text, conversation history)
+    """
+    # Get path to repository and issue details
+    repo_path = bot_tools.get_local_repo_path(repo_name)
+    details = get_issue_details(issue)
+
+    generate_edit_command_assistant = create_agent(
+        "generate_edit_command_assistant", llm_config) 
+    generate_edit_command_prompt = generate_prompt(
+            "generate_edit_command_assistant", repo_name, repo_path, details, issue)
+
+    chat_results = user.initiate_chats(
+        [
+            {
+                "recipient": generate_edit_command_assistant,
+                "message": generate_edit_command_prompt,
+                "max_turns": 10,
+                "summary_method": "reflection_with_llm",
+            },
+        ]
+    )
+
+    response = chat_results[0].chat_history[-1]['content']
+    all_content = [response]
+    return response, all_content
+
+############################################################
+# Processing logic 
+############################################################
+
+def check_triggers(issue: Issue) -> str: 
+    """
+    Check if the issue contains any triggers for generating a response
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        The trigger phrase found in the issue
+    """
+    if has_user_feedback(issue):
+        return "feedback"
+    elif has_generate_edit_command_trigger(issue):
+        return "generate_edit_command"
+    else:
+        return "new_response"
+
+def response_selector(trigger: str) -> function: 
+    """
+    Generate a response for a GitHub issue using autogen agents
+
+    Args:
+        trigger: The trigger phrase for generating the response
+
+    Returns:
+    """
+    if trigger == "feedback":
+        return generate_feedback_response
+    elif trigger == "generate_edit_command":
+        return generate_edit_command_response
+    else:
+        return generate_new_response
 
 def process_issue(
     issue: Issue,
@@ -400,14 +330,10 @@ def process_issue(
             if has_bot_response(issue) and not has_user_feedback(issue):
                 return False, "Issue already has a bot response without feedback from user"
 
-        # Check for generate_edit_command trigger
-        if has_generate_edit_command_trigger(issue):
-            response, all_content = generate_edit_command_response(issue, repo_name)
-            write_issue_response(issue, response)
-            return True, None
-
         # Generate and post response
-        response, all_content = generate_issue_response(issue, repo_name)
+        trigger = check_triggers(issue)
+        response_func = response_selector(trigger)
+        response, all_content = response_func(issue, repo_name)
         write_issue_response(issue, response)
         return True, None
 
