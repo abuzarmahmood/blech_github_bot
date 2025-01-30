@@ -240,7 +240,8 @@ def generate_issue_response(
             "api_key": os.getenv('OPENAI_API_KEY'),
             "temperature": random.uniform(0, 0.05),
         }
-        generate_edit_command_assistant = agents.create_generate_edit_command_agent(llm_config)
+        generate_edit_command_assistant = agents.create_generate_edit_command_agent(
+            llm_config)
         print('===============================')
         print('Generating feedback response')
         print('===============================')
