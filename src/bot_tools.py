@@ -8,6 +8,14 @@ import sys
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
 
+# Keep everything but tool calls
+
+
+def is_tool_related(
+        x: dict,) -> bool:
+    if 'tool_calls' in x.keys() or x['role'] == 'tool':
+        return True
+
 
 def get_local_repo_path(repo_name: str) -> str:
     """
