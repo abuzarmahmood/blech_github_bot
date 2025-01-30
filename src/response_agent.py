@@ -2,6 +2,7 @@
 Agent for generating responses to GitHub issues using pyautogen
 """
 from pprint import pprint
+from collections.abc import Callable
 import random
 import traceback
 import json
@@ -25,17 +26,29 @@ import agents
 from agents import (
     create_user_agent,
     create_agent,
-    gemerate_prompt,
     generate_prompt,
 )
 import triggers
 
+from dotenv import load_dotenv
+load_dotenv()
+
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OpenAI API key not found in environment variables")
+
+llm_config = {
+    "model": "gpt-4o",
+    "api_key": api_key,
+    "temperature": random.uniform(0, 0.05),
+}
 ############################################################
 # Response patterns
 ############################################################
 
 
 def generate_feedback_response(
+        issue: Issue,
         repo_name: str,
         max_turns: int = 10,
 ) -> Tuple[str, list]:
@@ -52,6 +65,7 @@ def generate_feedback_response(
     print('Generating feedback response')
     print('===============================')
     repo_path = bot_tools.get_local_repo_path(repo_name)
+    details = get_issue_details(issue)
 
     prompt_kwargs = {
         "repo_name": repo_name,
@@ -96,8 +110,8 @@ def generate_feedback_response(
 
 
 def generate_new_response(
-        repo_name: str,
         issue: Issue,
+        repo_name: str,
 ) -> Tuple[str, list]:
     """
     Generate a fresh response for a GitHub issue using autogen agents
@@ -183,7 +197,10 @@ def generate_new_response(
     return response, all_content
 
 
-def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, list]:
+def generate_edit_command_response(
+        issue: Issue,
+        repo_name: str
+) -> Tuple[str, list]:
     """
     Generate a command for a bot to make edits based on issue discussion
 
@@ -202,6 +219,7 @@ def generate_edit_command_response(issue: Issue, repo_name: str) -> Tuple[str, l
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
 
+    user = create_user_agent()
     generate_edit_command_assistant = create_agent(
         "generate_edit_command_assistant", llm_config)
     generate_edit_command_prompt = generate_prompt(
@@ -237,15 +255,15 @@ def check_triggers(issue: Issue) -> str:
     Returns:
         The trigger phrase found in the issue
     """
-    if triggers.has_user_feedback(issue):
-        return "feedback"
-    elif triggers.has_generate_edit_command_trigger(issue):
+    if triggers.has_generate_edit_command_trigger(issue):
         return "generate_edit_command"
+    elif triggers.has_user_feedback(issue):
+        return "feedback"
     else:
         return "new_response"
 
 
-def response_selector(trigger: str) -> function:
+def response_selector(trigger: str) -> Callable:
     """
     Generate a response for a GitHub issue using autogen agents
 
@@ -283,7 +301,7 @@ def process_issue(
                 issue) or "[ blech_bot ]" in issue.title.lower()
             if not has_bot_mention:
                 return False, "Issue does not have blech_bot tag or mention in title"
-            if has_bot_response(issue) and not triggers.has_user_feedback(issue):
+            if triggers.has_bot_response(issue) and not triggers.has_user_feedback(issue):
                 return False, "Issue already has a bot response without feedback from user"
 
         # Generate and post response

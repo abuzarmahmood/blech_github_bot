@@ -2,6 +2,8 @@
 Functions to check specific conditions
 """
 from github import Issue
+from git_utils import get_issue_comments
+
 
 def has_blech_bot_tag(issue: Issue) -> bool:
     """
@@ -28,6 +30,7 @@ def has_generate_edit_command_trigger(issue: Issue) -> bool:
     """
     comments = get_issue_comments(issue)
     return any("[ generate_edit_command ]" in comment.body for comment in comments)
+
 
 def has_bot_response(issue: Issue) -> bool:
     """
