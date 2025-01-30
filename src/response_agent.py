@@ -29,6 +29,7 @@ from agents import (
     create_feedback_agent
 )
 
+
 def has_generate_edit_command_trigger(issue: Issue) -> bool:
     """
     Check if the issue comments contain the trigger for generate_edit_command
@@ -41,6 +42,7 @@ def has_generate_edit_command_trigger(issue: Issue) -> bool:
     """
     comments = get_issue_comments(issue)
     return any("[ generate_edit_command ]" in comment.body for comment in comments)
+
 
 def has_bot_response(issue: Issue) -> bool:
     """
@@ -282,7 +284,8 @@ def process_issue(
 
         # Check for generate_edit_command trigger
         if has_generate_edit_command_trigger(issue):
-            response, all_content = generate_edit_command_response(issue, repo_name)
+            response, all_content = generate_edit_command_response(
+                issue, repo_name)
             write_issue_response(issue, response)
             return True, None
 
