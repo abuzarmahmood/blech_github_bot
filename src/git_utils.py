@@ -175,29 +175,29 @@ def get_development_branch(issue: Issue, repo_path: str) -> str:
         )
     elif len(related_branches) == 1:
         return related_branches[0][0]
+    else:
+        try:
+            # Change to repo directory
+            original_dir = os.getcwd()
+            os.chdir(repo_path)
+            
+            # Create branch from issue
+            subprocess.run(['gh', 'issue', 'develop', str(issue.number)], 
+                          check=True,
+                          capture_output=True)
 
-    try:
-        # Change to repo directory
-        original_dir = os.getcwd()
-        os.chdir(repo_path)
-        
-        # Create branch from issue
-        subprocess.run(['gh', 'issue', 'develop', '-c', str(issue.number)], 
-                      check=True,
-                      capture_output=True)
+            
+            related_branch = get_issue_related_branches(repo_path, issue.number)
+            
+            # Return to original directory
+            os.chdir(original_dir)
 
-        
-        related_branch = get_issue_related_branches(repo_path, issue.number)
-        
-        # Return to original directory
-        os.chdir(original_dir)
-
-        return related_branch[0][0] 
-        
-    except FileNotFoundError:
-        raise ValueError("GitHub CLI (gh) not found. Please install it first.")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to create development branch: {e.stderr}")
+            return related_branch[0][0] 
+            
+        except FileNotFoundError:
+            raise ValueError("GitHub CLI (gh) not found. Please install it first.")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to create development branch: {e.stderr}")
 
 def create_pull_request(repo_path: str) -> str:
     """
