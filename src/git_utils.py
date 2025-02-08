@@ -3,6 +3,7 @@ Utility functions for interacting with GitHub API
 """
 from typing import List, Dict, Optional
 import os
+import subprocess
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
@@ -140,6 +141,49 @@ def update_repository(repo_path: str) -> None:
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
     origin.pull()
+
+
+def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
+    """
+    Creates a pull request from an issue using GitHub CLI
+    
+    Args:
+        issue: The GitHub issue to create a PR from
+        repo_path: Path to local git repository
+    
+    Returns:
+        URL of the created pull request
+    
+    Raises:
+        subprocess.CalledProcessError: If gh commands fail
+        ValueError: If gh CLI is not installed
+    """
+    try:
+        # Change to repo directory
+        original_dir = os.getcwd()
+        os.chdir(repo_path)
+        
+        # Create branch from issue
+        subprocess.run(['gh', 'issue', 'develop', '-c', str(issue.number)], 
+                      check=True,
+                      capture_output=True)
+        
+        # Create pull request
+        result = subprocess.run(['gh', 'pr', 'create', '--fill'],
+                              check=True,
+                              capture_output=True,
+                              text=True)
+        
+        # Return to original directory
+        os.chdir(original_dir)
+        
+        # Return the PR URL from the output
+        return result.stdout.strip()
+        
+    except FileNotFoundError:
+        raise ValueError("GitHub CLI (gh) not found. Please install it first.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to create pull request: {e.stderr}")
 
 
 if __name__ == '__main__':
