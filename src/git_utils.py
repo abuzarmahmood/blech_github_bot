@@ -157,7 +157,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
         issue: The GitHub issue to create branch for
         repo_path: Path to local git repository
         create: If True, create branch if it doesn't exist
-    
+
     Returns:
         Name of the branch
 
@@ -200,9 +200,11 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
             raise ValueError(
                 "GitHub CLI (gh) not found. Please install it first.")
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Failed to create development branch: {e.stderr}")
+            raise RuntimeError(
+                f"Failed to create development branch: {e.stderr}")
     else:
         return None
+
 
 def create_pull_request(repo_path: str) -> str:
     """
@@ -259,23 +261,23 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
 def has_linked_pr(issue: Issue) -> bool:
     """
     Check if an issue has a linked pull request
-    
+
     Args:
         issue: The GitHub issue to check
-    
+
     Returns:
         True if the issue has a linked PR, False otherwise
     """
     # Get timeline events to check for PR links
     timeline = list(issue.get_timeline())
-    
+
     # Check if any timeline event is a cross-reference to a PR
     for event in timeline:
         if event.event == "cross-referenced":
             # Check if the reference is to a PR
             if event.source and event.source.type == "PullRequest":
                 return True
-    
+
     return False
 
 
