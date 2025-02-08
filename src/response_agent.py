@@ -329,6 +329,44 @@ def process_issue(
         return False, f"Error processing issue: {traceback.format_exc()}"
 
 
+def run_aider(message: str, repo_path: str) -> str:
+    """
+    Run aider with a given message string
+    
+    Args:
+        message: The message/instruction to send to aider
+        repo_path: Path to the repository to run aider in
+    
+    Returns:
+        Output from aider command
+        
+    Raises:
+        subprocess.CalledProcessError: If aider command fails
+        FileNotFoundError: If aider is not installed
+    """
+    try:
+        # Change to repo directory
+        original_dir = os.getcwd()
+        os.chdir(repo_path)
+        
+        # Run aider with the message
+        result = subprocess.run(
+            ['aider', '--message', message],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        
+        # Return to original directory
+        os.chdir(original_dir)
+        
+        return result.stdout
+        
+    except FileNotFoundError:
+        raise ValueError("Aider not found. Please install it first with 'pip install aider-chat'")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to run aider: {e.stderr}")
+
 def process_repository(
     repo_name: str,
 ) -> None:
