@@ -82,3 +82,18 @@ def has_develop_issue_trigger(issue: Issue) -> bool:
     if not comments:
         return False
     return "[ develop_issue ]" in comments[-1].body
+
+def has_pull_request_trigger(issue: Issue) -> bool:
+    """
+    Check if the latest comment contains the pull_request trigger
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the latest comment contains "[ pull_request ]"
+    """
+    comments = get_issue_comments(issue)
+    if not comments:
+        return False
+    return "Created pull request" in comments[-1].body

@@ -307,7 +307,10 @@ def process_issue(
         if triggers.has_develop_issue_trigger(issue):
             repo_path = bot_tools.get_local_repo_path(repo_name)
             pr_url = create_pull_request_from_issue(issue, repo_path)
-            write_issue_response(issue, f"Created pull request: {pr_url}")
+            write_issue_response(
+                    issue, 
+                    f"Created pull request: {pr_url}" + '\nContinue discussion there.'
+                    )
             return True, None
 
         # Generate and post response
