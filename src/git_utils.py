@@ -185,22 +185,14 @@ def get_development_branch(issue: Issue, repo_path: str) -> str:
         subprocess.run(['gh', 'issue', 'develop', '-c', str(issue.number)], 
                       check=True,
                       capture_output=True)
+
         
-        # Get the created branch name
-        result = subprocess.run(['gh', 'issue', 'view', str(issue.number), '--json', 'developmentBranches'],
-                              check=True,
-                              capture_output=True,
-                              text=True)
+        related_branch = get_issue_related_branches(repo_path, issue.number)
         
         # Return to original directory
         os.chdir(original_dir)
-        
-        # Extract branch name from JSON output
-        import json
-        branches = json.loads(result.stdout)['developmentBranches']
-        if branches:
-            return branches[0]['name']
-        raise RuntimeError("Failed to get development branch name")
+
+        return related_branch[0][0] 
         
     except FileNotFoundError:
         raise ValueError("GitHub CLI (gh) not found. Please install it first.")

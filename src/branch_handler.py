@@ -6,37 +6,61 @@ import git
 from github.Issue import Issue
 from typing import List, Optional, Tuple
 
+
 def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[str, bool]]:
     """
-    Find all branches (local and remote) related to an issue number
-    
+    Uses `gh issue develop -l <issue_number>` to get all branches related to an issue number
+
     Args:
         repo_path: Path to local git repository
         issue_number: GitHub issue number to search for
-    
+
     Returns:
-        List of tuples containing (branch_name, is_remote)
+        List of tuples containing (branch_name, url)
     """
-    repo = git.Repo(repo_path)
     related_branches = []
-    
-    # Check local branches
-    for branch in repo.heads:
-        if str(issue_number) in branch.name:
-            related_branches.append((branch.name, False))
-    
-    # Check remote branches
-    for remote in repo.remotes:
-        for ref in remote.refs:
-            # Skip HEAD ref
-            if ref.name.endswith('/HEAD'):
-                continue
-            # Remove remote name prefix for comparison
-            branch_name = ref.name.split('/', 1)[1]
-            if str(issue_number) in branch_name:
-                related_branches.append((branch_name, True))
-    
+    try:
+        branches = os.popen(f"gh issue develop -l {issue_number}").read().splitlines()
+        for branch in branches:
+            # Each line is in the format "branch_name url"
+            branch = branch.split()[0]
+            url = branch.split()[1]
+            related_branches.append((branch, url))
+    except Exception as e:
+        print(f"Error getting related branches: {str(e)}")
     return related_branches
+
+# def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[str, bool]]:
+#     """
+#     Find all branches (local and remote) related to an issue number
+#     
+#     Args:
+#         repo_path: Path to local git repository
+#         issue_number: GitHub issue number to search for
+#     
+#     Returns:
+#         List of tuples containing (branch_name, is_remote)
+#     """
+#     repo = git.Repo(repo_path)
+#     related_branches = []
+#     
+#     # Check local branches
+#     for branch in repo.heads:
+#         if str(issue_number) in branch.name:
+#             related_branches.append((branch.name, False))
+#     
+#     # Check remote branches
+#     for remote in repo.remotes:
+#         for ref in remote.refs:
+#             # Skip HEAD ref
+#             if ref.name.endswith('/HEAD'):
+#                 continue
+#             # Remove remote name prefix for comparison
+#             branch_name = ref.name.split('/', 1)[1]
+#             if str(issue_number) in branch_name:
+#                 related_branches.append((branch_name, True))
+#     
+#     return related_branches
 
 def get_current_branch(repo_path: str) -> str:
     """
