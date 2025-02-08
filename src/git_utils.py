@@ -253,6 +253,29 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     return create_pull_request(repo_path)
 
 
+def has_linked_pr(issue: Issue) -> bool:
+    """
+    Check if an issue has a linked pull request
+    
+    Args:
+        issue: The GitHub issue to check
+    
+    Returns:
+        True if the issue has a linked PR, False otherwise
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+    
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                return True
+    
+    return False
+
+
 if __name__ == '__main__':
     client = get_github_client()
     repo = get_repository(client, 'katzlabbrandeis/blech_clust')
