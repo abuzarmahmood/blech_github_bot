@@ -77,3 +77,23 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
     repo = git.Repo(repo_path)
     if branch_name in repo.heads:
         repo.delete_head(branch_name, force=force)
+
+def back_to_master_branch(repo_path: str) -> None:
+    """
+    Switch back to master/main branch, detecting which one exists
+    
+    Args:
+        repo_path: Path to local git repository
+    """
+    repo = git.Repo(repo_path)
+    
+    # Check if master or main branch exists
+    if 'master' in repo.heads:
+        main_branch = 'master'
+    elif 'main' in repo.heads:
+        main_branch = 'main'
+    else:
+        raise ValueError("Neither 'master' nor 'main' branch found")
+    
+    # Switch to the main branch
+    repo.git.checkout(main_branch)
