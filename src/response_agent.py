@@ -28,6 +28,7 @@ from git_utils import (
     get_issue_comments,
     create_pull_request_from_issue,
     get_development_branch,
+    has_linked_pr,
 )
 import bot_tools
 from autogen import AssistantAgent
@@ -345,7 +346,9 @@ def process_issue(
                     f"Created pull request: {pr_url}\nContinue discussion there."
                 )
 
-                # Write aider instructions and output to pull request rather than issue
+                # Get repo object and pull request
+                client = get_github_client()
+                repo = get_repository(client, repo_name)
                 pull = repo.get_pull(int(pr_number))
 
                 # write_issue_response(issue, "Generated edit command:\n" + response)
