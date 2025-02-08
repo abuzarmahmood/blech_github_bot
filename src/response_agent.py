@@ -10,6 +10,12 @@ from typing import Optional, Tuple
 import os
 import subprocess
 import autogen
+from branch_handler import (
+    checkout_branch,
+    push_changes,
+    back_to_master_branch,
+    delete_branch
+)
 from github.Issue import Issue
 from github.Repository import Repository
 from git_utils import (
