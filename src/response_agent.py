@@ -8,6 +8,7 @@ import traceback
 import json
 from typing import Optional, Tuple
 import os
+import subprocess
 import autogen
 from github.Issue import Issue
 from github.Repository import Repository
