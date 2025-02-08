@@ -18,7 +18,8 @@ from git_utils import (
     get_issue_details,
     clone_repository,
     update_repository,
-    get_issue_comments
+    get_issue_comments,
+    create_pull_request_from_issue
 )
 import bot_tools
 from autogen import AssistantAgent
