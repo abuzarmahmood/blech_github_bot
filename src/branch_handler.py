@@ -23,7 +23,8 @@ def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[
 
     related_branches = []
     try:
-        branches = os.popen(f"gh issue develop -l {issue_number}").read().splitlines()
+        branches = os.popen(
+            f"gh issue develop -l {issue_number}").read().splitlines()
         for branch in branches:
             # Each line is in the format "branch_name url"
             branch_name = branch.split('\t')[0]
@@ -38,22 +39,22 @@ def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[
 # def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[str, bool]]:
 #     """
 #     Find all branches (local and remote) related to an issue number
-#     
+#
 #     Args:
 #         repo_path: Path to local git repository
 #         issue_number: GitHub issue number to search for
-#     
+#
 #     Returns:
 #         List of tuples containing (branch_name, is_remote)
 #     """
 #     repo = git.Repo(repo_path)
 #     related_branches = []
-#     
+#
 #     # Check local branches
 #     for branch in repo.heads:
 #         if str(issue_number) in branch.name:
 #             related_branches.append((branch.name, False))
-#     
+#
 #     # Check remote branches
 #     for remote in repo.remotes:
 #         for ref in remote.refs:
@@ -64,26 +65,28 @@ def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[
 #             branch_name = ref.name.split('/', 1)[1]
 #             if str(issue_number) in branch_name:
 #                 related_branches.append((branch_name, True))
-#     
+#
 #     return related_branches
+
 
 def get_current_branch(repo_path: str) -> str:
     """
     Get the name of the current git branch
-    
+
     Args:
         repo_path: Path to local git repository
-    
+
     Returns:
         Name of current branch
     """
     repo = git.Repo(repo_path)
     return repo.active_branch.name
 
+
 def checkout_branch(repo_path: str, branch_name: str, create: bool = False) -> None:
     """
     Checkout a git branch, optionally creating it
-    
+
     Args:
         repo_path: Path to local git repository
         branch_name: Name of branch to checkout
@@ -96,10 +99,11 @@ def checkout_branch(repo_path: str, branch_name: str, create: bool = False) -> N
     repo.git.checkout(branch_name)
     print(f"Checked out branch {branch_name}")
 
+
 def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None:
     """
     Delete a git branch
-    
+
     Args:
         repo_path: Path to local git repository
         branch_name: Name of branch to delete
@@ -109,15 +113,16 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
     if branch_name in repo.heads:
         repo.delete_head(branch_name, force=force)
 
+
 def back_to_master_branch(repo_path: str) -> None:
     """
     Switch back to master/main branch, detecting which one exists
-    
+
     Args:
         repo_path: Path to local git repository
     """
     repo = git.Repo(repo_path)
-    
+
     # Check if master or main branch exists
     if 'master' in repo.heads:
         main_branch = 'master'
@@ -125,26 +130,27 @@ def back_to_master_branch(repo_path: str) -> None:
         main_branch = 'main'
     else:
         raise ValueError("Neither 'master' nor 'main' branch found")
-    
+
     # Switch to the main branch
     repo.git.checkout(main_branch)
     print(f"Checked out {main_branch} branch")
 
+
 def push_changes(repo_path: str, branch_name: Optional[str] = None, force: bool = False) -> None:
     """
     Push local changes to remote repository
-    
+
     Args:
         repo_path: Path to local git repository
         branch_name: Name of branch to push (defaults to current branch)
         force: If True, force push changes
     """
     repo = git.Repo(repo_path)
-    
+
     # Get current branch if none specified
     if branch_name is None:
         branch_name = repo.active_branch.name
-    
+
     # Push changes
     if force:
         repo.git.push('origin', branch_name, '--force')

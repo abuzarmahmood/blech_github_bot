@@ -83,6 +83,7 @@ def has_develop_issue_trigger(issue: Issue) -> bool:
         return False
     return "[ develop_issue ]" in comments[-1].body
 
+
 def has_pull_request_trigger(issue: Issue) -> bool:
     """
     Check if the latest comment contains the pull_request trigger
