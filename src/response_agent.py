@@ -455,18 +455,3 @@ if __name__ == '__main__':
 
     print('\nCompleted processing all repositories')
 
-
-##############################
-
-tracked_repos = bot_tools.get_tracked_repos()
-repo_name = tracked_repos[0]
-client = get_github_client()
-repo = get_repository(client, repo_name)
-
-# Ensure repository is cloned and up to date
-repo_dir = clone_repository(repo)
-update_repository(repo_dir)
-
-# Get open issues
-open_issues = repo.get_issues(state='open')
-issue = [x for x in open_issues if x.number == 331][0]
