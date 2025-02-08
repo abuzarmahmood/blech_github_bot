@@ -66,3 +66,35 @@ def has_user_feedback(issue: Issue) -> bool:
 
     # Check if there are any comments after the latest bot comment
     return latest_bot_idx >= 0 and latest_bot_idx < len(comments) - 1
+
+
+def has_develop_issue_trigger(issue: Issue) -> bool:
+    """
+    Check if the latest comment contains the develop_issue trigger
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the latest comment contains "[ develop_issue ]"
+    """
+    comments = get_issue_comments(issue)
+    if not comments:
+        return False
+    return "[ develop_issue ]" in comments[-1].body
+
+
+def has_pull_request_trigger(issue: Issue) -> bool:
+    """
+    Check if the latest comment contains the pull_request trigger
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the latest comment contains "[ pull_request ]"
+    """
+    comments = get_issue_comments(issue)
+    if not comments:
+        return False
+    return "Created pull request" in comments[-1].body

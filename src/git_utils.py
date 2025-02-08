@@ -1,8 +1,15 @@
 """
 Utility functions for interacting with GitHub API
 """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import os
+import subprocess
+from branch_handler import (
+    get_issue_related_branches,
+    get_current_branch,
+    checkout_branch,
+    delete_branch
+)
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
@@ -140,6 +147,138 @@ def update_repository(repo_path: str) -> None:
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
     origin.pull()
+
+
+def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
+    """
+    Gets or creates a development branch for an issue
+
+    Args:
+        issue: The GitHub issue to create branch for
+        repo_path: Path to local git repository
+        create: If True, create branch if it doesn't exist
+
+    Returns:
+        Name of the branch
+
+    Raises:
+        subprocess.CalledProcessError: If gh commands fail
+        ValueError: If gh CLI is not installed
+        RuntimeError: If multiple branches exist for the issue
+    """
+    # Check for existing branches related to this issue
+    related_branches = get_issue_related_branches(repo_path, issue.number)
+    if len(related_branches) > 1:
+        branch_list = "\n".join(
+            [f"- {b[0]} ({'remote' if b[1] else 'local'})" for b in related_branches])
+        raise RuntimeError(
+            f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n"
+            "Please delete or use existing branches before creating a new one."
+        )
+    elif len(related_branches) == 1:
+        return related_branches[0][0]
+    elif create:
+        try:
+            # Change to repo directory
+            original_dir = os.getcwd()
+            os.chdir(repo_path)
+
+            # Create branch from issue
+            subprocess.run(['gh', 'issue', 'develop', str(issue.number)],
+                           check=True,
+                           capture_output=True)
+
+            related_branch = get_issue_related_branches(
+                repo_path, issue.number)
+
+            # Return to original directory
+            os.chdir(original_dir)
+
+            return related_branch[0][0]
+
+        except FileNotFoundError:
+            raise ValueError(
+                "GitHub CLI (gh) not found. Please install it first.")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(
+                f"Failed to create development branch: {e.stderr}")
+    else:
+        return None
+
+
+def create_pull_request(repo_path: str) -> str:
+    """
+    Creates a pull request from the current branch
+
+    Args:
+        repo_path: Path to local git repository
+
+    Returns:
+        URL of the created pull request
+
+    Raises:
+        subprocess.CalledProcessError: If gh commands fail
+        ValueError: If gh CLI is not installed
+    """
+    try:
+        # Change to repo directory
+        original_dir = os.getcwd()
+        os.chdir(repo_path)
+
+        # Create pull request
+        result = subprocess.run(['gh', 'pr', 'create', '--fill'],
+                                check=True,
+                                capture_output=True,
+                                text=True)
+
+        # Return to original directory
+        os.chdir(original_dir)
+
+        # Return the PR URL from the output
+        return result.stdout.strip()
+
+    except FileNotFoundError:
+        raise ValueError("GitHub CLI (gh) not found. Please install it first.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to create pull request: {e.stderr}")
+
+
+def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
+    """
+    Creates a pull request from an issue using GitHub CLI
+
+    Args:
+        issue: The GitHub issue to create a PR from
+        repo_path: Path to local git repository
+
+    Returns:
+        URL of the created pull request
+    """
+    branch = get_development_branch(issue, repo_path)
+    return create_pull_request(repo_path)
+
+
+def has_linked_pr(issue: Issue) -> bool:
+    """
+    Check if an issue has a linked pull request
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the issue has a linked PR, False otherwise
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                return True
+
+    return False
 
 
 if __name__ == '__main__':

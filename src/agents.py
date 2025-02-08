@@ -3,6 +3,7 @@ Agent creation and configuration for the GitHub bot
 """
 import os
 import autogen
+import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
 import bot_tools
 from git_utils import get_issue_comments
@@ -233,6 +234,11 @@ def generate_prompt(
     Include file paths, line numbers, and exact code changes where possible.
     Format the command in a way that can be parsed by automated tools.
     First try searching for files to get paths.
+
+    Format your output with the following structure:
+    - Summary of user's issues and requests
+    - Overview of plan to address the issues
+    - Specific details of changes to be made
 
     {comments_str}
 
