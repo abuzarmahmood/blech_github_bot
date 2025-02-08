@@ -149,16 +149,16 @@ def update_repository(repo_path: str) -> None:
     origin.pull()
 
 
-def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
+def get_development_branch(issue: Issue, repo_path: str) -> str:
     """
-    Creates a pull request from an issue using GitHub CLI
+    Gets or creates a development branch for an issue
     
     Args:
-        issue: The GitHub issue to create a PR from
+        issue: The GitHub issue to create branch for
         repo_path: Path to local git repository
     
     Returns:
-        URL of the created pull request
+        Name of the branch
     
     Raises:
         subprocess.CalledProcessError: If gh commands fail
@@ -167,12 +167,15 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     """
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue.number)
-    if len(related_branches) > 0:
+    if len(related_branches) > 1:
         branch_list = "\n".join([f"- {b[0]} ({'remote' if b[1] else 'local'})" for b in related_branches])
         raise RuntimeError(
-            f"Found existing branches for issue #{issue.number}:\n{branch_list}\n"
+            f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n"
             "Please delete or use existing branches before creating a new one."
         )
+    elif len(related_branches) == 1:
+        return related_branches[0][0]
+
     try:
         # Change to repo directory
         original_dir = os.getcwd()
@@ -182,6 +185,46 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
         subprocess.run(['gh', 'issue', 'develop', '-c', str(issue.number)], 
                       check=True,
                       capture_output=True)
+        
+        # Get the created branch name
+        result = subprocess.run(['gh', 'issue', 'view', str(issue.number), '--json', 'developmentBranches'],
+                              check=True,
+                              capture_output=True,
+                              text=True)
+        
+        # Return to original directory
+        os.chdir(original_dir)
+        
+        # Extract branch name from JSON output
+        import json
+        branches = json.loads(result.stdout)['developmentBranches']
+        if branches:
+            return branches[0]['name']
+        raise RuntimeError("Failed to get development branch name")
+        
+    except FileNotFoundError:
+        raise ValueError("GitHub CLI (gh) not found. Please install it first.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to create development branch: {e.stderr}")
+
+def create_pull_request(repo_path: str) -> str:
+    """
+    Creates a pull request from the current branch
+    
+    Args:
+        repo_path: Path to local git repository
+    
+    Returns:
+        URL of the created pull request
+    
+    Raises:
+        subprocess.CalledProcessError: If gh commands fail
+        ValueError: If gh CLI is not installed
+    """
+    try:
+        # Change to repo directory
+        original_dir = os.getcwd()
+        os.chdir(repo_path)
         
         # Create pull request
         result = subprocess.run(['gh', 'pr', 'create', '--fill'],
@@ -199,6 +242,20 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
         raise ValueError("GitHub CLI (gh) not found. Please install it first.")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to create pull request: {e.stderr}")
+
+def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
+    """
+    Creates a pull request from an issue using GitHub CLI
+    
+    Args:
+        issue: The GitHub issue to create a PR from
+        repo_path: Path to local git repository
+    
+    Returns:
+        URL of the created pull request
+    """
+    branch = get_development_branch(issue, repo_path)
+    return create_pull_request(repo_path)
 
 
 if __name__ == '__main__':
