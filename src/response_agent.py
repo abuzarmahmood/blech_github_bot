@@ -305,10 +305,15 @@ def process_issue(
 
         # Check for develop_issue trigger first
         if triggers.has_develop_issue_trigger(issue):
+            # First generate edit command from previous discussion
+            response, _ = generate_edit_command_response(issue, repo_name)
+            write_issue_response(issue, response)
+            
+            # Then create pull request
             repo_path = bot_tools.get_local_repo_path(repo_name)
             pr_url = create_pull_request_from_issue(issue, repo_path)
             write_issue_response(
-                    issue, 
+                    issue,
                     f"Created pull request: {pr_url}" + '\nContinue discussion there.'
                     )
             return True, None
