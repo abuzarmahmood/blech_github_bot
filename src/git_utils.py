@@ -1,9 +1,15 @@
 """
 Utility functions for interacting with GitHub API
 """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import os
 import subprocess
+from branch_handler import (
+    get_issue_related_branches,
+    get_current_branch,
+    checkout_branch,
+    delete_branch
+)
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
@@ -157,7 +163,16 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     Raises:
         subprocess.CalledProcessError: If gh commands fail
         ValueError: If gh CLI is not installed
+        RuntimeError: If multiple branches exist for the issue
     """
+    # Check for existing branches related to this issue
+    related_branches = get_issue_related_branches(repo_path, issue.number)
+    if len(related_branches) > 0:
+        branch_list = "\n".join([f"- {b[0]} ({'remote' if b[1] else 'local'})" for b in related_branches])
+        raise RuntimeError(
+            f"Found existing branches for issue #{issue.number}:\n{branch_list}\n"
+            "Please delete or use existing branches before creating a new one."
+        )
     try:
         # Change to repo directory
         original_dir = os.getcwd()
