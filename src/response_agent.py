@@ -315,15 +315,17 @@ def process_issue(
         if triggers.has_develop_issue_trigger(issue):
             repo_path = bot_tools.get_local_repo_path(repo_name)
             
+            # Check for existing branches
+            branch_name = get_development_branch(issue, repo_path, create=False)
+            if branch_name is not None:
+                return False, f"Branch {branch_name} already exists for issue #{issue.number}"
+                
+            # Check for linked PRs
+            if has_linked_pr(issue):
+                return False, f"Issue #{issue.number} already has a linked pull request"
+            
             # First generate edit command from previous discussion
             response, _ = generate_edit_command_response(issue, repo_name)
-            
-            # Create branch for issue
-            # branch_name = f"issue-{issue.number}"
-            branch_name = get_development_branch(issue, repo_path, create=False)
-            # If branch already exists, ignore
-            if branch_name is not None: 
-                return False, f"Branch {branch_name} already exists for issue #{issue.number}"
 
             branch_name = get_development_branch(issue, repo_path, create=True)
             checkout_branch(repo_path, branch_name, create=False)
