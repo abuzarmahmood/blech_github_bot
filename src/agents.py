@@ -234,6 +234,11 @@ def generate_prompt(
     Format the command in a way that can be parsed by automated tools.
     First try searching for files to get paths.
 
+    Format your output with the following structure:
+    - Summary of user's issues and requests
+    - Overview of plan to address the issues
+    - Specific details of changes to be made
+
     {comments_str}
 
     Reply "TERMINATE" in the end when everything is done.
