@@ -149,13 +149,14 @@ def update_repository(repo_path: str) -> None:
     origin.pull()
 
 
-def get_development_branch(issue: Issue, repo_path: str) -> str:
+def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
     """
     Gets or creates a development branch for an issue
     
     Args:
         issue: The GitHub issue to create branch for
         repo_path: Path to local git repository
+        create: If True, create branch if it doesn't exist
     
     Returns:
         Name of the branch
@@ -175,7 +176,7 @@ def get_development_branch(issue: Issue, repo_path: str) -> str:
         )
     elif len(related_branches) == 1:
         return related_branches[0][0]
-    else:
+    elif create:
         try:
             # Change to repo directory
             original_dir = os.getcwd()
@@ -198,6 +199,8 @@ def get_development_branch(issue: Issue, repo_path: str) -> str:
             raise ValueError("GitHub CLI (gh) not found. Please install it first.")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Failed to create development branch: {e.stderr}")
+    else:
+        return None
 
 def create_pull_request(repo_path: str) -> str:
     """

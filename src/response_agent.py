@@ -320,7 +320,12 @@ def process_issue(
             
             # Create branch for issue
             # branch_name = f"issue-{issue.number}"
-            branch_name = get_development_branch(issue, repo_path)
+            branch_name = get_development_branch(issue, repo_path, create=False)
+            # If branch already exists, ignore
+            if branch_name is not None: 
+                return False, f"Branch {branch_name} already exists for issue #{issue.number}"
+
+            branch_name = get_development_branch(issue, repo_path, create=True)
             checkout_branch(repo_path, branch_name, create=False)
             
             try:
