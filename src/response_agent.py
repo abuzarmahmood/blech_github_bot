@@ -324,6 +324,10 @@ def process_issue(
             # Check for linked PRs
             if has_linked_pr(issue):
                 return False, f"Issue #{issue.number} already has a linked pull request"
+
+            # Check if issue has label "under_development"
+            if "under_development" in [label.name for label in issue.labels]:
+                return False, f"Issue #{issue.number} is already under development"
             
             # First generate edit command from previous discussion
             response, _ = generate_edit_command_response(issue, repo_name)
@@ -345,6 +349,9 @@ def process_issue(
                     issue,
                     f"Created pull request: {pr_url}\nContinue discussion there."
                 )
+
+                # Mark issue with label "under_development"
+                issue.add_to_labels("under_development")
 
                 # Get repo object and pull request
                 client = get_github_client()
