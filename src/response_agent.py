@@ -302,6 +302,13 @@ def process_issue(
             if triggers.has_bot_response(issue) and not triggers.has_user_feedback(issue):
                 return False, "Issue already has a bot response without feedback from user"
 
+        # Check for develop_issue trigger first
+        if triggers.has_develop_issue_trigger(issue):
+            repo_path = bot_tools.get_local_repo_path(repo_name)
+            pr_url = create_pull_request_from_issue(issue, repo_path)
+            write_issue_response(issue, f"Created pull request: {pr_url}")
+            return True, None
+
         # Generate and post response
         trigger = check_triggers(issue)
         response_func = response_selector(trigger)
