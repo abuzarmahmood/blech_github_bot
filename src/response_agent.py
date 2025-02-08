@@ -306,17 +306,40 @@ def process_issue(
 
         # Check for develop_issue trigger first
         if triggers.has_develop_issue_trigger(issue):
+            repo_path = bot_tools.get_local_repo_path(repo_name)
+            
             # First generate edit command from previous discussion
             response, _ = generate_edit_command_response(issue, repo_name)
-            write_issue_response(issue, response)
+            write_issue_response(issue, "Generated edit command:\n" + response)
             
-            # Then create pull request
-            repo_path = bot_tools.get_local_repo_path(repo_name)
-            pr_url = create_pull_request_from_issue(issue, repo_path)
-            write_issue_response(
+            # Create branch for issue
+            branch_name = f"issue-{issue.number}"
+            checkout_branch(repo_path, branch_name, create=True)
+            
+            try:
+                # Run aider with the generated command
+                aider_output = run_aider(response, repo_path)
+                write_issue_response(issue, "Aider output:\n" + aider_output)
+                
+                # Push changes
+                push_changes(repo_path, branch_name)
+                
+                # Create pull request
+                pr_url = create_pull_request_from_issue(issue, repo_path)
+                write_issue_response(
                     issue,
-                    f"Created pull request: {pr_url}" + '\nContinue discussion there.'
-                    )
+                    f"Created pull request: {pr_url}\nContinue discussion there."
+                )
+                
+                # Switch back to main branch
+                back_to_master_branch(repo_path)
+                
+            except Exception as e:
+                # Clean up on error
+                back_to_master_branch(repo_path)
+                delete_branch(repo_path, branch_name, force=True)
+                raise RuntimeError(f"Failed to process develop issue: {str(e)}")
+                
             return True, None
 
         # Generate and post response
