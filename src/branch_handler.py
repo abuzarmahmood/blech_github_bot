@@ -97,3 +97,24 @@ def back_to_master_branch(repo_path: str) -> None:
     
     # Switch to the main branch
     repo.git.checkout(main_branch)
+
+def push_changes(repo_path: str, branch_name: Optional[str] = None, force: bool = False) -> None:
+    """
+    Push local changes to remote repository
+    
+    Args:
+        repo_path: Path to local git repository
+        branch_name: Name of branch to push (defaults to current branch)
+        force: If True, force push changes
+    """
+    repo = git.Repo(repo_path)
+    
+    # Get current branch if none specified
+    if branch_name is None:
+        branch_name = repo.active_branch.name
+    
+    # Push changes
+    if force:
+        repo.git.push('origin', branch_name, '--force')
+    else:
+        repo.git.push('origin', branch_name)
