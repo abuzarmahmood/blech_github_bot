@@ -166,7 +166,7 @@ def delete_non_main_branches(repo_path: str) -> None:
         repo_path: Path to local git repository
     """
     repo = git.Repo(repo_path)
-    
+
     # Identify the main branch
     if 'master' in repo.heads:
         main_branch = 'master'
@@ -174,11 +174,11 @@ def delete_non_main_branches(repo_path: str) -> None:
         main_branch = 'main'
     else:
         raise ValueError("Neither 'master' nor 'main' branch found")
-    
+
     # Switch to the main branch
     repo.git.checkout(main_branch)
     print(f"Checked out {main_branch} branch")
-    
+
     # Delete all non-main branches
     for branch in repo.heads:
         if branch.name != main_branch:
