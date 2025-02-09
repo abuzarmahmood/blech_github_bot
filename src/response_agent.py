@@ -14,7 +14,8 @@ from branch_handler import (
     checkout_branch,
     push_changes,
     back_to_master_branch,
-    delete_branch
+    delete_branch,
+    delete_non_main_branches
 )
 from github.Issue import Issue
 from github.Repository import Repository
@@ -353,6 +354,9 @@ def process_issue(
 
                 # Mark issue with label "under_development"
                 issue.add_to_labels("under_development")
+
+                # Delete all non-main branches after PR creation
+                delete_non_main_branches(repo_path)
 
                 # Get repo object and pull request
                 client = get_github_client()

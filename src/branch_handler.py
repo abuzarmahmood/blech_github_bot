@@ -156,3 +156,31 @@ def push_changes(repo_path: str, branch_name: Optional[str] = None, force: bool 
         repo.git.push('origin', branch_name, '--force')
     else:
         repo.git.push('origin', branch_name)
+
+
+def delete_non_main_branches(repo_path: str) -> None:
+    """
+    Delete all non-main local branches.
+
+    Args:
+        repo_path: Path to local git repository
+    """
+    repo = git.Repo(repo_path)
+    
+    # Identify the main branch
+    if 'master' in repo.heads:
+        main_branch = 'master'
+    elif 'main' in repo.heads:
+        main_branch = 'main'
+    else:
+        raise ValueError("Neither 'master' nor 'main' branch found")
+    
+    # Switch to the main branch
+    repo.git.checkout(main_branch)
+    print(f"Checked out {main_branch} branch")
+    
+    # Delete all non-main branches
+    for branch in repo.heads:
+        if branch.name != main_branch:
+            delete_branch(repo_path, branch.name, force=True)
+            print(f"Deleted branch {branch.name}")
