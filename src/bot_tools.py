@@ -260,7 +260,18 @@ def search_for_file(
         return "File not found"
 
 
-def readfile(filepath: str) -> str:
+def estimate_tokens(text: str) -> int:
+    """Estimate the number of tokens in text by splitting on whitespace
+    
+    Args:
+        text: Text to estimate tokens for
+        
+    Returns:
+        Estimated token count
+    """
+    return len(text.split())
+
+def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | None]:
     """
        Prints the contents of the file along with line numbers
     Inputs:
