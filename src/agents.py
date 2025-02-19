@@ -28,14 +28,6 @@ agent_system_messages = {
         Return file names that are relevant, and if possible, specific lines where changes can be made.
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
-
-        Example Output Template:
-        - Summary of user's issues and requests
-        - Overview of plan to address the issues
-        - Specific details of changes to be made
-          - File: path/to/file.py
-          - Line: 10-20
-          - Change: Replace function X with function Y
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and suggest the changes that need to be made.
@@ -220,6 +212,30 @@ def generate_prompt(
     Do not look for files again. Use the files suggested by the previous agent.
     Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
     Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
+
+    Format your output with the following structure:
+    - Summary of user's issues and requests
+    - Overview of plan to address the issues
+    - Specific details of changes to be made
+
+    Example Template for each specific change:
+      1 - Change title
+      - File: path/to/file.py
+      - Line: 10-20
+      - Description of change
+      - Code snippet of edits:
+        ```
+        Code edits here
+        ```
+      2 - Change title
+      - File: path/to/file.py
+      - Line: 10-20
+      - Description of change
+      - Code snippet of edits:
+        ```
+        Code edits here
+        ```
+
     Reply "TERMINATE" in the end when everything is done."""
 
     elif agent_name == "feedback_assistant":
@@ -262,6 +278,24 @@ def generate_prompt(
     - Summary of user's issues and requests
     - Overview of plan to address the issues
     - Specific details of changes to be made
+
+    Example Template for each specific change:
+      1 - Change title
+      - File: path/to/file.py
+      - Line: 10-20
+      - Description of change
+      - Code snippet of edits:
+        ```
+        Code edits here
+        ```
+      2 - Change title
+      - File: path/to/file.py
+      - Line: 10-20
+      - Description of change
+      - Code snippet of edits:
+        ```
+        Code edits here
+        ```
 
     {comments_str}
 
