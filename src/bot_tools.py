@@ -3,9 +3,12 @@ Tools for the agents to use.
 """
 
 import os
+from github.Issue import Issue
 import sys
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
+from branch_handler import get_issue_related_branches, delete_branch
+
 base_dir = os.path.dirname(src_dir)
 
 token_threshold = 100_000
@@ -286,7 +289,7 @@ def readfile(
     warning = (f"File exceeds token threshold of {token_threshold}. "
                f"Showing {len(included_lines)} of {len(data)} lines "
                f"({current_tokens}/{total_tokens} tokens). "
-               f"Use readlines({filepath}, start_line, end_line) "
+               f"Use readlines({file_path}, start_line, end_line) "
                f"to read specific ranges.")
 
     data = "".join(included_lines)
