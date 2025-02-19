@@ -28,6 +28,14 @@ agent_system_messages = {
         Return file names that are relevant, and if possible, specific lines where changes can be made.
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
+        
+        Example Output Template:
+        - Summary of user's issues and requests
+        - Overview of plan to address the issues
+        - Specific details of changes to be made
+          - File: path/to/file.py
+          - Line: 10-20
+          - Change: Replace function X with function Y
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and suggest the changes that need to be made.
@@ -36,7 +44,8 @@ agent_system_messages = {
         If no changes are needed, respond accordingly.
         NEVER ask for user input and NEVER expect it.
         If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
-        Provide code blocks where you can.
+        Include file paths, line numbers, and exact code changes where possible.
+        Format the command in a way that can be parsed by automated tools.
         Reply "TERMINATE" in the end when everything is done.
         """,
     "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
