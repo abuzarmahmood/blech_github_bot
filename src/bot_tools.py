@@ -232,7 +232,7 @@ def estimate_tokens(text: str) -> int:
     return len(text.split())
 
 
-def readfile(filepath: str, token_threshold: int = 100_000) -> tuple[str, str | None]:
+def readfile(filepath: str, token_threshold: int = 100_000) -> str:
     """Read a file and return its contents with line numbers.
     Will return partial content if token threshold is exceeded.
 
@@ -267,7 +267,7 @@ def readfile(filepath: str, token_threshold: int = 100_000) -> tuple[str, str | 
     total_tokens = estimate_tokens(full_content)
 
     if total_tokens <= token_threshold:
-        return full_content, None
+        return full_content
 
     # If over threshold, include as many lines as possible
     current_tokens = 0
@@ -286,7 +286,10 @@ def readfile(filepath: str, token_threshold: int = 100_000) -> tuple[str, str | 
                f"Use readlines({filepath}, start_line, end_line) "
                f"to read specific ranges.")
 
-    return "\n".join(included_lines), warning
+    data = "\n".join(included_lines)
+    data += f"\n\n{warning}"
+
+    return data
 
 
 def readlines(
@@ -340,7 +343,10 @@ def readlines(
                f"Use readlines({filepath}, start_line, end_line) "
                f"to read specific ranges.")
 
-    return "\n".join(included_lines), warning
+    data = "\n".join(included_lines)
+    data += f"\n\n{warning}"
+
+    return data
 
 
 def git_fetch(
