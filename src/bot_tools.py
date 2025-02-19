@@ -457,6 +457,29 @@ def run_python_script(
     return out
 
 
+def delete_issue_branch_and_pr(issue: Issue, repo_path: str) -> None:
+    """
+    Delete branches and pull requests related to an issue
+
+    Args:
+        issue: The GitHub issue
+        repo_path: Path to the local repository
+    """
+    branches = get_issue_related_branches(repo_path, issue.number)
+    for branch, _ in branches:
+        delete_branch(repo_path, branch, force=True)
+
+def remove_under_development_tag(issue: Issue) -> None:
+    """
+    Remove the 'under_development' tag from an issue
+
+    Args:
+        issue: The GitHub issue
+    """
+    for label in issue.labels:
+        if label.name == "under_development":
+            issue.remove_from_labels(label)
+
 def run_bash_script(
         script_path: str,
 ) -> str:

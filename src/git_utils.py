@@ -72,6 +72,18 @@ def search_issues(repo: Repository, query: str) -> List[Issue]:
     return list(repo.get_issues(state='all', labels=[query]))
 
 
+def remove_label_from_issue(issue: Issue, label_name: str) -> None:
+    """
+    Remove a label from an issue
+
+    Args:
+        issue: The GitHub issue
+        label_name: The name of the label to remove
+    """
+    for label in issue.labels:
+        if label.name == label_name:
+            issue.remove_from_labels(label)
+
 def write_issue_response(issue: Issue, response_text: str) -> IssueComment:
     """
     Write a response to an issue with the blech_bot signature

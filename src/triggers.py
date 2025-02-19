@@ -84,6 +84,21 @@ def has_develop_issue_trigger(issue: Issue) -> bool:
     return "[ develop_issue ]" in comments[-1].body
 
 
+def has_reset_development_trigger(issue: Issue) -> bool:
+    """
+    Check if the latest comment contains the reset_development trigger
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the latest comment contains "[ reset_development ]"
+    """
+    comments = get_issue_comments(issue)
+    if not comments:
+        return False
+    return "[ reset_development ]" in comments[-1].body
+
 def has_pull_request_trigger(issue: Issue) -> bool:
     """
     Check if the latest comment contains the pull_request trigger
