@@ -114,7 +114,10 @@ def generate_feedback_response(
         ]
     )
 
+    turns_used = len(feedback_results[0].chat_history)
     updated_response = feedback_results[0].chat_history[-1]['content']
+    if turns_used >= max_turns:
+        updated_response += f"\n\nNote: The processing was incomplete as the maximum number of turns ({max_turns}) was reached."
     all_content = [original_response, feedback_text, updated_response]
     return updated_response, all_content
 
@@ -199,7 +202,10 @@ def generate_new_response(
         max_turns=1,
     )
 
+    turns_used = len(summary_results.chat_history)
     response = summary_results.chat_history[-1]['content']
+    if turns_used >= 10:  # Assuming max_turns is 10 here
+        response += f"\n\nNote: The processing was incomplete as the maximum number of turns (10) was reached."
     all_content = results_to_summarize + [response]
 
     return response, all_content
@@ -244,7 +250,10 @@ def generate_edit_command_response(
         ]
     )
 
+    turns_used = len(chat_results[0].chat_history)
     response = chat_results[0].chat_history[-1]['content']
+    if turns_used >= 10:  # Assuming max_turns is 10 here
+        response += f"\n\nNote: The processing was incomplete as the maximum number of turns (10) was reached."
     all_content = [response]
     return response, all_content
 
