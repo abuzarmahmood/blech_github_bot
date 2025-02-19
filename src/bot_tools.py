@@ -8,6 +8,8 @@ import sys
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
 
+token_threshold = 100_000
+
 # Keep everything but tool calls
 
 
@@ -232,13 +234,14 @@ def estimate_tokens(text: str) -> int:
     return len(text.split())
 
 
-def readfile(filepath: str, token_threshold: int = 100_000) -> str:
+def readfile(
+        filepath: str,
+) -> str:
     """Read a file and return its contents with line numbers.
     Will return partial content if token threshold is exceeded.
 
     Args:
         filepath: Path to file to read
-        token_threshold: Maximum number of tokens to return (default: 100_000)
 
     Returns:
         Tuple of:
@@ -246,7 +249,7 @@ def readfile(filepath: str, token_threshold: int = 100_000) -> str:
         - Warning message if content was truncated, None otherwise
 
     Example:
-        content, warning = readfile("myfile.py", token_threshold=500)
+        content, warning = readfile("myfile.py")
         if warning:
             print(warning)  # Shows truncation message
         print(content)  # Shows numbered lines
@@ -318,11 +321,11 @@ def readlines(
                       line in enumerate(lines)]
 
     # Check total tokens
-    full_content = "\n".join(numbered_lines)
+    full_content = "".join(numbered_lines)
     total_tokens = estimate_tokens(full_content)
 
     if total_tokens <= token_threshold:
-        return full_content, None
+        return full_content
 
     # If over threshold, include as many lines as possible
     current_tokens = 0
