@@ -274,13 +274,13 @@ def estimate_tokens(text: str) -> int:
     return len(text.split())
 
 
-def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | None]:
+def readfile(filepath: str, token_threshold: int = 100_000) -> tuple[str, str | None]:
     """Read a file and return its contents with line numbers.
     Will return partial content if token threshold is exceeded.
 
     Args:
         filepath: Path to file to read
-        token_threshold: Maximum number of tokens to return (default: 1000)
+        token_threshold: Maximum number of tokens to return (default: 100_000)
 
     Returns:
         Tuple of:
