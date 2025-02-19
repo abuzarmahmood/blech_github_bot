@@ -12,10 +12,10 @@ import subprocess
 import autogen
 from branch_handler import (
     checkout_branch,
-    push_changes,
     back_to_master_branch,
     delete_branch
 )
+from git_utils import push_changes_with_authentication
 from github.Issue import Issue
 from github.Repository import Repository
 from git_utils import (
@@ -363,8 +363,8 @@ def process_issue(
                 # Run aider with the generated command
                 aider_output = run_aider(response, repo_path)
 
-                # Push changes
-                push_changes(repo_path, branch_name)
+                # Push changes with authentication
+                push_changes_with_authentication(repo_path, branch_name)
 
                 # Create pull request
                 pr_url = create_pull_request_from_issue(issue, repo_path)

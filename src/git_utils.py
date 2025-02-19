@@ -262,6 +262,41 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     return create_pull_request(repo_path)
 
 
+def push_changes_with_authentication(repo_path: str, branch_name: Optional[str] = None) -> None:
+    """
+    Push changes to the remote repository with authentication.
+
+    Args:
+        repo_path: Path to the local git repository
+        branch_name: Name of the branch to push (default: current branch)
+    """
+    load_dotenv()
+    token = os.getenv('GITHUB_TOKEN')
+    
+    if not token:
+        raise ValueError("GitHub token not found in environment variables")
+
+    repo = git.Repo(repo_path)
+    if branch_name is None:
+        branch_name = repo.active_branch.name
+        
+    remote = repo.remote(name='origin')
+    repo_url = remote.url
+    if repo_url.startswith('https://'):
+        repo_suffix = repo_url.split('github.com/')[-1]
+        repo_url_with_token = f"https://x-access-token:{token}@github.com/{repo_suffix}"
+        remote.set_url(repo_url_with_token)
+        
+    try:
+        remote.push(refspec=f'{branch_name}:{branch_name}')
+        print(f"Successfully pushed changes to {branch_name}")
+    except git.GitCommandError as e:
+        raise RuntimeError(f"Error pushing changes: {str(e)}")
+    finally:
+        if repo_url.startswith('https://'):
+            remote.set_url(repo_url)  # Reset URL to remove token
+
+
 def has_linked_pr(issue: Issue) -> bool:
     """
     Check if an issue has a linked pull request
