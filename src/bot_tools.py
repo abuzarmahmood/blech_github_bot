@@ -262,10 +262,10 @@ def search_for_file(
 
 def estimate_tokens(text: str) -> int:
     """Estimate the number of tokens in text by splitting on whitespace
-    
+
     Args:
         text: Text to estimate tokens for
-        
+
     Returns:
         Estimated token count
     """
@@ -273,19 +273,20 @@ def estimate_tokens(text: str) -> int:
         return 0
     return len(text.split())
 
+
 def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | None]:
     """Read a file and return its contents with line numbers.
     Will return partial content if token threshold is exceeded.
-    
+
     Args:
         filepath: Path to file to read
         token_threshold: Maximum number of tokens to return (default: 1000)
-        
+
     Returns:
         Tuple of:
         - File contents with line numbers (may be truncated if exceeds threshold)
         - Warning message if content was truncated, None otherwise
-        
+
     Example:
         content, warning = readfile("myfile.py", token_threshold=500)
         if warning:
@@ -299,34 +300,34 @@ def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | Non
         return f"File not found: {filepath}", None
     except Exception as e:
         return f"Error reading file {filepath}: {str(e)}", None
-        
+
     # Add line numbers
     numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
-    
+
     # Check total tokens
     full_content = "\n".join(numbered_lines)
     total_tokens = estimate_tokens(full_content)
-    
+
     if total_tokens <= token_threshold:
         return full_content, None
-        
+
     # If over threshold, include as many lines as possible
     current_tokens = 0
     included_lines = []
-    
+
     for line in numbered_lines:
         line_tokens = estimate_tokens(line)
         if current_tokens + line_tokens > token_threshold:
             break
         included_lines.append(line)
         current_tokens += line_tokens
-    
+
     warning = (f"File exceeds token threshold of {token_threshold}. "
                f"Showing {len(included_lines)} of {len(data)} lines "
                f"({current_tokens}/{total_tokens} tokens). "
                f"Use readlines({filepath}, start_line, end_line) "
                f"to read specific ranges.")
-               
+
     return "\n".join(included_lines), warning
 
 
