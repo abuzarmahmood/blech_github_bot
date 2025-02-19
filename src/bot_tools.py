@@ -269,6 +269,8 @@ def estimate_tokens(text: str) -> int:
     Returns:
         Estimated token count
     """
+    if not text:
+        return 0
     return len(text.split())
 
 def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | None]:
@@ -277,15 +279,26 @@ def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | Non
     
     Args:
         filepath: Path to file to read
-        token_threshold: Maximum number of tokens to return
+        token_threshold: Maximum number of tokens to return (default: 1000)
         
     Returns:
         Tuple of:
-        - File contents with line numbers
+        - File contents with line numbers (may be truncated if exceeds threshold)
         - Warning message if content was truncated, None otherwise
+        
+    Example:
+        content, warning = readfile("myfile.py", token_threshold=500)
+        if warning:
+            print(warning)  # Shows truncation message
+        print(content)  # Shows numbered lines
     """
-    with open(filepath, 'r') as file:
-        data = file.readlines()
+    try:
+        with open(filepath, 'r') as file:
+            data = file.readlines()
+    except FileNotFoundError:
+        return f"File not found: {filepath}", None
+    except Exception as e:
+        return f"Error reading file {filepath}: {str(e)}", None
         
     # Add line numbers
     numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
@@ -309,8 +322,10 @@ def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | Non
         current_tokens += line_tokens
     
     warning = (f"File exceeds token threshold of {token_threshold}. "
-               f"Showing {len(included_lines)} of {len(data)} lines. "
-               f"Consider using readlines() to read specific line ranges.")
+               f"Showing {len(included_lines)} of {len(data)} lines "
+               f"({current_tokens}/{total_tokens} tokens). "
+               f"Use readlines({filepath}, start_line, end_line) "
+               f"to read specific ranges.")
                
     return "\n".join(included_lines), warning
 
