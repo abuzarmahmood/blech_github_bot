@@ -57,7 +57,8 @@ llm_config = {
 # Response patterns
 ############################################################
 
-def check_not_empty(data:str) -> bool:
+
+def check_not_empty(data: str) -> bool:
     """
     Check that given data is not empty and is not a TERMINATE message
     """
@@ -67,6 +68,7 @@ def check_not_empty(data:str) -> bool:
         return True
     else:
         return False
+
 
 def generate_feedback_response(
         issue: Issue,

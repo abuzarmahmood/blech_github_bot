@@ -91,14 +91,16 @@ def register_functions(
 # Agent creation and configuration
 ############################################################
 
-def is_terminate_msg(x : dict) -> bool:
+
+def is_terminate_msg(x: dict) -> bool:
     """
     Returns true if terminate conditions are met
     """
     content = x['content']
     # Remove punctuation
     if type(content) is str:
-        clean_content = content.translate(str.maketrans('', '', string.punctuation))
+        clean_content = content.translate(
+            str.maketrans('', '', string.punctuation))
         return bool(clean_content) and clean_content.rstrip().endswith("TERMINATE")
     else:
         return x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE")
@@ -110,7 +112,7 @@ def create_user_agent():
     user = UserProxyAgent(
         name="User",
         human_input_mode="NEVER",
-        is_termination_msg = is_terminate_msg,
+        is_termination_msg=is_terminate_msg,
         code_execution_config=False
     )
 
