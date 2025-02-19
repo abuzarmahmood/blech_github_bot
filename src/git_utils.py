@@ -184,12 +184,14 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
             os.chdir(repo_path)
 
             # Create branch from issue
-            subprocess.run(['gh', 'issue', 'develop', str(issue.number)],
-                           check=True,
-                           capture_output=True)
+            result = subprocess.run(
+                ['gh', 'issue', 'develop', str(issue.number)],
+                check=True,
+                capture_output=True,
+                text=True
+            )
 
-            related_branch = get_issue_related_branches(
-                repo_path, issue.number)
+            related_branch = get_issue_related_branches(repo_path, issue.number)
 
             # Return to original directory
             os.chdir(original_dir)
@@ -197,11 +199,11 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
             return related_branch[0][0]
 
         except FileNotFoundError:
-            raise ValueError(
-                "GitHub CLI (gh) not found. Please install it first.")
+            raise ValueError("GitHub CLI (gh) not found. Please install it first.")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(
-                f"Failed to create development branch: {e.stderr}")
+                f"Failed to create development branch: {e.stderr.strip()}"
+            )
     else:
         return None
 
