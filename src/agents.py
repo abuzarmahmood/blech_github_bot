@@ -28,7 +28,7 @@ agent_system_messages = {
         Return file names that are relevant, and if possible, specific lines where changes can be made.
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
-        
+
         Example Output Template:
         - Summary of user's issues and requests
         - Overview of plan to address the issues
