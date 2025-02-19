@@ -263,7 +263,7 @@ def readfile(filepath: str, token_threshold: int = 100_000) -> str:
     numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
 
     # Check total tokens
-    full_content = "\n".join(numbered_lines)
+    full_content = "".join(numbered_lines)
     total_tokens = estimate_tokens(full_content)
 
     if total_tokens <= token_threshold:
@@ -286,7 +286,7 @@ def readfile(filepath: str, token_threshold: int = 100_000) -> str:
                f"Use readlines({filepath}, start_line, end_line) "
                f"to read specific ranges.")
 
-    data = "\n".join(included_lines)
+    data = "".join(included_lines)
     data += f"\n\n{warning}"
 
     return data
@@ -343,7 +343,7 @@ def readlines(
                f"Use readlines({filepath}, start_line, end_line) "
                f"to read specific ranges.")
 
-    data = "\n".join(included_lines)
+    data = "".join(included_lines)
     data += f"\n\n{warning}"
 
     return data
