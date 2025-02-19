@@ -143,14 +143,11 @@ def generate_feedback_response(
         ]
     )
 
-    updated_response = None
     for this_chat in feedback_results[0].chat_history[::-1]:
         this_content = this_chat['content']
         if check_not_empty(this_content):
-            updated_response = clean_response(this_content)
+            updated_response = this_content
             break
-    if updated_response is None:
-        raise ValueError("No valid response found in feedback results")
     all_content = [original_response, feedback_text, updated_response]
     return updated_response, all_content
 
