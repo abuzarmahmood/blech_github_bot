@@ -99,6 +99,7 @@ def has_reset_development_trigger(issue: Issue) -> bool:
         return False
     return "[ reset_development ]" in comments[-1].body
 
+
 def has_pull_request_trigger(issue: Issue) -> bool:
     """
     Check if the latest comment contains the pull_request trigger

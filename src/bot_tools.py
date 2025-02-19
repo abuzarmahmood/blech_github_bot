@@ -2,12 +2,12 @@
 Tools for the agents to use.
 """
 
+from branch_handler import get_issue_related_branches, delete_branch
 import os
 from github.Issue import Issue
 import sys
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
-from branch_handler import get_issue_related_branches, delete_branch
 
 base_dir = os.path.dirname(src_dir)
 
@@ -472,6 +472,7 @@ def delete_issue_branch_and_pr(issue: Issue, repo_path: str) -> None:
     for branch, _ in branches:
         delete_branch(repo_path, branch, force=True)
 
+
 def remove_under_development_tag(issue: Issue) -> None:
     """
     Remove the 'under_development' tag from an issue
@@ -482,6 +483,7 @@ def remove_under_development_tag(issue: Issue) -> None:
     for label in issue.labels:
         if label.name == "under_development":
             issue.remove_from_labels(label)
+
 
 def run_bash_script(
         script_path: str,

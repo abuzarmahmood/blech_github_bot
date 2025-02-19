@@ -84,6 +84,7 @@ def remove_label_from_issue(issue: Issue, label_name: str) -> None:
         if label.name == label_name:
             issue.remove_from_labels(label)
 
+
 def write_issue_response(issue: Issue, response_text: str) -> IssueComment:
     """
     Write a response to an issue with the blech_bot signature
