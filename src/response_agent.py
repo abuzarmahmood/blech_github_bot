@@ -50,7 +50,7 @@ if not api_key:
 llm_config = {
     "model": "gpt-4o",
     "api_key": api_key,
-    "temperature": random.uniform(0, 0.05),
+    "temperature": random.uniform(0, 0.2),
 }
 ############################################################
 # Response patterns

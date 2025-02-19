@@ -196,7 +196,7 @@ def generate_prompt(
     Use the tools you have. Do not ask for user input or expect it.
     Do not look for files again. Use the files suggested by the previous agent.
     Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
-    Try to read the whole file to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
+    Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
     Reply "TERMINATE" in the end when everything is done."""
 
     elif agent_name == "feedback_assistant":
@@ -208,7 +208,7 @@ def generate_prompt(
     DO NOT SUGGEST CODE EXECUTIONS. Only make code editing suggestions.
     To find details of files use read_merged_summary or read_merged_docstrings
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
-    Read relevant files to understand context where possible. If file is too large, search for specific functions or classes. If you can't find functions to classes, try reading sets of lines repeatedly.
+    Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
     Finish the job by suggesting specific lines in specific files where changes can be made.
 
     Previous Response:
