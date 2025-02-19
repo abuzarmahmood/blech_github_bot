@@ -101,7 +101,7 @@ def create_user_agent():
             "content", "").rstrip().endswith("TERMINATE"),
         code_execution_config=False
     )
-    agent.max_turns = llm_config.get("max_turns", 10)  # Set default max_turns if not provided
+    user.max_turns = 10  # Set default max_turns
 
     user = register_functions(user, register_how="execution")
 
