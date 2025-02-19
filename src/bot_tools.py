@@ -8,6 +8,8 @@ import sys
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
 
+token_threshold = 100_000
+
 # Keep everything but tool calls
 
 
@@ -196,48 +198,6 @@ def modify_lines(
     return True
 
 
-def readlines(
-        file_path: str,
-        start_line: int,
-        end_line: int,
-) -> str:
-    """
-    Read lines from a file
-
-    Inputs:
-        - file_path : Path to file
-        - start_line : Start line
-        - end_line : End line
-
-    Returns:
-        - Lines from file
-    """
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    return "".join(lines[start_line:end_line])
-
-# Tends to muddy the output too much
-# def listdir(
-#         directory : str,
-#         extension : str = None,
-#         ) -> str:
-#     """List contents of a directory
-#     Inputs:
-#         - Directory : Path to directory
-#         - Extension (optional) : Only return files with the given extension
-#     """
-#     if extension:
-#         ext_str = f"-iname '*{extension}'"
-#     else:
-#         ext_str = ""
-#     run_str = f"find {directory} " + ext_str
-#     print(run_str)
-#     # out = os.system(run_str)
-#     out = os.popen(run_str).read()
-#     return out
-
-
 def search_for_file(
         directory: str,
         filename: str,
@@ -260,16 +220,135 @@ def search_for_file(
         return "File not found"
 
 
-def readfile(filepath: str) -> str:
+def estimate_tokens(text: str) -> int:
+    """Estimate the number of tokens in text by splitting on whitespace
+
+    Args:
+        text: Text to estimate tokens for
+
+    Returns:
+        Estimated token count
     """
-       Prints the contents of the file along with line numbers
+    if not text:
+        return 0
+    return len(text.split())
+
+
+def readfile(
+        filepath: str,
+) -> str:
+    """Read a file and return its contents with line numbers.
+    Will return partial content if token threshold is exceeded.
+
+    Args:
+        filepath: Path to file to read
+
+    Returns:
+        Tuple of:
+        - File contents with line numbers (may be truncated if exceeds threshold)
+        - Warning message if content was truncated, None otherwise
+
+    Example:
+        content, warning = readfile("myfile.py")
+        if warning:
+            print(warning)  # Shows truncation message
+        print(content)  # Shows numbered lines
+    """
+    try:
+        with open(filepath, 'r') as file:
+            data = file.readlines()
+    except FileNotFoundError:
+        return f"File not found: {filepath}", None
+    except Exception as e:
+        return f"Error reading file {filepath}: {str(e)}", None
+
+    # Add line numbers
+    numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
+
+    # Check total tokens
+    full_content = "".join(numbered_lines)
+    total_tokens = estimate_tokens(full_content)
+
+    if total_tokens <= token_threshold:
+        return full_content
+
+    # If over threshold, include as many lines as possible
+    current_tokens = 0
+    included_lines = []
+
+    for line in numbered_lines:
+        line_tokens = estimate_tokens(line)
+        if current_tokens + line_tokens > token_threshold:
+            break
+        included_lines.append(line)
+        current_tokens += line_tokens
+
+    warning = (f"File exceeds token threshold of {token_threshold}. "
+               f"Showing {len(included_lines)} of {len(data)} lines "
+               f"({current_tokens}/{total_tokens} tokens). "
+               f"Use readlines({filepath}, start_line, end_line) "
+               f"to read specific ranges.")
+
+    data = "".join(included_lines)
+    data += f"\n\n{warning}"
+
+    return data
+
+
+def readlines(
+        file_path: str,
+        start_line: int,
+        end_line: int,
+) -> str:
+    """
+    Read lines from a file
+
     Inputs:
-        - Filepath
+        - file_path : Path to file
+        - start_line : Start line
+        - end_line : End line
+
+    Returns:
+        - Lines from file
     """
-    with open(filepath, 'r') as file:
-        data = file.read()
-    data = data.split('\n')
-    data = "\n".join([f"{i:04}: {line}" for i, line in enumerate(data)])
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    lines = lines[start_line:end_line]
+
+    # Add line numbers
+    numbered_lines = [f"{i+start_line:04}: {line}" for i,
+                      line in enumerate(lines)]
+
+    # Check total tokens
+    full_content = "".join(numbered_lines)
+    total_tokens = estimate_tokens(full_content)
+
+    if total_tokens <= token_threshold:
+        return full_content
+
+    # If over threshold, include as many lines as possible
+    current_tokens = 0
+    included_lines = []
+
+    for line in numbered_lines:
+        line_tokens = estimate_tokens(line)
+        if current_tokens + line_tokens > token_threshold:
+            break
+        included_lines.append(line)
+        current_tokens += line_tokens
+
+    n_included = len(included_lines)
+
+    warning = (f"Selected lines exceed token threshold of {token_threshold}. "
+               f"Showing lines {start_line} to {start_line + n_included} "
+               f"({current_tokens}/{total_tokens} tokens). "
+               f"Use readlines({filepath}, start_line, end_line) "
+               f"to read specific ranges.")
+
+    data = "".join(included_lines)
+    data += f"\n\n{warning}"
+
     return data
 
 
