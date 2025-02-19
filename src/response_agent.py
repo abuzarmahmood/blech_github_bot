@@ -456,7 +456,8 @@ def process_repository(
     try:
         checkout_branch(repo_dir, default_branch)
     except Exception as e:
-        print(f"Error switching to default branch '{default_branch}': {str(e)}")
+        print(
+            f"Error switching to default branch '{default_branch}': {str(e)}")
         return
     # Update repository
     update_repository(repo_dir)
