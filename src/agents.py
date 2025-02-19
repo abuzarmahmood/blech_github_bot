@@ -9,6 +9,7 @@ import bot_tools
 from git_utils import get_issue_comments
 from github.Issue import Issue
 import random
+import string
 
 
 # Get callable tool functions
@@ -91,14 +92,27 @@ def register_functions(
 ############################################################
 
 
+def is_terminate_msg(x: dict) -> bool:
+    """
+    Returns true if terminate conditions are met
+    """
+    content = x['content']
+    # Remove punctuation
+    if type(content) is str:
+        clean_content = content.translate(
+            str.maketrans('', '', string.punctuation))
+        return bool(clean_content) and clean_content.rstrip().endswith("TERMINATE")
+    else:
+        return x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE")
+
+
 def create_user_agent():
     """Create and configure the user agent"""
 
     user = UserProxyAgent(
         name="User",
         human_input_mode="NEVER",
-        is_termination_msg=lambda x: x.get("content", "") and x.get(
-            "content", "").rstrip().endswith("TERMINATE"),
+        is_termination_msg=is_terminate_msg,
         code_execution_config=False
     )
 

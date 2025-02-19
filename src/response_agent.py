@@ -39,6 +39,7 @@ from agents import (
     generate_prompt,
 )
 import triggers
+import string
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -55,6 +56,18 @@ llm_config = {
 ############################################################
 # Response patterns
 ############################################################
+
+
+def check_not_empty(data: str) -> bool:
+    """
+    Check that given data is not empty and is not a TERMINATE message
+    """
+    clean_data = data.translate(str.maketrans('', '', string.punctuation))
+    clean_data = clean_data.lower()
+    if clean_data != '' and clean_data != 'terminate':
+        return True
+    else:
+        return False
 
 
 def generate_feedback_response(
@@ -114,7 +127,12 @@ def generate_feedback_response(
         ]
     )
 
-    updated_response = feedback_results[0].chat_history[-1]['content']
+    # updated_response = feedback_results[0].chat_history[-1]['content']
+    for this_chat in feedback_results[0].chat_history[::-1]:
+        this_content = this_chat['content']
+        if check_not_empty(this_content):
+            updated_response = this_content
+            break
     all_content = [original_response, feedback_text, updated_response]
     return updated_response, all_content
 
@@ -244,7 +262,12 @@ def generate_edit_command_response(
         ]
     )
 
-    response = chat_results[0].chat_history[-1]['content']
+    # response = chat_results[0].chat_history[-1]['content']
+    for this_chat in chat_results[0].chat_history[::-1]:
+        this_content = this_chat['content']
+        if check_not_empty(this_content):
+            response = this_content
+            break
     all_content = [response]
     return response, all_content
 
