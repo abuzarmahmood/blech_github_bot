@@ -442,8 +442,23 @@ def process_repository(
     client = get_github_client()
     repo = get_repository(client, repo_name)
 
-    # Ensure repository is cloned and up to date
-    repo_dir = clone_repository(repo)
+    # Get local repository path
+    repo_dir = bot_tools.get_local_repo_path(repo_name)
+
+    # Clone repository only if not already present
+    if not os.path.exists(repo_dir):
+        repo_dir = clone_repository(repo)
+
+    # Determine the default branch
+    default_branch = repo.default_branch
+
+    # Ensure repository is on the default branch
+    try:
+        checkout_branch(repo_dir, default_branch)
+    except Exception as e:
+        print(f"Error switching to default branch '{default_branch}': {str(e)}")
+        return
+    # Update repository
     update_repository(repo_dir)
 
     # Get open issues
