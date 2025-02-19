@@ -272,16 +272,47 @@ def estimate_tokens(text: str) -> int:
     return len(text.split())
 
 def readfile(filepath: str, token_threshold: int = 1000) -> tuple[str, str | None]:
-    """
-       Prints the contents of the file along with line numbers
-    Inputs:
-        - Filepath
+    """Read a file and return its contents with line numbers.
+    Will return partial content if token threshold is exceeded.
+    
+    Args:
+        filepath: Path to file to read
+        token_threshold: Maximum number of tokens to return
+        
+    Returns:
+        Tuple of:
+        - File contents with line numbers
+        - Warning message if content was truncated, None otherwise
     """
     with open(filepath, 'r') as file:
-        data = file.read()
-    data = data.split('\n')
-    data = "\n".join([f"{i:04}: {line}" for i, line in enumerate(data)])
-    return data
+        data = file.readlines()
+        
+    # Add line numbers
+    numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
+    
+    # Check total tokens
+    full_content = "\n".join(numbered_lines)
+    total_tokens = estimate_tokens(full_content)
+    
+    if total_tokens <= token_threshold:
+        return full_content, None
+        
+    # If over threshold, include as many lines as possible
+    current_tokens = 0
+    included_lines = []
+    
+    for line in numbered_lines:
+        line_tokens = estimate_tokens(line)
+        if current_tokens + line_tokens > token_threshold:
+            break
+        included_lines.append(line)
+        current_tokens += line_tokens
+    
+    warning = (f"File exceeds token threshold of {token_threshold}. "
+               f"Showing {len(included_lines)} of {len(data)} lines. "
+               f"Consider using readlines() to read specific line ranges.")
+               
+    return "\n".join(included_lines), warning
 
 
 def git_fetch(
