@@ -4,6 +4,7 @@ Utility functions for interacting with GitHub API
 from typing import List, Dict, Optional, Tuple
 import os
 import subprocess
+import git
 from branch_handler import (
     get_issue_related_branches,
     get_current_branch,
