@@ -185,18 +185,29 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue)
 
+    unique_branches = set([branch_name for branch_name, _ in related_branches])
+    branch_dict = {}
+    for branch_name in unique_branches:
+        branch_dict[branch_name] = []
+        wanted_inds = [i for i, (name, _) in enumerate(
+            related_branches) if name == branch_name]
+        for ind in wanted_inds:
+            branch_dict[branch_name].append(related_branches[ind][1])
+
     comments = get_issue_comments(issue)
 
-    if len(related_branches) > 1:
+    if len(branch_dict) > 1:
         branch_list = "\n".join(
-            [f"- {branch_name}" for branch_name in related_branches])
+            [f"- {branch_name} : Remote = {is_remote}"
+             for branch_name, is_remote in branch_dict.items()]
+        )
         error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
             "Please delete or use existing branches before creating a new one."
         if "Found multiple branches" not in comments[-1].body:
             write_issue_response(issue, error_msg)
         raise RuntimeError(error_msg)
-    elif len(related_branches) == 1:
-        return related_branches[0]
+    elif len(branch_dict) == 1:
+        return list(branch_dict.keys())[0]
     elif create:
         try:
             # Change to repo directory
@@ -217,7 +228,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
             # Return to original directory
             os.chdir(original_dir)
 
-            return related_branch[0]
+            return related_branch[0][0]
 
         except FileNotFoundError:
             error_msg = "GitHub CLI (gh) not found. Please install it first."

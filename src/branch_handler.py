@@ -59,9 +59,6 @@ def get_issue_related_branches(
                 if possible_branch_name in branch_name:
                     related_branches.append((branch_name, True))
 
-        # Only return unique names
-        related_branches = list(set([x for x, _ in related_branches]))
-
     os.chdir(orig_dir)
     return related_branches
 
