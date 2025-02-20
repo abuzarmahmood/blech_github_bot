@@ -7,7 +7,10 @@ from github.Issue import Issue
 from typing import List, Optional, Tuple
 
 
-def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[str, bool]]:
+def get_issue_related_branches(
+        repo_path: str,
+        issue: Issue
+) -> List[Tuple[str, bool]]:
     """
     Uses `gh issue develop -l <issue_number>` to get all branches related to an issue number
 
@@ -18,6 +21,8 @@ def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[
     Returns:
         List of tuples containing (branch_name, url)
     """
+    issue_number = issue.number
+
     orig_dir = os.getcwd()
     os.chdir(repo_path)
 
@@ -32,6 +37,27 @@ def get_issue_related_branches(repo_path: str, issue_number: int) -> List[Tuple[
             related_branches.append((branch_name, url))
     except Exception as e:
         print(f"Error getting related branches: {str(e)}")
+
+    if len(related_branches) == 0:
+
+        repo = git.Repo(repo_path)
+        possible_branch_name = f"{issue.number}-{'-'.join(issue.title.lower().split(' '))}"
+
+        # Check local branches
+        for branch in repo.heads:
+            if possible_branch_name in branch.name:
+                related_branches.append((branch.name, False))
+
+        # Check remote branches
+        for remote in repo.remotes:
+            for ref in remote.refs:
+                # Skip HEAD ref
+                if ref.name.endswith('/HEAD'):
+                    continue
+                # Remove remote name prefix for comparison
+                branch_name = ref.name.split('/', 1)[1]
+                if possible_branch_name in branch_name:
+                    related_branches.append((branch_name, True))
 
     os.chdir(orig_dir)
     return related_branches
