@@ -367,7 +367,8 @@ def process_issue(
                     latest_bot_idx = i
 
             # check if there are any comments after the latest bot comment
-            user_feedback_bool = latest_bot_idx >= 0 and latest_bot_idx < len(comments) - 1
+            user_feedback_bool = latest_bot_idx >= 0 and latest_bot_idx < len(
+                comments) - 1
 
             branch_name = get_development_branch(
                 issue, repo_path, create=False)
@@ -375,7 +376,7 @@ def process_issue(
             # Only run if branch exists and user comment is found on PR
             if branch_name and user_feedback_bool:
                 user_comment = comments[-1].body
-                print('Triggered by user comment on PR') 
+                print('Triggered by user comment on PR')
 
                 try:
                     original_dir = os.getcwd()
@@ -388,7 +389,6 @@ def process_issue(
                     remote_branch = f"origin/{branch_name}"
                     subprocess.run(
                         ['git', 'pull', 'origin', branch_name], check=True)
-
 
                     if user_comment:
                         # Pass directly to aider
@@ -496,7 +496,7 @@ def process_issue(
         trigger = check_triggers(issue)
         response_func = response_selector(trigger)
         if response_func is None:
-            return False, f"No trigger found for issue #{issue.number}" 
+            return False, f"No trigger found for issue #{issue.number}"
         response, all_content = response_func(issue, repo_name)
         write_issue_response(issue, response)
         return True, None

@@ -120,6 +120,7 @@ def has_pr_creation_comment(issue: Issue) -> bool:
     else:
         return False, None
 
+
 def has_user_comment_on_pr(issue: Issue) -> bool:
     """
     Check if there is a user comment on a pull request that needs processing
