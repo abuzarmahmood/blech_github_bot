@@ -16,6 +16,7 @@ from github.Issue import Issue
 from github.Repository import Repository
 from github.IssueComment import IssueComment
 from dotenv import load_dotenv
+import re
 
 def clean_response(response: str) -> str:
     """Remove any existing signatures or TERMINATE flags from response text"""

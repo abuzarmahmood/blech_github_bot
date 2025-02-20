@@ -258,9 +258,9 @@ def readfile(
         with open(filepath, 'r') as file:
             data = file.readlines()
     except FileNotFoundError:
-        return f"File not found: {filepath}", None
+        return f"File not found: {filepath}"
     except Exception as e:
-        return f"Error reading file {filepath}: {str(e)}", None
+        return f"Error reading file {filepath}: {str(e)}"
 
     # Add line numbers
     numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
