@@ -183,12 +183,16 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     """
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue)
+
+    comments = get_issue_comments(issue)
+
     if len(related_branches) > 1:
         branch_list = "\n".join(
             [f"- {branch_name}" for branch_name in related_branches])
         error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
             "Please delete or use existing branches before creating a new one."
-        write_issue_response(issue, error_msg)
+        if "Found multiple branches" not in comments[-1].body: 
+            write_issue_response(issue, error_msg)
         raise RuntimeError(error_msg)
     elif len(related_branches) == 1:
         return related_branches[0]
@@ -216,11 +220,13 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
 
         except FileNotFoundError:
             error_msg = "GitHub CLI (gh) not found. Please install it first."
-            write_issue_response(issue, error_msg)
+            if error_msg not in comments[-1].body: 
+                write_issue_response(issue, error_msg)
             raise ValueError(error_msg)
         except subprocess.CalledProcessError as e:
             error_msg = f"Failed to create development branch: {e.stderr.strip()}"
-            write_issue_response(issue, error_msg)
+            if "Failed to create" not in comments[-1].body: 
+                write_issue_response(issue, error_msg)
             raise RuntimeError(error_msg)
     else:
         return None
