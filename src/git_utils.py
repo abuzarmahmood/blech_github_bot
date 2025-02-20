@@ -186,7 +186,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     if len(related_branches) > 1:
         branch_list = "\n".join(
             [f"- {branch_name}" for branch_name in related_branches])
-        error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n"
+        error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
             "Please delete or use existing branches before creating a new one."
         write_issue_response(issue, error_msg)
         raise RuntimeError(error_msg)
