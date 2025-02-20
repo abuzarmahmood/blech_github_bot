@@ -172,7 +172,8 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue)
     if len(related_branches) > 1:
-        branch_list = "\n".join([f"- {branch_name}" for branch_name in related_branches])
+        branch_list = "\n".join(
+            [f"- {branch_name}" for branch_name in related_branches])
         raise RuntimeError(
             f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n"
             "Please delete or use existing branches before creating a new one."
@@ -320,7 +321,6 @@ def has_linked_pr(issue: Issue) -> bool:
                 return True
 
     return False
-
 
 
 if __name__ == '__main__':

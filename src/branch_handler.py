@@ -8,9 +8,9 @@ from typing import List, Optional, Tuple
 
 
 def get_issue_related_branches(
-        repo_path: str, 
-        issue : Issue 
-        ) -> List[Tuple[str, bool]]:
+        repo_path: str,
+        issue: Issue
+) -> List[Tuple[str, bool]]:
     """
     Uses `gh issue develop -l <issue_number>` to get all branches related to an issue number
 
@@ -29,7 +29,7 @@ def get_issue_related_branches(
     related_branches = []
     try:
         branches = os.popen(
-                f"gh issue develop -l {issue_number}").read().splitlines()
+            f"gh issue develop -l {issue_number}").read().splitlines()
         for branch in branches:
             # Each line is in the format "branch_name url"
             branch_name = branch.split('\t')[0]
@@ -45,7 +45,7 @@ def get_issue_related_branches(
 
         # Check local branches
         for branch in repo.heads:
-            if possible_branch_name in branch.name: 
+            if possible_branch_name in branch.name:
                 related_branches.append((branch.name, False))
 
         # Check remote branches
@@ -56,7 +56,7 @@ def get_issue_related_branches(
                     continue
                 # Remove remote name prefix for comparison
                 branch_name = ref.name.split('/', 1)[1]
-                if possible_branch_name in branch_name: 
+                if possible_branch_name in branch_name:
                     related_branches.append((branch_name, True))
 
         # Only return unique names
