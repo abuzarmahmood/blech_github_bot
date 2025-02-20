@@ -100,7 +100,7 @@ def is_terminate_msg(x: dict, agent=None) -> bool:
     - Max turns reached (if agent provided)
     """
     content = x['content']
-    
+
     # Check turns limit if agent provided
     if agent and hasattr(agent, 'max_turns'):
         if not hasattr(agent, 'turns_used'):
@@ -108,7 +108,7 @@ def is_terminate_msg(x: dict, agent=None) -> bool:
         agent.turns_used += 1
         if agent.turns_used >= agent.max_turns:
             return True
-            
+
     # Check for TERMINATE message
     if type(content) is str:
         clean_content = content.translate(
