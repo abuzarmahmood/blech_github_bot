@@ -99,6 +99,7 @@ def has_pull_request_trigger(issue: Issue) -> bool:
         return False
     return "Created pull request" in comments[-1].body
 
+
 def has_pr_creation_comment(issue: Issue) -> bool:
     """
     Check if an issue has comments indicating a PR was created
@@ -110,12 +111,15 @@ def has_pr_creation_comment(issue: Issue) -> bool:
         True if the issue has PR comments, False otherwise
     """
     comments = get_issue_comments(issue)
-    pr_comment_bool = any('Created pull request' in comment.body for comment in comments)     
+    pr_comment_bool = any(
+        'Created pull request' in comment.body for comment in comments)
     if pr_comment_bool:
-        pr_comment = [comment for comment in comments if 'Created pull request' in comment.body][-1]
+        pr_comment = [
+            comment for comment in comments if 'Created pull request' in comment.body][-1]
         return True, pr_comment.body
     else:
         return False, None
+
 
 def has_user_comment_on_pr(issue: Issue) -> bool:
     """
