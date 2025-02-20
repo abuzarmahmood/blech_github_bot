@@ -112,6 +112,17 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
     repo = git.Repo(repo_path)
     if branch_name in repo.heads:
         repo.delete_head(branch_name, force=force)
+    """
+    Delete a git branch
+
+    Args:
+        repo_path: Path to local git repository
+        branch_name: Name of branch to delete
+        force: If True, force delete even if not merged
+    """
+    repo = git.Repo(repo_path)
+    if branch_name in repo.heads:
+        repo.delete_head(branch_name, force=force)
 
 
 def back_to_master_branch(repo_path: str) -> None:

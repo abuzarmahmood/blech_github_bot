@@ -2,10 +2,13 @@
 Tools for the agents to use.
 """
 
+from branch_handler import get_issue_related_branches, delete_branch
 import os
+from github.Issue import Issue
 import sys
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
+
 base_dir = os.path.dirname(src_dir)
 
 token_threshold = 100_000
@@ -286,7 +289,7 @@ def readfile(
     warning = (f"File exceeds token threshold of {token_threshold}. "
                f"Showing {len(included_lines)} of {len(data)} lines "
                f"({current_tokens}/{total_tokens} tokens). "
-               f"Use readlines({filepath}, start_line, end_line) "
+               f"Use readlines({file_path}, start_line, end_line) "
                f"to read specific ranges.")
 
     data = "".join(included_lines)
@@ -455,6 +458,31 @@ def run_python_script(
     """
     out = os.popen(f"python {script_path}").read()
     return out
+
+
+def delete_issue_branch_and_pr(issue: Issue, repo_path: str) -> None:
+    """
+    Delete branches and pull requests related to an issue
+
+    Args:
+        issue: The GitHub issue
+        repo_path: Path to the local repository
+    """
+    branches = get_issue_related_branches(repo_path, issue.number)
+    for branch, _ in branches:
+        delete_branch(repo_path, branch, force=True)
+
+
+def remove_under_development_tag(issue: Issue) -> None:
+    """
+    Remove the 'under_development' tag from an issue
+
+    Args:
+        issue: The GitHub issue
+    """
+    for label in issue.labels:
+        if label.name == "under_development":
+            issue.remove_from_labels(label)
 
 
 def run_bash_script(

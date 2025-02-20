@@ -305,7 +305,8 @@ def check_triggers(issue: Issue) -> str:
         return "generate_edit_command"
     elif triggers.has_user_feedback(issue):
         return "feedback"
-    else:
+    elif triggers.has_reset_development_trigger(issue):
+        return "reset_development"
         return "new_response"
 
 
@@ -345,7 +346,14 @@ def process_issue(
         if not ignore_checks:
             has_bot_mention = triggers.has_blech_bot_tag(
                 issue) or "[ blech_bot ]" in issue.title.lower()
-            if not has_bot_mention:
+            if triggers.has_reset_development_trigger(issue):
+                repo_path = bot_tools.get_local_repo_path(repo_name)
+                bot_tools.delete_issue_branch_and_pr(issue, repo_path)
+                bot_tools.remove_under_development_tag(issue)
+                write_issue_response(issue, "Development reset successfully.")
+                return True, None
+
+            elif not has_bot_mention:
                 return False, "Issue does not have blech_bot tag or mention in title"
             if triggers.has_bot_response(issue) and not triggers.has_user_feedback(issue):
                 return False, "Issue already has a bot response without feedback from user"
