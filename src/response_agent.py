@@ -395,8 +395,13 @@ def process_issue(
                         aider_output = run_aider(user_comment, repo_path)
 
                         # Push changes
-                        push_changes_with_authentication(
-                            repo_path, branch_name)
+                        push_success, err_msg = push_changes_with_authentication(
+                            repo_path,
+                            pr,
+                            branch_name)
+
+                        if not push_success:
+                            return False, f"Failed to push changes: {err_msg}"
 
                         # Write response
                         write_str = f"Applied changes based on comment:\n---\n```\n{aider_output}\n```"
@@ -450,9 +455,6 @@ def process_issue(
                 # Run aider with the generated command
                 aider_output = run_aider(response, repo_path)
 
-                # Push changes with authentication
-                push_changes_with_authentication(repo_path, branch_name)
-
                 # Create pull request
                 pr_url = create_pull_request_from_issue(issue, repo_path)
                 pr_number = pr_url.split('/')[-1]
@@ -468,6 +470,16 @@ def process_issue(
                 client = get_github_client()
                 repo = get_repository(client, repo_name)
                 pull = repo.get_pull(int(pr_number))
+
+                # Push changes with authentication
+                push_success, err_msg = push_changes_with_authentication(
+                    repo_path,
+                    pull,
+                    branch_name
+                )
+
+                if not push_success:
+                    return False, f"Failed to push changes: {err_msg}"
 
                 # write_issue_response(issue, "Generated edit command:\n" + response)
                 write_str = f"Generated edit command:\n---\n{response}\n\n" + \

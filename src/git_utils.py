@@ -15,6 +15,7 @@ from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
 from github.IssueComment import IssueComment
+from github.PullRequest import PullRequest
 from dotenv import load_dotenv
 import re
 
@@ -191,7 +192,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
             [f"- {branch_name}" for branch_name in related_branches])
         error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
             "Please delete or use existing branches before creating a new one."
-        if "Found multiple branches" not in comments[-1].body: 
+        if "Found multiple branches" not in comments[-1].body:
             write_issue_response(issue, error_msg)
         raise RuntimeError(error_msg)
     elif len(related_branches) == 1:
@@ -220,12 +221,12 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
 
         except FileNotFoundError:
             error_msg = "GitHub CLI (gh) not found. Please install it first."
-            if error_msg not in comments[-1].body: 
+            if error_msg not in comments[-1].body:
                 write_issue_response(issue, error_msg)
             raise ValueError(error_msg)
         except subprocess.CalledProcessError as e:
             error_msg = f"Failed to create development branch: {e.stderr.strip()}"
-            if "Failed to create" not in comments[-1].body: 
+            if "Failed to create" not in comments[-1].body:
                 write_issue_response(issue, error_msg)
             raise RuntimeError(error_msg)
     else:
@@ -284,7 +285,11 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     return create_pull_request(repo_path)
 
 
-def push_changes_with_authentication(repo_path: str, branch_name: Optional[str] = None) -> None:
+def push_changes_with_authentication(
+        repo_path: str,
+        pull_request: PullRequest,
+        branch_name: Optional[str] = None
+) -> Tuple[bool, Optional[str]]:
     """
     Push changes to the remote repository with authentication.
 
@@ -312,11 +317,21 @@ def push_changes_with_authentication(repo_path: str, branch_name: Optional[str] 
     try:
         remote.push(refspec=f'{branch_name}:{branch_name}')
         print(f"Successfully pushed changes to {branch_name}")
+        success_bool = True
     except git.GitCommandError as e:
-        raise RuntimeError(f"Error pushing changes: {str(e)}")
+        error_msg = f"Failed to push changes: {e.stderr.strip()}"
+        pr_comments = list(pull_request.get_issue_comments())
+        if 'Failed to push changes' not in pr_comments[-1].body:
+            pull_request.create_issue_comment(error_msg)
+        print(error_msg)
+        success_bool = False
     finally:
         if repo_url.startswith('https://'):
             remote.set_url(repo_url)  # Reset URL to remove token
+    if success_bool:
+        return success_bool, None
+    else:
+        return success_bool, error_msg
 
 
 def has_linked_pr(issue: Issue) -> bool:
