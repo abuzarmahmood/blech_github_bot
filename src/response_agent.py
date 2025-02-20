@@ -333,9 +333,10 @@ def process_issue(
             issue) or "[ blech_bot ]" in issue.title.lower()
         if not has_bot_mention:
             return False, "Issue does not have blech_bot tag or mention in title"
-        already_responded = triggers.has_bot_response(issue) and not triggers.has_user_feedback(issue)
+        already_responded = triggers.has_bot_response(
+            issue) and not triggers.has_user_feedback(issue)
         pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue)
-        if already_responded and not pr_comment_bool: 
+        if already_responded and not pr_comment_bool:
             return False, "Issue already has a bot response without feedback from user"
 
         # Check for user comments on PR first
