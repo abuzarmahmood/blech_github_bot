@@ -6,6 +6,8 @@ from typing import Optional, Tuple, List
 from dotenv import load_dotenv
 import string
 import requests
+from github.PullRequest import PullRequest
+from git_utils import get_workflow_run_logs, extract_errors_from_logs, clean_response
 import triggers
 from agents import (
     create_user_agent,
@@ -602,7 +604,8 @@ def process_workflow_errors(
             )
             
             # Get feedback on errors
-            feedback_results = user.initiate_chats(
+            user_agent = create_user_agent()
+            feedback_results = user_agent.initiate_chats(
                 [
                     {
                         "recipient": feedback_assistant,
