@@ -373,7 +373,7 @@ def process_issue(
 
             # Delete any existing local branches first
             delete_all_related_branches(repo_path, issue)
-            
+
             # Get or fetch the development branch
             branch_name = get_development_branch(
                 issue, repo_path, create=False)
@@ -436,7 +436,7 @@ def process_issue(
 
             # Delete any existing local branches first
             delete_all_related_branches(repo_path, issue)
-            
+
             # Check for existing branches
             branch_name = get_development_branch(
                 issue, repo_path, create=False)

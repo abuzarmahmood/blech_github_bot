@@ -184,7 +184,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     """
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue)
-    
+
     # First check for remote branches and fetch if found
     for branch_name, is_remote in related_branches:
         if is_remote:

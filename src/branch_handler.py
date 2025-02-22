@@ -143,7 +143,7 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
 def delete_all_related_branches(repo_path: str, issue: Issue) -> None:
     """
     Delete all local branches related to an issue.
-    
+
     Args:
         repo_path: Path to local git repository
         issue: The GitHub issue object
