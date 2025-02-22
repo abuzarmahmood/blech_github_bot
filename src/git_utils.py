@@ -375,13 +375,14 @@ def get_workflow_run_logs(repo: Repository, run_id: int) -> List[str]:
     except Exception as e:
         raise RuntimeError(f"Failed to fetch workflow logs: {str(e)}")
 
+
 def extract_errors_from_logs(log_lines: List[str]) -> List[str]:
     """
     Extract error messages from workflow log lines
-    
+
     Args:
         log_lines: List of log lines to parse
-        
+
     Returns:
         List of extracted error messages
     """
@@ -399,14 +400,15 @@ def extract_errors_from_logs(log_lines: List[str]) -> List[str]:
             capture = True
             error_lines.append(line)
             continue
-            
+
         # Keep capturing until we hit a likely end
         if capture:
             error_lines.append(line)
             if line.strip() == "" or "Process completed" in line:
                 capture = False
-                
+
     return error_lines
+
 
 def has_linked_pr(issue: Issue) -> bool:
     """
