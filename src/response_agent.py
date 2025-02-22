@@ -370,6 +370,10 @@ def process_issue(
             user_feedback_bool = latest_bot_idx >= 0 and latest_bot_idx < len(
                 comments) - 1
 
+            # Delete any existing local branches first
+            delete_all_related_branches(repo_path, issue)
+            
+            # Get or fetch the development branch
             branch_name = get_development_branch(
                 issue, repo_path, create=False)
 
@@ -429,11 +433,12 @@ def process_issue(
             print('Triggered by [ develop_issue ] command')
             repo_path = bot_tools.get_local_repo_path(repo_name)
 
+            # Delete any existing local branches first
+            delete_all_related_branches(repo_path, issue)
+            
             # Check for existing branches
             branch_name = get_development_branch(
                 issue, repo_path, create=False)
-            if branch_name is not None:
-                return False, f"Branch {branch_name} already exists for issue #{issue.number}"
 
             # Check for linked PRs
             if has_linked_pr(issue):

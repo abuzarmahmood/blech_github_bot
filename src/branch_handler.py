@@ -140,6 +140,21 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
         repo.delete_head(branch_name, force=force)
 
 
+def delete_all_related_branches(repo_path: str, issue: Issue) -> None:
+    """
+    Delete all local branches related to an issue.
+    
+    Args:
+        repo_path: Path to local git repository
+        issue: The GitHub issue object
+    """
+    repo = git.Repo(repo_path)
+    related_branches = get_issue_related_branches(repo_path, issue)
+    for branch_name, is_remote in related_branches:
+        if not is_remote and branch_name in repo.heads:
+            repo.delete_head(branch_name, force=True)
+
+
 def back_to_master_branch(repo_path: str) -> None:
     """
     Switch back to master/main branch, detecting which one exists
