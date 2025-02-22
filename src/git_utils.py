@@ -298,7 +298,8 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
 
 def push_changes_with_authentication(
         repo_path: str,
-        pull_request: PullRequest,
+        # pull_request: PullRequest,
+        out_thread: IssueComment | PullRequest,
         branch_name: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """
@@ -331,9 +332,15 @@ def push_changes_with_authentication(
         success_bool = True
     except git.GitCommandError as e:
         error_msg = f"Failed to push changes: {e.stderr.strip()}"
-        pr_comments = list(pull_request.get_issue_comments())
-        if 'Failed to push changes' not in pr_comments[-1].body:
-            pull_request.create_issue_comment(error_msg)
+        if isinstance(out_thread, IssueComment):
+            write_issue_response(out_thread, error_msg)
+        elif isinstance(out_thread, PullRequest):
+            pr_comments = list(pull_request.get_issue_comments())
+            if 'Failed to push changes' not in pr_comments[-1].body:
+                pull_request.create_issue_comment(error_msg)
+        else:
+            raise ValueError(
+                "Invalid output thread type, must be IssueComment or PullRequest")
         print(error_msg)
         success_bool = False
     finally:

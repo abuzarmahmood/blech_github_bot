@@ -432,8 +432,8 @@ def process_issue(
             # Check for existing branches
             branch_name = get_development_branch(
                 issue, repo_path, create=False)
-            if branch_name is not None:
-                return False, f"Branch {branch_name} already exists for issue #{issue.number}"
+            # if branch_name is not None:
+            #     return False, f"Branch {branch_name} already exists for issue #{issue.number}"
 
             # Check for linked PRs
             if has_linked_pr(issue):
@@ -455,9 +455,22 @@ def process_issue(
                 # Run aider with the generated command
                 aider_output = run_aider(response, repo_path)
 
-                # Create pull request
+                # Get repo object and pull request
+                client = get_github_client()
+                repo = get_repository(client, repo_name)
+
+                # Push changes with authentication
+                push_success, err_msg = push_changes_with_authentication(
+                    repo_path,
+                    issue,
+                    branch_name
+                )
+
                 pr_url = create_pull_request_from_issue(issue, repo_path)
                 pr_number = pr_url.split('/')[-1]
+                pull = repo.get_pull(int(pr_number))
+
+                # Create pull request
                 write_issue_response(
                     issue,
                     f"Created pull request: {pr_url}\nContinue discussion there."
@@ -465,18 +478,6 @@ def process_issue(
 
                 # Mark issue with label "under_development"
                 issue.add_to_labels("under_development")
-
-                # Get repo object and pull request
-                client = get_github_client()
-                repo = get_repository(client, repo_name)
-                pull = repo.get_pull(int(pr_number))
-
-                # Push changes with authentication
-                push_success, err_msg = push_changes_with_authentication(
-                    repo_path,
-                    pull,
-                    branch_name
-                )
 
                 if not push_success:
                     return False, f"Failed to push changes: {err_msg}"
