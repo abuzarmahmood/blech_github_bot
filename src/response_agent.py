@@ -33,7 +33,8 @@ from github.Issue import Issue
 from branch_handler import (
     checkout_branch,
     back_to_master_branch,
-    delete_branch
+    delete_branch,
+    delete_all_related_branches
 )
 import autogen
 import subprocess
