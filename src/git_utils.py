@@ -376,7 +376,7 @@ def get_workflow_run_logs(repo: Repository, run_id: int) -> List[str]:
             "X-GitHub-Api-Version": "2022-11-28"
         }
         response = requests.get(logs_url, headers=headers)
-        
+
         if response.status_code == 403:
             raise PermissionError(
                 "Insufficient permissions to access workflow logs. "
@@ -386,9 +386,9 @@ def get_workflow_run_logs(repo: Repository, run_id: int) -> List[str]:
             raise RuntimeError(
                 f"Workflow run with ID {run_id} not found in repository {repo.full_name}"
             )
-            
+
         response.raise_for_status()
-        
+
         # Check if response is HTML (error page) instead of logs
         content_type = response.headers.get('content-type', '')
         if 'text/html' in content_type:
@@ -396,9 +396,9 @@ def get_workflow_run_logs(repo: Repository, run_id: int) -> List[str]:
                 "Received HTML response instead of logs. "
                 "This likely indicates an authentication or permission issue."
             )
-            
+
         return response.text.splitlines()
-        
+
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Failed to fetch workflow logs: {str(e)}")
 
