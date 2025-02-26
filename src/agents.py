@@ -27,6 +27,7 @@ agent_system_messages = {
         NEVER ask for user input and NEVER expect it.
         Return file names that are relevant, and if possible, specific lines where changes can be made.
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
+        If URLs are present in the issue, use scrape_text_from_url to extract content and analyze it.
         Reply "TERMINATE" in the end when everything is done.
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
@@ -37,11 +38,13 @@ agent_system_messages = {
         NEVER ask for user input and NEVER expect it.
         If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
         Include file paths, line numbers, and exact code changes where possible.
+        If URLs are present in the issue, use scrape_text_from_url to extract content and analyze it.
         Format the command in a way that can be parsed by automated tools.
         Reply "TERMINATE" in the end when everything is done.
         """,
     "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
+        If URLs are present in the issue, use the scraped content to provide more context in your summary.
         """,
     "feedback_assistant": """You are a helpful GitHub bot that processes user feedback on previous bot responses.
         Analyze the user's feedback carefully and suggest improvements to the original response.
@@ -171,6 +174,15 @@ def generate_prompt(
     """Generate prompt for the agent"""
     last_comment_str, comments_str = parse_comments(
         repo_name, repo_path, details, issue)
+    
+    # Add URL content information if available
+    url_content_str = ""
+    if 'url_contents' in details and details['url_contents']:
+        url_content_str = "\nURLs found in issue:\n"
+        for url, content in details['url_contents'].items():
+            # Truncate content preview to avoid extremely long prompts
+            content_preview = content[:500] + "..." if len(content) > 500 else content
+            url_content_str += f"\n- URL: {url}\n- Content preview: {content_preview}\n"
 
     boilerplate_text = f"""
         Repository: {repo_name}
@@ -178,6 +190,7 @@ def generate_prompt(
         Title: {details['title']}
         Body: {details['body']}
         {last_comment_str}
+        {url_content_str}
         """
 
     if agent_name == "file_assistant":

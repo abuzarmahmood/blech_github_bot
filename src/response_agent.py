@@ -1,7 +1,7 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
 """
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from dotenv import load_dotenv
 import string
@@ -11,6 +11,7 @@ from agents import (
     create_agent,
     generate_prompt,
 )
+from urlextract import URLExtract
 import agents
 from autogen import AssistantAgent
 import bot_tools
@@ -93,6 +94,22 @@ def generate_feedback_response(
     print('===============================')
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
+    
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+    
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = bot_tools.scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = bot_tools.summarize_text(content)
+            url_contents[url] = summarized_content
+        
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
 
     prompt_kwargs = {
         "repo_name": repo_name,
@@ -140,6 +157,37 @@ def generate_feedback_response(
     return updated_response, all_content
 
 
+def extract_urls_from_issue(issue: Issue) -> List[str]:
+    """
+    Extract URLs from issue body and comments
+    
+    Args:
+        issue: The GitHub issue to extract URLs from
+        
+    Returns:
+        List of URLs found in the issue
+    """
+    extractor = URLExtract()
+    urls = []
+    
+    # Extract from issue body
+    issue_body = issue.body or ""
+    urls.extend(extractor.find_urls(issue_body))
+    
+    # Extract from comments
+    for comment in get_issue_comments(issue):
+        comment_body = comment.body or ""
+        urls.extend(extractor.find_urls(comment_body))
+    
+    # Remove duplicates while preserving order
+    unique_urls = []
+    for url in urls:
+        if url not in unique_urls:
+            unique_urls.append(url)
+    
+    return unique_urls
+
+
 def generate_new_response(
         issue: Issue,
         repo_name: str,
@@ -160,6 +208,22 @@ def generate_new_response(
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
+    
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+    
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = bot_tools.scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = bot_tools.summarize_text(content)
+            url_contents[url] = summarized_content
+        
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
 
     # Create base agents
     user = create_user_agent()
@@ -247,6 +311,22 @@ def generate_edit_command_response(
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
+    
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+    
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = bot_tools.scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = bot_tools.summarize_text(content)
+            url_contents[url] = summarized_content
+        
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
 
     user = create_user_agent()
     generate_edit_command_assistant = create_agent(
