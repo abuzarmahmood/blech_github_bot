@@ -337,9 +337,9 @@ def push_changes_with_authentication(
         if isinstance(out_thread, IssueComment):
             write_issue_response(out_thread, error_msg)
         elif isinstance(out_thread, PullRequest):
-            pr_comments = list(pull_request.get_issue_comments())
+            pr_comments = list(out_thread.get_issue_comments())
             if 'Failed to push changes' not in pr_comments[-1].body:
-                pull_request.create_issue_comment(error_msg)
+                out_thread.create_issue_comment(error_msg)
         else:
             raise ValueError(
                 "Invalid output thread type, must be IssueComment or PullRequest")
