@@ -174,14 +174,15 @@ def generate_prompt(
     """Generate prompt for the agent"""
     last_comment_str, comments_str = parse_comments(
         repo_name, repo_path, details, issue)
-    
+
     # Add URL content information if available
     url_content_str = ""
     if 'url_contents' in details and details['url_contents']:
         url_content_str = "\nURLs found in issue:\n"
         for url, content in details['url_contents'].items():
             # Truncate content preview to avoid extremely long prompts
-            content_preview = content[:500] + "..." if len(content) > 500 else content
+            content_preview = content[:500] + \
+                "..." if len(content) > 500 else content
             url_content_str += f"\n- URL: {url}\n- Content preview: {content_preview}\n"
 
     boilerplate_text = f"""

@@ -582,21 +582,22 @@ def scrape_text_from_url(url: str) -> str:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+
         # Remove script and style elements
         for script in soup(["script", "style"]):
             script.extract()
-            
+
         # Get text
         text = soup.get_text()
-        
+
         # Break into lines and remove leading and trailing space on each
         lines = (line.strip() for line in text.splitlines())
         # Break multi-headlines into a line each
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        chunks = (phrase.strip()
+                  for line in lines for phrase in line.split("  "))
         # Remove blank lines
         text = '\n'.join(chunk for chunk in chunks if chunk)
-        
+
         return text
     except requests.RequestException as e:
         print(f"Error fetching URL {url}: {e}")
@@ -615,6 +616,6 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
     """
     if len(text) <= max_length:
         return text
-        
+
     # Simple truncation with ellipsis for now
     return text[:max_length] + "...\n[Text truncated due to length]"
