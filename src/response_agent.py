@@ -392,8 +392,9 @@ def process_issue(
 
                     if user_comment:
                         # Pass to generate_edit_command agent first
-                        response, _ = generate_edit_command_response(issue, repo_name)
-                       
+                        response, _ = generate_edit_command_response(
+                            issue, repo_name)
+
                         # Then run aider with the generated command
                         aider_output = run_aider(response, repo_path)
 
