@@ -141,8 +141,21 @@ def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
 
 
 def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
-    """Parse comments for the issue"""
+    """Parse comments for the issue or pull request"""
+    from git_utils import has_linked_pr, get_linked_pr
+    
     comments_objs = get_issue_comments(issue)
+    
+    # If there's a linked PR, also get its comments
+    try:
+        if has_linked_pr(issue):
+            pr = get_linked_pr(issue)
+            pr_comments = get_issue_comments(pr)
+            comments_objs.extend(pr_comments)
+    except:
+        # Continue if there's an error getting PR comments
+        pass
+        
     all_comments = [c.body for c in comments_objs]
     if len(all_comments) == 0:
         last_comment_str = ""
@@ -177,7 +190,7 @@ def generate_prompt(
         Local path: {repo_path}
         Title: {details['title']}
         Body: {details['body']}
-        {last_comment_str}
+        {last_comment_str}  # Focus on addressing this comment
         """
 
     if agent_name == "file_assistant":

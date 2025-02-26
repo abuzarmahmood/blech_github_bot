@@ -55,7 +55,9 @@ def get_open_issues(repo: Repository) -> List[Issue]:
 
 
 def get_issue_comments(issue: Issue) -> List[IssueComment]:
-    """Get all comments for a specific issue"""
+    """Get all comments for a specific issue or pull request"""
+    if isinstance(issue, PullRequest):
+        return list(issue.get_issue_comments())
     return list(issue.get_comments())
 
 
@@ -373,6 +375,30 @@ def has_linked_pr(issue: Issue) -> bool:
                 return True
 
     return False
+
+def get_linked_pr(issue: Issue) -> PullRequest:
+    """
+    Get the linked pull request for an issue
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        The linked PullRequest object or None if not found
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                pr_number = event.source.issue.number
+                repo = issue.repository
+                return repo.get_pull(pr_number)
+    
+    return None
 
 
 if __name__ == '__main__':

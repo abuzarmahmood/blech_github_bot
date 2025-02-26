@@ -391,8 +391,11 @@ def process_issue(
                         ['git', 'pull', 'origin', branch_name], check=True)
 
                     if user_comment:
-                        # Pass directly to aider
-                        aider_output = run_aider(user_comment, repo_path)
+                        # Pass to generate_edit_command agent first
+                        response, _ = generate_edit_command_response(issue, repo_name)
+                       
+                        # Then run aider with the generated command
+                        aider_output = run_aider(response, repo_path)
 
                         # Push changes
                         push_success, err_msg = push_changes_with_authentication(
