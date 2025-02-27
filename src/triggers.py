@@ -3,9 +3,9 @@ Functions to check specific conditions
 """
 from github import Issue
 from git_utils import (
-    get_issue_comments, 
-    cache_issue_timeline, 
-    save_cache_to_file, 
+    get_issue_comments,
+    cache_issue_timeline,
+    save_cache_to_file,
     load_cache_from_file
 )
 
@@ -150,15 +150,15 @@ def has_user_comment_on_pr(issue: Issue) -> bool:
 def should_run_detailed_checks(issue: Issue, cache: dict) -> bool:
     """
     Determine if detailed trigger checks should be run based on timeline changes.
-    
+
     This function checks if there have been any changes to the issue timeline
     since the last check. If changes are detected, it updates the cache and
     returns True to indicate that detailed checks should be run.
-    
+
     Args:
         issue: The GitHub issue to check
         cache: A dictionary to store cached timeline hashes
-        
+
     Returns:
         True if detailed checks should be run, False otherwise
     """

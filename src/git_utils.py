@@ -380,17 +380,17 @@ def has_linked_pr(issue: Issue) -> bool:
 def get_issue_timeline_hash(issue: Issue) -> str:
     """
     Generate a hash representing the current state of an issue's timeline
-    
+
     Args:
         issue: The GitHub issue to check
-        
+
     Returns:
         A string hash representing the current state of the issue's timeline
     """
     # Get comments and their timestamps
     comments = get_issue_comments(issue)
     comment_data = [(c.id, c.updated_at.timestamp()) for c in comments]
-    
+
     # Get issue details that might change
     issue_data = {
         'updated_at': issue.updated_at.timestamp(),
@@ -398,7 +398,7 @@ def get_issue_timeline_hash(issue: Issue) -> str:
         'labels': [label.name for label in issue.labels],
         'comments_count': issue.comments
     }
-    
+
     # Combine all data and create a hash
     import hashlib
     combined_data = str(comment_data) + str(issue_data)
@@ -408,33 +408,33 @@ def get_issue_timeline_hash(issue: Issue) -> str:
 def cache_issue_timeline(issue: Issue, cache: Dict[int, str]) -> bool:
     """
     Cache the timeline of an issue and compare with the current timeline.
-    
+
     Args:
         issue: The GitHub issue to check
         cache: A dictionary to store cached timeline hashes
-        
+
     Returns:
         True if changes are detected, False otherwise
     """
     issue_number = issue.number
     current_hash = get_issue_timeline_hash(issue)
-    
+
     if issue_number not in cache:
         cache[issue_number] = current_hash
         return True
-    
+
     cached_hash = cache[issue_number]
     if current_hash != cached_hash:
         cache[issue_number] = current_hash
         return True
-    
+
     return False
 
 
 def save_cache_to_file(cache: Dict[int, str], filename: str = 'issue_cache.pkl') -> None:
     """
     Save the cache to a file.
-    
+
     Args:
         cache: The cache dictionary to save
         filename: The name of the file to save the cache to
@@ -446,10 +446,10 @@ def save_cache_to_file(cache: Dict[int, str], filename: str = 'issue_cache.pkl')
 def load_cache_from_file(filename: str = 'issue_cache.pkl') -> Dict[int, str]:
     """
     Load the cache from a file.
-    
+
     Args:
         filename: The name of the file to load the cache from
-        
+
     Returns:
         The loaded cache dictionary, or an empty dictionary if the file doesn't exist
     """
