@@ -293,7 +293,15 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
         URL of the created pull request
     """
     branch = get_development_branch(issue, repo_path)
-    return create_pull_request(repo_path)
+    pr_url = create_pull_request(repo_path)
+    
+    # Add "blech_bot" tag to the pull request
+    repo = get_repository(get_github_client(), issue.repository.full_name)
+    pr_number = int(pr_url.split('/')[-1])
+    pr = repo.get_pull(pr_number)
+    pr.add_to_labels("blech_bot")
+    
+    return pr_url
 
 
 def push_changes_with_authentication(
