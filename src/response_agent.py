@@ -78,7 +78,6 @@ def check_not_empty(data: str) -> bool:
 def summarize_relevant_comments(
         issue: Issue,
         repo_name: str,
-        max_turns: int = 10,
 ) -> Tuple[str, list]:
     """Summarize relevant comments for a given issue
 
@@ -112,8 +111,7 @@ def summarize_relevant_comments(
             "comment_summary_assistant",
             **prompt_kwargs,
             # original_response=comment_list[-1],
-            # feedback_text=comment_list[-1],
-            feedback_text='Improve parse comments to also extract pr comments',
+            feedback_text=comment_list[-1],
             results_to_summarize=[comment],
         )
 
@@ -134,6 +132,11 @@ def summarize_relevant_comments(
                            for comment in summarized_comments]
     summarized_comments = [re.sub(r'\bTERMINATE\b', '', comment)
                            for comment in summarized_comments]
+    # Make sure to remove any empty strings and new lines
+    summarized_comments = [comment.strip() for comment in summarized_comments]
+    # Keep only comments with content
+    summarized_comments = [comment for comment in summarized_comments if check_not_empty(
+        comment)]
 
     summary_comment_str = '\n====================================================\n'.join(
         summarized_comments)
@@ -295,7 +298,8 @@ def generate_new_response(
 
 def generate_edit_command_response(
         issue: Issue,
-        repo_name: str
+        repo_name: str,
+        summarized_comments: str = '',
 ) -> Tuple[str, list]:
     """
     Generate a command for a bot to make edits based on issue discussion
@@ -318,8 +322,17 @@ def generate_edit_command_response(
     user = create_user_agent()
     generate_edit_command_assistant = create_agent(
         "generate_edit_command_assistant", llm_config)
-    generate_edit_command_prompt = generate_prompt(
-        "generate_edit_command_assistant", repo_name, repo_path, details, issue)
+    if summarized_comments:
+        generate_edit_command_prompt = generate_prompt(
+            "generate_edit_command_assistant",
+            repo_name, repo_path, details, issue,
+            summarized_comments_str=summarized_comments
+        )
+    else:
+        generate_edit_command_prompt = generate_prompt(
+            "generate_edit_command_assistant",
+            repo_name, repo_path, details, issue
+        )
 
     chat_results = user.initiate_chats(
         [
@@ -458,9 +471,16 @@ def process_issue(
                         ['git', 'pull', 'origin', branch_name], check=True)
 
                     if user_comment:
+                        # Summarize relevant comments
+                        summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
+                            issue, repo_name)
+
+                        if summary_comment_str == '':
+                            summary_comment_str = 'No relevant comments found'
+
                         # Pass to generate_edit_command agent first
                         response, _ = generate_edit_command_response(
-                            issue, repo_name)
+                            issue, repo_name, summary_comment_str)
 
                         # Then run aider with the generated command
                         aider_output = run_aider(response, repo_path)

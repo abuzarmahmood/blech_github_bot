@@ -6,12 +6,16 @@ import autogen
 import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
 import bot_tools
-from git_utils import get_issue_comments
+from git_utils import (
+    get_github_client,
+    get_repository,
+    get_issue_comments,
+)
 from github.Issue import Issue
 import random
 import string
 import triggers
-
+from urlextract import URLExtract
 
 # Get callable tool functions
 tool_funcs = []
@@ -151,6 +155,7 @@ def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) 
     from git_utils import has_linked_pr, get_linked_pr
 
     comments_objs = get_issue_comments(issue)
+    repo = get_repository(get_github_client(), repo_name)
 
     # If there's a linked PR, also get its comments
     pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue)
@@ -187,6 +192,7 @@ def generate_prompt(
         original_response: str = "",
         feedback_text: str = "",
         agent_system_messages: dict = agent_system_messages,
+        summarized_comments_str: str = "",
 ) -> str:
     """Generate prompt for the agent"""
     last_comment_str, comments_str, all_comments = parse_comments(
@@ -285,6 +291,10 @@ def generate_prompt(
         return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}\n"
 
     elif agent_name == "generate_edit_command_assistant":
+        if summarized_comments_str != "":
+            generate_edit_context = summarized_comments_str
+        else:
+            generate_edit_context = comments_str
         return f"""Please analyze this GitHub issue and generate a detailed edit command:
 
     {boilerplate_text}
@@ -317,7 +327,7 @@ def generate_prompt(
         Code edits here
         ```
 
-    {comments_str}
+    {generate_edit_context}
 
     Reply "TERMINATE" in the end when everything is done.
     """
