@@ -10,6 +10,7 @@ from agents import (
     create_user_agent,
     create_agent,
     generate_prompt,
+    parse_comments
 )
 import agents
 from autogen import AssistantAgent
@@ -72,6 +73,72 @@ def check_not_empty(data: str) -> bool:
         return True
     else:
         return False
+
+
+def summarize_relevant_comments(
+        issue: Issue,
+        repo_name: str,
+        max_turns: int = 10,
+) -> Tuple[str, list]:
+    """Summarize relevant comments for a given issue
+
+    Args:
+        issue: The GitHub issue to summarize
+        repo_name: Full name of repository (owner/repo)
+        max_turns: Maximum number of turns for the conversation
+
+    Returns:
+        Tuple of (summary text, full conversation history)
+    """
+    repo_path = bot_tools.get_local_repo_path(repo_name)
+    details = get_issue_details(issue)
+
+    # user, file_assistant, edit_assistant = create_agents()
+    last_comment, comment_str, comment_list = parse_comments(
+        repo_name, repo_path, details, issue)
+
+    prompt_kwargs = {
+        "repo_name": repo_name,
+        "repo_path": repo_path,
+        "details": details,
+        "issue": issue,
+    }
+
+    comment_summary_assistant = create_agent(
+        "comment_summary_assistant", llm_config)
+    summarized_comments = []
+    for comment in comment_list[:-1]:
+        summary_prompt = generate_prompt(
+            "comment_summary_assistant",
+            **prompt_kwargs,
+            # original_response=comment_list[-1],
+            # feedback_text=comment_list[-1],
+            feedback_text='Improve parse comments to also extract pr comments',
+            results_to_summarize=[comment],
+        )
+
+        comment_summary_results = comment_summary_assistant.initiate_chat(
+            comment_summary_assistant,
+            message=summary_prompt,
+            max_turns=1,
+        )
+
+        response = comment_summary_results.chat_history[-1]['content']
+        summarized_comments.append(response)
+
+    # Remove all mentioned of "IS_RELEVANT", "NOT_RELEVANT", and "TERMINATE" from the summaries
+    # Keep them in the code for future reference
+    summarized_comments = [re.sub(r'\bIS_RELEVANT\b', '', comment)
+                           for comment in summarized_comments]
+    summarized_comments = [re.sub(r'\bNOT_RELEVANT\b', '', comment)
+                           for comment in summarized_comments]
+    summarized_comments = [re.sub(r'\bTERMINATE\b', '', comment)
+                           for comment in summarized_comments]
+
+    summary_comment_str = '\n====================================================\n'.join(
+        summarized_comments)
+
+    return summarized_comments, comment_list, summary_comment_str
 
 
 def generate_feedback_response(
