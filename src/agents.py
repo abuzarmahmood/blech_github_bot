@@ -296,6 +296,7 @@ def generate_prompt(
         else:
             generate_edit_context = comments_str
         return f"""Please analyze this GitHub issue and generate a detailed edit command:
+            **Focus specifically on the last comment (if it is relevant).**
 
     {boilerplate_text}
 
