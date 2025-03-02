@@ -10,6 +10,7 @@ from git_utils import get_issue_comments
 from github.Issue import Issue
 import random
 import string
+import triggers
 
 
 # Get callable tool functions
@@ -147,14 +148,14 @@ def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) 
     comments_objs = get_issue_comments(issue)
 
     # If there's a linked PR, also get its comments
-    try:
-        if has_linked_pr(issue):
-            pr = get_linked_pr(issue)
-            pr_comments = get_issue_comments(pr)
-            comments_objs.extend(pr_comments)
-    except:
-        # Continue if there's an error getting PR comments
-        pass
+    pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue)
+    if pr_comment_bool:
+        extractor = URLExtract()
+        urls = extractor.find_urls(pr_comment)[0]
+        pr_number = int(urls.split('/')[-1])
+        pr = repo.get_pull(pr_number)
+        pr_comments = get_issue_comments(pr)
+        comments_objs.extend(pr_comments)
 
     all_comments = [c.body for c in comments_objs]
     if len(all_comments) == 0:
