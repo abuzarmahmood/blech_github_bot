@@ -62,6 +62,11 @@ agent_system_messages = {
         Provide code blocks where you can.
         Reply "TERMINATE" in the end when everything is done.
         """,
+    'comment_summary_assistant': """You are a helpful GitHub bot that reviews issue comments and generates a summary in the context of the given prompt.
+    Your goal is to summarize all relevant information from the comments in the context of the prompt.
+    If no relevant information is found, respond accordingly.
+        Reply "TERMINATE" in the end when everything is done.
+        """,
 }
 
 
@@ -169,7 +174,7 @@ def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) 
         last_comment_str = f"Last comment: {comments_objs[-1].body}"
         comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
 
-    return last_comment_str, comments_str
+    return last_comment_str, comments_str, all_comments
 
 
 def generate_prompt(
@@ -181,9 +186,10 @@ def generate_prompt(
         results_to_summarize: list = [],
         original_response: str = "",
         feedback_text: str = "",
+        agent_system_messages: dict = agent_system_messages,
 ) -> str:
     """Generate prompt for the agent"""
-    last_comment_str, comments_str = parse_comments(
+    last_comment_str, comments_str, all_comments = parse_comments(
         repo_name, repo_path, details, issue)
 
     boilerplate_text = f"""
@@ -315,3 +321,26 @@ def generate_prompt(
 
     Reply "TERMINATE" in the end when everything is done.
     """
+
+    elif agent_name == "comment_summary_assistant":
+        return f"""Summarize all relevant information from the comment in the context of the given prompt.
+    If the comment is relevant to the current prompt, reply "IS_RELEVANT" along with a summary of the comment, and then terminate the conversation.
+    Include any filenames, line numbers, or code snippets that are relevant to the prompt, in the summary.
+    If no relevant information is found, respond "NOT_RELEVANT" (without a summary), and then terminate.
+
+    Prompt:
+    ========================================
+    {feedback_text}
+    ========================================
+
+    Comment to summarize:
+    ========================================
+        {results_to_summarize[0]}
+    ========================================
+
+    Reply "TERMINATE" in the end when everything is done.
+    """
+
+    else:
+        raise ValueError(
+            f"Invalid agent name: {agent_name}\nOptions are:\n{agent_system_messages.keys()}")
