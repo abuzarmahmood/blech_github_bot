@@ -402,6 +402,69 @@ def get_linked_pr(issue: Issue) -> PullRequest:
     return None
 
 
+def update_self_repo(repo_path: str) -> None:
+    """
+    Pull latest changes for the bot's own repository, handling tracked config files.
+
+    Args:
+        repo_path: Path to the bot's local git repository
+    """
+    import git
+    import os
+    import shutil
+
+    git_repo = git.Repo(repo_path)
+    origin = git_repo.remotes.origin
+
+    # Backup config/repos.txt
+    config_repos_path = os.path.join(repo_path, 'config', 'repos.txt')
+    backup_path = os.path.join(repo_path, 'config', 'repos.txt.backup')
+
+    has_backup = False
+    if os.path.exists(config_repos_path):
+        print(f"Backing up {config_repos_path}")
+        shutil.copy2(config_repos_path, backup_path)
+        has_backup = True
+
+    # Fetch latest changes
+    print("Fetching latest changes for self-repo")
+    origin.fetch()
+
+    # Check if the remote is ahead
+    local_commit = git_repo.head.commit
+    remote_commit = None
+    try:
+        remote_commit = origin.refs.master.commit
+    except AttributeError:
+        try:
+            remote_commit = origin.refs.main.commit
+        except AttributeError:
+            print("Could not find master or main branch on remote")
+
+    if remote_commit and local_commit != remote_commit:
+        print("Remote is ahead. Force pulling latest changes for self-repo.")
+        # Get the default branch name
+        default_branch = None
+        for ref in git_repo.references:
+            if ref.name == 'HEAD':
+                default_branch = ref.reference.name.replace('refs/heads/', '')
+                break
+
+        if not default_branch:
+            default_branch = 'master'  # Fallback
+
+        # Hard reset to remote branch
+        git_repo.git.reset('--hard', f'origin/{default_branch}')
+    else:
+        print("Self-repo is up-to-date.")
+
+    # Restore config/repos.txt
+    if has_backup:
+        print(f"Restoring {config_repos_path}")
+        shutil.copy2(backup_path, config_repos_path)
+        os.remove(backup_path)
+
+
 if __name__ == '__main__':
     client = get_github_client()
     repo = get_repository(client, 'katzlabbrandeis/blech_clust')
