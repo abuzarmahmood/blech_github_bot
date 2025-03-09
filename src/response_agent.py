@@ -15,6 +15,7 @@ from agents import (
 import agents
 from autogen import AssistantAgent
 import bot_tools
+import os
 
 from git_utils import (
     get_github_client,
@@ -704,7 +705,24 @@ def process_repository(
             print(f"Skipped issue #{issue.number}: {error}")
 
 
+def initialize_bot() -> None:
+    """
+    Initialize the bot and ensure it is up-to-date.
+    """
+    # Path to the bot's own repository
+    self_repo_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Update the bot's own repository
+    from git_utils import update_self_repo
+    print(f"Updating bot repository at {self_repo_path}")
+    update_self_repo(self_repo_path)
+    print("Bot repository update complete")
+
+
 if __name__ == '__main__':
+    # Initialize the bot (self-update)
+    initialize_bot()
+    
     # Get list of repositories to process
     tracked_repos = bot_tools.get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
