@@ -132,8 +132,9 @@ def create_user_agent():
     return user
 
 
-def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
+def create_agent(agent_name: str) -> AssistantAgent:
     """Create and configure the autogen agents"""
+    from config import llm_config
 
     agent = AssistantAgent(
         name=agent_name,
