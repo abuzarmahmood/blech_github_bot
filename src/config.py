@@ -22,10 +22,11 @@ repo_names = {
     # Add more repositories as needed
 }
 
+
 def get_tracked_repos():
     """
     Get list of tracked repositories from the repo_names dictionary
-    
+
     Returns:
         List of repository names in format owner/repo
     """
