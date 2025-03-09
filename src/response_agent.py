@@ -28,6 +28,7 @@ from git_utils import (
     has_linked_pr,
     push_changes_with_authentication,
 )
+from config import llm_config
 from github.Repository import Repository
 from github.Issue import Issue
 from branch_handler import (
