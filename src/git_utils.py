@@ -419,7 +419,7 @@ def update_self_repo(repo_path: str) -> None:
     # Backup config/repos.txt
     config_repos_path = os.path.join(repo_path, 'config', 'repos.txt')
     backup_path = os.path.join(repo_path, 'config', 'repos.txt.backup')
-    
+
     has_backup = False
     if os.path.exists(config_repos_path):
         print(f"Backing up {config_repos_path}")
@@ -440,7 +440,7 @@ def update_self_repo(repo_path: str) -> None:
             remote_commit = origin.refs.main.commit
         except AttributeError:
             print("Could not find master or main branch on remote")
-    
+
     if remote_commit and local_commit != remote_commit:
         print("Remote is ahead. Force pulling latest changes for self-repo.")
         # Get the default branch name
@@ -449,10 +449,10 @@ def update_self_repo(repo_path: str) -> None:
             if ref.name == 'HEAD':
                 default_branch = ref.reference.name.replace('refs/heads/', '')
                 break
-        
+
         if not default_branch:
             default_branch = 'master'  # Fallback
-        
+
         # Hard reset to remote branch
         git_repo.git.reset('--hard', f'origin/{default_branch}')
     else:
