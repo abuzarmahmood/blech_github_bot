@@ -3,7 +3,6 @@ Agent for generating responses to GitHub issues using pyautogen
 """
 from typing import Optional, Tuple
 
-from dotenv import load_dotenv
 import string
 import triggers
 from agents import (
@@ -41,23 +40,11 @@ import subprocess
 import os
 from pprint import pprint
 from collections.abc import Callable
-import random
 import traceback
 import json
 import re
 from urlextract import URLExtract
-
-load_dotenv()
-
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    raise ValueError("OpenAI API key not found in environment variables")
-
-llm_config = {
-    "model": "gpt-4o",
-    "api_key": api_key,
-    "temperature": random.uniform(0, 0.2),
-}
+from config import llm_config
 ############################################################
 # Response patterns
 ############################################################
@@ -104,7 +91,7 @@ def summarize_relevant_comments(
     }
 
     comment_summary_assistant = create_agent(
-        "comment_summary_assistant", llm_config)
+        "comment_summary_assistant")
     summarized_comments = []
     for comment in comment_list[:-1]:
         summary_prompt = generate_prompt(
@@ -171,7 +158,7 @@ def generate_feedback_response(
         "issue": issue,
     }
     user = create_user_agent()
-    feedback_assistant = create_agent("feedback_assistant", llm_config)
+    feedback_assistant = create_agent("feedback_assistant")
 
     comments = get_issue_comments(issue)
     for comment in reversed(comments):
@@ -234,9 +221,9 @@ def generate_new_response(
 
     # Create base agents
     user = create_user_agent()
-    file_assistant = create_agent("file_assistant", llm_config)
-    edit_assistant = create_agent("edit_assistant", llm_config)
-    summary_assistant = create_agent("summary_assistant", llm_config)
+    file_assistant = create_agent("file_assistant")
+    edit_assistant = create_agent("edit_assistant")
+    summary_assistant = create_agent("summary_assistant")
     # user, file_assistant, edit_assistant = create_agents()
 
     # Get prompts and run agents
@@ -323,7 +310,7 @@ def generate_edit_command_response(
 
     user = create_user_agent()
     generate_edit_command_assistant = create_agent(
-        "generate_edit_command_assistant", llm_config)
+        "generate_edit_command_assistant")
     if summarized_comments:
         generate_edit_command_prompt = generate_prompt(
             "generate_edit_command_assistant",
@@ -706,7 +693,8 @@ def process_repository(
 
 if __name__ == '__main__':
     # Get list of repositories to process
-    tracked_repos = bot_tools.get_tracked_repos()
+    from config import get_tracked_repos
+    tracked_repos = get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
     pprint(tracked_repos)
 
