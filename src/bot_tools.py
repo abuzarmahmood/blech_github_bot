@@ -286,7 +286,7 @@ def readfile(
     warning = (f"File exceeds token threshold of {token_threshold}. "
                f"Showing {len(included_lines)} of {len(data)} lines "
                f"({current_tokens}/{total_tokens} tokens). "
-               f"Use readlines({filepath}, start_line, end_line) "
+               f"Use readlines({file_path}, start_line, end_line) "
                f"to read specific ranges.")
 
     data = "".join(included_lines)
@@ -343,7 +343,7 @@ def readlines(
     warning = (f"Selected lines exceed token threshold of {token_threshold}. "
                f"Showing lines {start_line} to {start_line + n_included} "
                f"({current_tokens}/{total_tokens} tokens). "
-               f"Use readlines({filepath}, start_line, end_line) "
+               f"Use readlines({file_path}, start_line, end_line) "
                f"to read specific ranges.")
 
     data = "".join(included_lines)
