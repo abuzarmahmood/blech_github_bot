@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Tuple
 import os
 import subprocess
 import git
+from fuzzywuzzy import fuzz
 from branch_handler import (
     get_issue_related_branches,
     get_current_branch,
