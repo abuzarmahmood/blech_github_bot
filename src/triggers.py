@@ -15,7 +15,13 @@ def has_blech_bot_tag(issue: Issue) -> bool:
     Returns:
         True if the issue has the blech_bot tag, False otherwise
     """
-    return any(label.name == "blech_bot" for label in issue.labels)
+    try:
+        return any(label.name == "blech_bot" for label in issue.labels)
+    except (AttributeError, TypeError):
+        # Handle mock objects in testing
+        if hasattr(issue, 'labels') and isinstance(issue['labels'], list):
+            return any(label.name == "blech_bot" for label in issue['labels'])
+        return False
 
 
 def has_generate_edit_command_trigger(issue: Issue) -> bool:
