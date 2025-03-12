@@ -46,6 +46,7 @@ import traceback
 import json
 import re
 from urlextract import URLExtract
+from fuzzywuzzy import fuzz
 
 load_dotenv()
 
