@@ -5,6 +5,7 @@ import os
 import git
 from github.Issue import Issue
 from typing import List, Optional, Tuple
+from fuzzywuzzy import fuzz
 
 
 def get_issue_related_branches(
@@ -42,10 +43,13 @@ def get_issue_related_branches(
 
         repo = git.Repo(repo_path)
         possible_branch_name = f"{issue.number}-{'-'.join(issue.title.lower().split(' '))}"
+        fuzzy_threshold = 80  # Threshold for fuzzy matching (80% similarity)
 
         # Check local branches
         for branch in repo.heads:
-            if possible_branch_name in branch.name:
+            # Use partial_ratio for fuzzy matching to find similar branch names
+            similarity = fuzz.partial_ratio(possible_branch_name, branch.name)
+            if similarity > fuzzy_threshold:
                 related_branches.append((branch.name, False))
 
         # Check remote branches
@@ -56,7 +60,9 @@ def get_issue_related_branches(
                     continue
                 # Remove remote name prefix for comparison
                 branch_name = ref.name.split('/', 1)[1]
-                if possible_branch_name in branch_name:
+                # Use partial_ratio for fuzzy matching
+                similarity = fuzz.partial_ratio(possible_branch_name, branch_name)
+                if similarity > fuzzy_threshold:
                     related_branches.append((branch_name, True))
 
     os.chdir(orig_dir)
