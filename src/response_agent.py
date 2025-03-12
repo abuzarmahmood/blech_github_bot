@@ -407,15 +407,18 @@ def response_selector(trigger: str) -> Callable:
 def process_issue(
     issue: Issue,
     repo_name: str,
-) -> Tuple[bool, Optional[str]]:
+    dry_run: bool = False,
+) -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Process a single issue - check if it needs response and generate one
 
     Args:
         issue: The GitHub issue to process
+        repo_name: Full name of repository (owner/repo)
+        dry_run: If True, don't post responses, just generate them
 
     Returns:
-        Tuple of (whether response was posted, optional error message)
+        Tuple of (whether response was posted, optional error message, optional response text)
     """
     print(f"Processing issue #{issue.number}")
     try:
@@ -603,13 +606,16 @@ def process_issue(
         trigger = check_triggers(issue)
         response_func = response_selector(trigger)
         if response_func is None:
-            return False, f"No trigger found for issue #{issue.number}"
+            return False, f"No trigger found for issue #{issue.number}", None
         response, all_content = response_func(issue, repo_name)
-        write_issue_response(issue, response)
-        return True, None
+        
+        if not dry_run:
+            write_issue_response(issue, response)
+        
+        return True, None, response
 
     except Exception as e:
-        return False, f"Error processing issue: {traceback.format_exc()}"
+        return False, f"Error processing issue: {traceback.format_exc()}", None
 
 
 def run_aider(message: str, repo_path: str) -> str:

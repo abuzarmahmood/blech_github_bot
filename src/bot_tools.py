@@ -472,6 +472,111 @@ def run_bash_script(
     return out
 
 
+# Testing utilities
+def create_mock_issue(
+        issue_number: int = 1,
+        title: str = "Test Issue",
+        body: str = "This is a test issue",
+        labels: list = None,
+        user_login: str = "test_user"
+) -> dict:
+    """Create a mock issue for testing
+
+    Args:
+        issue_number: Issue number
+        title: Issue title
+        body: Issue body
+        labels: List of label names
+        user_login: Username of issue creator
+
+    Returns:
+        Mock issue dictionary that mimics GitHub Issue object
+    """
+    if labels is None:
+        labels = []
+    
+    # Create mock label objects
+    label_objects = [type('Label', (), {'name': name}) for name in labels]
+    
+    # Create mock user
+    user = type('User', (), {'login': user_login})
+    
+    # Create mock issue
+    issue = {
+        'number': issue_number,
+        'title': title,
+        'body': body,
+        'labels': label_objects,
+        'user': user,
+        'comments': [],
+    }
+    
+    # Add methods to mock issue
+    issue['add_to_labels'] = lambda label: labels.append(label)
+    issue['get_comments'] = lambda: issue['comments']
+    
+    return issue
+
+def create_mock_comment(
+        body: str,
+        user_login: str = "test_user",
+        created_at = None
+) -> dict:
+    """Create a mock issue comment for testing
+
+    Args:
+        body: Comment body
+        user_login: Username of commenter
+        created_at: Creation timestamp
+
+    Returns:
+        Mock comment dictionary that mimics GitHub IssueComment object
+    """
+    if created_at is None:
+        import datetime
+        created_at = datetime.datetime.now()
+    
+    # Create mock user
+    user = type('User', (), {'login': user_login})
+    
+    # Create mock comment
+    comment = {
+        'body': body,
+        'user': user,
+        'created_at': created_at
+    }
+    
+    return comment
+
+def create_mock_repository(
+        name: str = "test/repo",
+        default_branch: str = "main"
+) -> dict:
+    """Create a mock repository for testing
+
+    Args:
+        name: Repository name (owner/repo)
+        default_branch: Default branch name
+
+    Returns:
+        Mock repository dictionary that mimics GitHub Repository object
+    """
+    # Create mock repository
+    repo = {
+        'name': name.split('/')[-1],
+        'full_name': name,
+        'default_branch': default_branch,
+        'issues': [],
+        'pulls': []
+    }
+    
+    # Add methods to mock repository
+    repo['get_issues'] = lambda state=None: repo['issues']
+    repo['get_pull'] = lambda number: next((pr for pr in repo['pulls'] if pr['number'] == number), None)
+    
+    return repo
+
+
 # def read_merged_docstrings(repo_name: str) -> str:
 #     """Read the merged docstrings JSON file from a repository
 #
