@@ -494,13 +494,13 @@ def create_mock_issue(
     """
     if labels is None:
         labels = []
-    
+
     # Create mock label objects
     label_objects = [type('Label', (), {'name': name}) for name in labels]
-    
+
     # Create mock user
     user = type('User', (), {'login': user_login})
-    
+
     # Create mock issue
     issue = {
         'number': issue_number,
@@ -510,17 +510,18 @@ def create_mock_issue(
         'user': user,
         'comments': [],
     }
-    
+
     # Add methods to mock issue
     issue['add_to_labels'] = lambda label: labels.append(label)
     issue['get_comments'] = lambda: issue['comments']
-    
+
     return issue
+
 
 def create_mock_comment(
         body: str,
         user_login: str = "test_user",
-        created_at = None
+        created_at=None
 ) -> dict:
     """Create a mock issue comment for testing
 
@@ -535,18 +536,19 @@ def create_mock_comment(
     if created_at is None:
         import datetime
         created_at = datetime.datetime.now()
-    
+
     # Create mock user
     user = type('User', (), {'login': user_login})
-    
+
     # Create mock comment
     comment = {
         'body': body,
         'user': user,
         'created_at': created_at
     }
-    
+
     return comment
+
 
 def create_mock_repository(
         name: str = "test/repo",
@@ -569,11 +571,12 @@ def create_mock_repository(
         'issues': [],
         'pulls': []
     }
-    
+
     # Add methods to mock repository
     repo['get_issues'] = lambda state=None: repo['issues']
-    repo['get_pull'] = lambda number: next((pr for pr in repo['pulls'] if pr['number'] == number), None)
-    
+    repo['get_pull'] = lambda number: next(
+        (pr for pr in repo['pulls'] if pr['number'] == number), None)
+
     return repo
 
 

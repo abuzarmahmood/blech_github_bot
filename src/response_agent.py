@@ -608,10 +608,10 @@ def process_issue(
         if response_func is None:
             return False, f"No trigger found for issue #{issue.number}", None
         response, all_content = response_func(issue, repo_name)
-        
+
         if not dry_run:
             write_issue_response(issue, response)
-        
+
         return True, None, response
 
     except Exception as e:
