@@ -61,7 +61,8 @@ def get_issue_related_branches(
                 # Remove remote name prefix for comparison
                 branch_name = ref.name.split('/', 1)[1]
                 # Use partial_ratio for fuzzy matching
-                similarity = fuzz.partial_ratio(possible_branch_name, branch_name)
+                similarity = fuzz.partial_ratio(
+                    possible_branch_name, branch_name)
                 if similarity > fuzzy_threshold:
                     related_branches.append((branch_name, True))
 

@@ -171,30 +171,31 @@ def update_repository(repo_path: str) -> None:
 def select_best_branch(issue: Issue, branches: list) -> str:
     """
     Select the best branch from multiple candidates using fuzzy matching
-    
+
     Args:
         issue: The GitHub issue to match against
         branches: List of branch names to choose from
-        
+
     Returns:
         The best matching branch name
     """
     issue_title = issue.title.lower()
     issue_number = str(issue.number)
-    
+
     # First try to find branches that contain the issue number
     number_branches = [b for b in branches if issue_number in b]
-    
+
     if number_branches:
         # If we have branches with the issue number, use fuzzy matching on those
-        best_branch = max(number_branches, 
+        best_branch = max(number_branches,
                           key=lambda b: fuzz.partial_ratio(issue_title, b))
         return best_branch
-    
+
     # If no branches with issue number, use fuzzy matching on all branches
-    best_branch = max(branches, 
+    best_branch = max(branches,
                       key=lambda b: fuzz.partial_ratio(issue_title, b))
     return best_branch
+
 
 def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
     """
@@ -219,7 +220,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     # Process branches with fuzzy matching scores
     unique_branches = set([branch_name for branch_name, _ in related_branches])
     branch_dict = {}
-    
+
     # Create a dictionary of branch names with their remote status
     for branch_name in unique_branches:
         branch_dict[branch_name] = []
