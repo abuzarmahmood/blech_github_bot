@@ -16,6 +16,7 @@ import random
 import string
 import triggers
 from urlextract import URLExtract
+from urlextract import URLExtract
 
 # Get callable tool functions
 tool_funcs = []
