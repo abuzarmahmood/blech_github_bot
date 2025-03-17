@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Tuple
 import os
 import subprocess
 import git
+from fuzzywuzzy import fuzz
 from branch_handler import (
     get_issue_related_branches,
     get_current_branch,
@@ -167,6 +168,44 @@ def update_repository(repo_path: str) -> None:
     origin.pull()
 
 
+def select_best_branch(issue: Issue, branches: list) -> str:
+    """
+    Select the best branch from multiple candidates using fuzzy matching
+
+    Args:
+        issue: The GitHub issue to match against
+        branches: List of branch names to choose from
+
+    Returns:
+        The best matching branch name
+    """
+    issue_title = issue.title.lower()
+    issue_number = str(issue.number)
+
+    # Generate a normalized branch name from the issue
+    normalized_branch = f"{issue_number}-{'-'.join(issue_title.split())}"
+
+    # First try to find branches that contain the issue number
+    number_branches = [b for b in branches if issue_number in b]
+
+    if number_branches:
+        if len(number_branches) == 1:
+            # If only one branch with the issue number, return it
+            return number_branches[0]
+
+        # If multiple branches with issue number, use fuzzy matching on those
+        # Use token_sort_ratio for better matching with word order differences
+        best_branch = max(number_branches,
+                          key=lambda b: fuzz.token_sort_ratio(normalized_branch, b))
+        return best_branch
+
+    # If no branches with issue number, use fuzzy matching on all branches
+    # Use token_sort_ratio for better matching with word order differences
+    best_branch = max(branches,
+                      key=lambda b: fuzz.token_sort_ratio(normalized_branch, b))
+    return best_branch
+
+
 def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
     """
     Gets or creates a development branch for an issue
@@ -187,8 +226,11 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     # Check for existing branches related to this issue
     related_branches = get_issue_related_branches(repo_path, issue)
 
+    # Process branches with fuzzy matching scores
     unique_branches = set([branch_name for branch_name, _ in related_branches])
     branch_dict = {}
+
+    # Create a dictionary of branch names with their remote status
     for branch_name in unique_branches:
         branch_dict[branch_name] = []
         wanted_inds = [i for i, (name, _) in enumerate(
@@ -199,15 +241,22 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
     comments = get_issue_comments(issue)
 
     if len(branch_dict) > 1:
-        branch_list = "\n".join(
-            [f"- {branch_name} : Remote = {is_remote}"
-             for branch_name, is_remote in branch_dict.items()]
-        )
-        error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
-            "Please delete or use existing branches before creating a new one."
-        if "Found multiple branches" not in comments[-1].body:
-            write_issue_response(issue, error_msg)
-        raise RuntimeError(error_msg)
+        # Try to select the best branch using fuzzy matching
+        try:
+            best_branch = select_best_branch(issue, list(branch_dict.keys()))
+            print(f"Selected best matching branch: {best_branch}")
+            return best_branch
+        except Exception as e:
+            # If selection fails, fall back to the error message
+            branch_list = "\n".join(
+                [f"- {branch_name} : Remote = {is_remote}"
+                 for branch_name, is_remote in branch_dict.items()]
+            )
+            error_msg = f"Found multiple branches for issue #{issue.number}:\n{branch_list}\n" +\
+                "Please delete or use existing branches before creating a new one."
+            if "Found multiple branches" not in comments[-1].body:
+                write_issue_response(issue, error_msg)
+            raise RuntimeError(error_msg)
     elif len(branch_dict) == 1:
         return list(branch_dict.keys())[0]
     elif create:
@@ -265,6 +314,9 @@ def create_pull_request(repo_path: str) -> str:
         original_dir = os.getcwd()
         os.chdir(repo_path)
 
+        # Get current branch name
+        current_branch = get_current_branch(repo_path)
+
         # Create pull request
         result = subprocess.run(['gh', 'pr', 'create', '--fill'],
                                 check=True,
@@ -274,8 +326,9 @@ def create_pull_request(repo_path: str) -> str:
         # Return to original directory
         os.chdir(original_dir)
 
-        # Return the PR URL from the output
-        return result.stdout.strip()
+        # Return the PR URL from the output with branch information
+        pr_url = result.stdout.strip()
+        return pr_url, current_branch
 
     except FileNotFoundError:
         raise ValueError("GitHub CLI (gh) not found. Please install it first.")
@@ -295,7 +348,13 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
         URL of the created pull request
     """
     branch = get_development_branch(issue, repo_path)
-    return create_pull_request(repo_path)
+    pr_url, branch_name = create_pull_request(repo_path)
+
+    # Add a comment to the issue with the branch name used for the PR
+    comment_text = f"Created pull request from branch: `{branch_name}`\n{pr_url}"
+    write_issue_response(issue, comment_text)
+
+    return pr_url
 
 
 def push_changes_with_authentication(
