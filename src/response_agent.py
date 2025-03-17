@@ -60,6 +60,7 @@ if not api_key:
 
 llm_config = {
     "model": "gpt-4o",
+    # "model": "o3-mini-2025-01-31",
     "api_key": api_key,
     "temperature": random.uniform(0, 0.2),
 }
@@ -257,7 +258,7 @@ def summarize_relevant_comments(
 def generate_feedback_response(
         issue: Issue,
         repo_name: str,
-        max_turns: int = 10,
+        max_turns: int = 20,
 ) -> Tuple[str, list]:
     """Generate an improved response based on user feedback
 
@@ -396,13 +397,13 @@ def generate_new_response(
             {
                 "recipient": file_assistant,
                 "message": file_prompt,
-                "max_turns": 10,
+                "max_turns": 20,
                 "summary_method": "last_msg",
             },
             {
                 "recipient": edit_assistant,
                 "message": edit_prompt,
-                "max_turns": 10,
+                "max_turns": 20,
                 "summary_method": "reflection_with_llm",
             },
         ]
@@ -499,7 +500,7 @@ def generate_edit_command_response(
             {
                 "recipient": generate_edit_command_assistant,
                 "message": generate_edit_command_prompt,
-                "max_turns": 10,
+                "max_turns": 20,
                 "summary_method": "reflection_with_llm",
             },
         ]
