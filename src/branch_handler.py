@@ -14,13 +14,14 @@ def get_issue_related_branches(
 ) -> List[Tuple[str, bool]]:
     """
     Uses `gh issue develop -l <issue_number>` to get all branches related to an issue number
+    and falls back to fuzzy matching if no branches are found through GitHub CLI
 
     Args:
         repo_path: Path to local git repository
-        issue_number: GitHub issue number to search for
+        issue: GitHub issue to search for
 
     Returns:
-        List of tuples containing (branch_name, url)
+        List of tuples containing (branch_name, is_remote)
     """
     issue_number = issue.number
 
@@ -40,13 +41,25 @@ def get_issue_related_branches(
         print(f"Error getting related branches: {str(e)}")
 
     if len(related_branches) == 0:
-
+        # Fall back to fuzzy matching if no branches found through GitHub CLI
         repo = git.Repo(repo_path)
+        
+        # Create a possible branch name based on issue number and title
         possible_branch_name = f"{issue.number}-{'-'.join(issue.title.lower().split(' '))}"
-        fuzzy_threshold = 80  # Threshold for fuzzy matching (80% similarity)
+        
+        # Also check for just the issue number in branch names
+        issue_number_str = str(issue.number)
+        
+        # Set threshold for fuzzy matching (80% similarity)
+        fuzzy_threshold = 80
 
         # Check local branches
         for branch in repo.heads:
+            # First check if branch contains the issue number
+            if issue_number_str in branch.name:
+                related_branches.append((branch.name, False))
+                continue
+                
             # Use partial_ratio for fuzzy matching to find similar branch names
             similarity = fuzz.partial_ratio(possible_branch_name, branch.name)
             if similarity > fuzzy_threshold:
@@ -60,6 +73,12 @@ def get_issue_related_branches(
                     continue
                 # Remove remote name prefix for comparison
                 branch_name = ref.name.split('/', 1)[1]
+                
+                # First check if branch contains the issue number
+                if issue_number_str in branch_name:
+                    related_branches.append((branch_name, True))
+                    continue
+                    
                 # Use partial_ratio for fuzzy matching
                 similarity = fuzz.partial_ratio(
                     possible_branch_name, branch_name)

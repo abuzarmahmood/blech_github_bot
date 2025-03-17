@@ -181,19 +181,28 @@ def select_best_branch(issue: Issue, branches: list) -> str:
     """
     issue_title = issue.title.lower()
     issue_number = str(issue.number)
+    
+    # Generate a normalized branch name from the issue
+    normalized_branch = f"{issue_number}-{'-'.join(issue_title.split())}"
 
     # First try to find branches that contain the issue number
     number_branches = [b for b in branches if issue_number in b]
 
     if number_branches:
-        # If we have branches with the issue number, use fuzzy matching on those
+        if len(number_branches) == 1:
+            # If only one branch with the issue number, return it
+            return number_branches[0]
+        
+        # If multiple branches with issue number, use fuzzy matching on those
+        # Use token_sort_ratio for better matching with word order differences
         best_branch = max(number_branches,
-                          key=lambda b: fuzz.partial_ratio(issue_title, b))
+                          key=lambda b: fuzz.token_sort_ratio(normalized_branch, b))
         return best_branch
 
     # If no branches with issue number, use fuzzy matching on all branches
+    # Use token_sort_ratio for better matching with word order differences
     best_branch = max(branches,
-                      key=lambda b: fuzz.partial_ratio(issue_title, b))
+                      key=lambda b: fuzz.token_sort_ratio(normalized_branch, b))
     return best_branch
 
 
@@ -304,6 +313,9 @@ def create_pull_request(repo_path: str) -> str:
         # Change to repo directory
         original_dir = os.getcwd()
         os.chdir(repo_path)
+        
+        # Get current branch name
+        current_branch = get_current_branch(repo_path)
 
         # Create pull request
         result = subprocess.run(['gh', 'pr', 'create', '--fill'],
@@ -314,8 +326,9 @@ def create_pull_request(repo_path: str) -> str:
         # Return to original directory
         os.chdir(original_dir)
 
-        # Return the PR URL from the output
-        return result.stdout.strip()
+        # Return the PR URL from the output with branch information
+        pr_url = result.stdout.strip()
+        return pr_url, current_branch
 
     except FileNotFoundError:
         raise ValueError("GitHub CLI (gh) not found. Please install it first.")
@@ -335,7 +348,13 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
         URL of the created pull request
     """
     branch = get_development_branch(issue, repo_path)
-    return create_pull_request(repo_path)
+    pr_url, branch_name = create_pull_request(repo_path)
+    
+    # Add a comment to the issue with the branch name used for the PR
+    comment_text = f"Created pull request from branch: `{branch_name}`\n{pr_url}"
+    write_issue_response(issue, comment_text)
+    
+    return pr_url
 
 
 def push_changes_with_authentication(
