@@ -49,6 +49,8 @@ import re
 from urlextract import URLExtract
 
 load_dotenv()
+src_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(src_dir)
 
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:

@@ -2,12 +2,13 @@
 Tools for the agents to use.
 
 DO NOT PUT ANYTHING HERE THAT IS NOT SAFE FOR THE AGENT TO USE.
+ALSO CAN'T HAVE CALLABLE MODULES.
 """
 
 import os
 import sys
 import requests
-from bs4 import BeautifulSoup
+import bs4
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
@@ -265,7 +266,7 @@ def scrape_text_from_url(url: str) -> str:
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
         # Remove script and style elements
         for script in soup(["script", "style"]):
