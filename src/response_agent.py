@@ -64,6 +64,28 @@ llm_config = {
 ############################################################
 
 
+def get_tracked_repos() -> str:
+    """
+    Get the tracked repositories
+
+    Returns:
+        - List of tracked repositories
+    """
+    tracked_repos_path = os.path.join(base_dir, 'config', 'repos.txt')
+    with open(tracked_repos_path, 'r') as file:
+        tracked_repos = file.readlines()
+    tracked_repos = [repo.strip() for repo in tracked_repos]
+    return tracked_repos
+
+# Keep everything but tool calls
+
+
+def is_tool_related(
+        x: dict,) -> bool:
+    if 'tool_calls' in x.keys() or x['role'] == 'tool':
+        return True
+
+
 def check_not_empty(data: str) -> bool:
     """
     Check that given data is not empty and is not a TERMINATE message
@@ -331,7 +353,7 @@ def generate_new_response(
     )
 
     results_to_summarize = [
-        [x for x in this_result.chat_history if not bot_tools.is_tool_related(
+        [x for x in this_result.chat_history if not is_tool_related(
             x)]
         for this_result in chat_results
     ]
@@ -786,7 +808,7 @@ def process_repository(
 
 if __name__ == '__main__':
     # Get list of repositories to process
-    tracked_repos = bot_tools.get_tracked_repos()
+    tracked_repos = get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
     pprint(tracked_repos)
 

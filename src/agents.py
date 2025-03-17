@@ -17,6 +17,7 @@ import string
 import triggers
 from urlextract import URLExtract
 
+
 # Get callable tool functions
 tool_funcs = []
 for func in dir(bot_tools):
