@@ -47,7 +47,6 @@ import traceback
 import json
 import re
 from urlextract import URLExtract
-from urlextract import URLExtract
 
 load_dotenv()
 
@@ -77,35 +76,6 @@ def check_not_empty(data: str) -> bool:
         return False
 
 
-def extract_urls_from_issue(issue: Issue) -> List[str]:
-    """
-    Extract URLs from issue body and comments
-
-    Args:
-        issue: The GitHub issue to extract URLs from
-
-    Returns:
-        List of URLs found in the issue
-    """
-    extractor = URLExtract()
-    urls = []
-
-    # Extract from issue body
-    issue_body = issue.body or ""
-    urls.extend(extractor.find_urls(issue_body))
-
-    # Extract from comments
-    for comment in get_issue_comments(issue):
-        comment_body = comment.body or ""
-        urls.extend(extractor.find_urls(comment_body))
-
-    # Remove duplicates while preserving order
-    unique_urls = []
-    for url in urls:
-        if url not in unique_urls:
-            unique_urls.append(url)
-
-    return unique_urls
 
 
 def summarize_relevant_comments(
