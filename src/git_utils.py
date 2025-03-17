@@ -301,7 +301,7 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
 def push_changes_with_authentication(
         repo_path: str,
         # pull_request: PullRequest,
-        out_thread: IssueComment | PullRequest,
+        out_thread: Issue | PullRequest,
         branch_name: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """
@@ -334,8 +334,10 @@ def push_changes_with_authentication(
         success_bool = True
     except git.GitCommandError as e:
         error_msg = f"Failed to push changes: {e.stderr.strip()}"
-        if isinstance(out_thread, IssueComment):
-            write_issue_response(out_thread, error_msg)
+        if isinstance(out_thread, Issue):
+            issue_comments = list(out_thread.get_comments())
+            if 'Failed to push changes' not in issue_comments[-1].body:
+                write_issue_response(out_thread, error_msg)
         elif isinstance(out_thread, PullRequest):
             pr_comments = list(out_thread.get_issue_comments())
             if 'Failed to push changes' not in pr_comments[-1].body:

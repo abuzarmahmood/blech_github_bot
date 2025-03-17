@@ -792,9 +792,13 @@ def run_aider(message: str, repo_path: str) -> str:
         FileNotFoundError: If aider is not installed
     """
     try:
+
         # Change to repo directory
         original_dir = os.getcwd()
         os.chdir(repo_path)
+
+        # Current commit
+        current_commit = git.Repo(repo_path).head.object.hexsha
 
         # Run aider with the message
         result = subprocess.run(
@@ -810,6 +814,11 @@ def run_aider(message: str, repo_path: str) -> str:
                 capture_output=True,
                 text=True
             )
+
+        # Check if there are any changes
+        updated_commit = git.Repo(repo_path).head.object.hexsha
+        if current_commit == updated_commit:
+            raise RuntimeError("No changes made by Aider")
 
         # Return to original directory
         os.chdir(original_dir)
