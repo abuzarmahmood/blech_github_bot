@@ -6,11 +6,16 @@ import autogen
 import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
 import bot_tools
-from git_utils import get_issue_comments
+from git_utils import (
+    get_github_client,
+    get_repository,
+    get_issue_comments,
+)
 from github.Issue import Issue
 import random
 import string
-
+import triggers
+from urlextract import URLExtract
 
 # Get callable tool functions
 tool_funcs = []
@@ -62,6 +67,11 @@ agent_system_messages = {
         Ensure the command provides enough information for the downstream bot to make changes accurately.
         NEVER ask for user input and NEVER expect it.
         Provide code blocks where you can.
+        Reply "TERMINATE" in the end when everything is done.
+        """,
+    'comment_summary_assistant': """You are a helpful GitHub bot that reviews issue comments and generates a summary in the context of the given prompt.
+    Your goal is to summarize all relevant information from the comments in the context of the prompt.
+    If no relevant information is found, respond accordingly.
         Reply "TERMINATE" in the end when everything is done.
         """,
 }
@@ -144,8 +154,22 @@ def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
 
 
 def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
-    """Parse comments for the issue"""
+    """Parse comments for the issue or pull request"""
+    from git_utils import has_linked_pr, get_linked_pr
+
     comments_objs = get_issue_comments(issue)
+    repo = get_repository(get_github_client(), repo_name)
+
+    # If there's a linked PR, also get its comments
+    pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue)
+    if pr_comment_bool:
+        extractor = URLExtract()
+        urls = extractor.find_urls(pr_comment)[0]
+        pr_number = int(urls.split('/')[-1])
+        pr = repo.get_pull(pr_number)
+        pr_comments = get_issue_comments(pr)
+        comments_objs.extend(pr_comments)
+
     all_comments = [c.body for c in comments_objs]
     if len(all_comments) == 0:
         last_comment_str = ""
@@ -158,7 +182,7 @@ def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) 
         last_comment_str = f"Last comment: {comments_objs[-1].body}"
         comments_str = f"Also think of these comments as part of the response context:\n    {comments}"
 
-    return last_comment_str, comments_str
+    return last_comment_str, comments_str, all_comments
 
 
 def generate_prompt(
@@ -170,9 +194,11 @@ def generate_prompt(
         results_to_summarize: list = [],
         original_response: str = "",
         feedback_text: str = "",
+        agent_system_messages: dict = agent_system_messages,
+        summarized_comments_str: str = "",
 ) -> str:
     """Generate prompt for the agent"""
-    last_comment_str, comments_str = parse_comments(
+    last_comment_str, comments_str, all_comments = parse_comments(
         repo_name, repo_path, details, issue)
 
     # Add URL content information if available
@@ -279,7 +305,12 @@ def generate_prompt(
         return f"Summarize the suggestions and changes made by the other agents. Repeat any code snippets as is.\n\n{results_to_summarize}\n"
 
     elif agent_name == "generate_edit_command_assistant":
+        if summarized_comments_str != "":
+            generate_edit_context = summarized_comments_str
+        else:
+            generate_edit_context = comments_str
         return f"""Please analyze this GitHub issue and generate a detailed edit command:
+            **Focus specifically on the last comment (if it is relevant).**
 
     {boilerplate_text}
 
@@ -311,7 +342,30 @@ def generate_prompt(
         Code edits here
         ```
 
-    {comments_str}
+    {generate_edit_context}
 
     Reply "TERMINATE" in the end when everything is done.
     """
+
+    elif agent_name == "comment_summary_assistant":
+        return f"""Summarize all relevant information from the comment in the context of the given prompt.
+    If the comment is relevant to the current prompt, reply "IS_RELEVANT" along with a summary of the comment, and then terminate the conversation.
+    Include any filenames, line numbers, or code snippets that are relevant to the prompt, in the summary.
+    If no relevant information is found, respond "NOT_RELEVANT" (without a summary), and then terminate.
+
+    Prompt:
+    ========================================
+    {feedback_text}
+    ========================================
+
+    Comment to summarize:
+    ========================================
+        {results_to_summarize[0]}
+    ========================================
+
+    Reply "TERMINATE" in the end when everything is done.
+    """
+
+    else:
+        raise ValueError(
+            f"Invalid agent name: {agent_name}\nOptions are:\n{agent_system_messages.keys()}")
