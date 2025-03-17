@@ -181,7 +181,7 @@ def select_best_branch(issue: Issue, branches: list) -> str:
     """
     issue_title = issue.title.lower()
     issue_number = str(issue.number)
-    
+
     # Generate a normalized branch name from the issue
     normalized_branch = f"{issue_number}-{'-'.join(issue_title.split())}"
 
@@ -192,7 +192,7 @@ def select_best_branch(issue: Issue, branches: list) -> str:
         if len(number_branches) == 1:
             # If only one branch with the issue number, return it
             return number_branches[0]
-        
+
         # If multiple branches with issue number, use fuzzy matching on those
         # Use token_sort_ratio for better matching with word order differences
         best_branch = max(number_branches,
@@ -313,7 +313,7 @@ def create_pull_request(repo_path: str) -> str:
         # Change to repo directory
         original_dir = os.getcwd()
         os.chdir(repo_path)
-        
+
         # Get current branch name
         current_branch = get_current_branch(repo_path)
 
@@ -349,11 +349,11 @@ def create_pull_request_from_issue(issue: Issue, repo_path: str) -> str:
     """
     branch = get_development_branch(issue, repo_path)
     pr_url, branch_name = create_pull_request(repo_path)
-    
+
     # Add a comment to the issue with the branch name used for the PR
     comment_text = f"Created pull request from branch: `{branch_name}`\n{pr_url}"
     write_issue_response(issue, comment_text)
-    
+
     return pr_url
 
 
