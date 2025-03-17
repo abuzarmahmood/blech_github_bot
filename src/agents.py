@@ -32,7 +32,6 @@ agent_system_messages = {
         DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
         NEVER ask for user input and NEVER expect it.
         Return file names that are relevant, and if possible, specific lines where changes can be made.
-        Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
@@ -225,7 +224,6 @@ def generate_prompt(
 
     Generate a helpful and specific response addressing the issue contents.
     Use the tools you have. Do not ask for user input or expect it.
-    To find details of files use read_merged_summary or read_merged_docstrings
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
 
     Return response in format:
@@ -283,7 +281,6 @@ def generate_prompt(
 
     Use the tools you have. Do not ask for user input or expect it.
     DO NOT SUGGEST CODE EXECUTIONS. Only make code editing suggestions.
-    To find details of files use read_merged_summary or read_merged_docstrings
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
     Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
     Finish the job by suggesting specific lines in specific files where changes can be made.

@@ -7,8 +7,6 @@ ALSO CAN'T HAVE CALLABLE MODULES.
 
 import os
 import sys
-import requests
-import bs4
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
