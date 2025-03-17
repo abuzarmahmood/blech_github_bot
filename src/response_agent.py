@@ -50,6 +50,7 @@ import re
 from urlextract import URLExtract
 import requests
 import bs4
+import git
 
 load_dotenv()
 src_dir = os.path.dirname(os.path.abspath(__file__))
