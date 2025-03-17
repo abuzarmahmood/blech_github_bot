@@ -41,23 +41,33 @@ def get_issue_related_branches(
     if len(related_branches) == 0:
 
         repo = git.Repo(repo_path)
-        possible_branch_name = f"{issue.number}-{'-'.join(issue.title.lower().split(' '))}"
+        issue_title_cleaned = issue.title.replace(' ', '-').lower()
+        # Remove any punctuation from the title
+        issue_title_cleaned = ''.join(
+            char for char in issue_title_cleaned if char.isalnum() or char == '-')
+        possible_branch_name = f"{issue.number}-{issue_title_cleaned}"
+
+        fetched_heads = repo.git.ls_remote('--heads', 'origin').splitlines()
 
         # Check local branches
         for branch in repo.heads:
             if possible_branch_name in branch.name:
                 related_branches.append((branch.name, False))
 
+        for this_head in fetched_heads:
+            if possible_branch_name in this_head:
+                related_branches.append((this_head.split('heads/')[1], True))
+
         # Check remote branches
-        for remote in repo.remotes:
-            for ref in remote.refs:
-                # Skip HEAD ref
-                if ref.name.endswith('/HEAD'):
-                    continue
-                # Remove remote name prefix for comparison
-                branch_name = ref.name.split('/', 1)[1]
-                if possible_branch_name in branch_name:
-                    related_branches.append((branch_name, True))
+        # for remote in repo.remotes:
+        #     for ref in remote.refs:
+        #         # Skip HEAD ref
+        #         if ref.name.endswith('/HEAD'):
+        #             continue
+        #         # Remove remote name prefix for comparison
+        #         branch_name = ref.name.split('/', 1)[1]
+        #         if possible_branch_name in branch_name:
+        #             related_branches.append((branch_name, True))
 
     os.chdir(orig_dir)
     return related_branches

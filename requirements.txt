@@ -5,3 +5,6 @@ pyyaml>=5.4.1
 pyautogen>=0.2.0
 gitpython>=3.1.40
 pre-commit>=3.5.0
+urlextract>=1.0.0
+beautifulsoup4>=4.9.3
+aider-chat>=0.18.0

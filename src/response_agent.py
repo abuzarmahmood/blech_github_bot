@@ -1,7 +1,7 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
 """
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from dotenv import load_dotenv
 import string
@@ -12,6 +12,7 @@ from agents import (
     generate_prompt,
     parse_comments
 )
+from urlextract import URLExtract
 import agents
 from autogen import AssistantAgent
 import bot_tools
@@ -46,8 +47,12 @@ import traceback
 import json
 import re
 from urlextract import URLExtract
+import requests
+import bs4
 
 load_dotenv()
+src_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(src_dir)
 
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
@@ -61,6 +66,111 @@ llm_config = {
 ############################################################
 # Response patterns
 ############################################################
+
+
+def extract_urls_from_issue(issue: Issue) -> List[str]:
+    """
+    Extract URLs from issue body and comments
+
+    Args:
+        issue: The GitHub issue to extract URLs from
+
+    Returns:
+        List of URLs found in the issue
+    """
+    extractor = URLExtract()
+    urls = []
+
+    # Extract from issue body
+    issue_body = issue.body or ""
+    urls.extend(extractor.find_urls(issue_body))
+
+    # Extract from comments
+    for comment in get_issue_comments(issue):
+        comment_body = comment.body or ""
+        urls.extend(extractor.find_urls(comment_body))
+
+    # Remove duplicates while preserving order
+    unique_urls = []
+    for url in urls:
+        if url not in unique_urls:
+            unique_urls.append(url)
+
+    return unique_urls
+
+
+def scrape_text_from_url(url: str) -> str:
+    """Scrape text content from a given URL.
+
+    Args:
+        url: The URL to scrape text from.
+
+    Returns:
+        The scraped text content.
+    """
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Raise an error for bad responses
+        soup = bs4.BeautifulSoup(response.text, 'html.parser')
+
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()
+
+        # Get text
+        text = soup.get_text()
+
+        # Break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # Break multi-headlines into a line each
+        chunks = (phrase.strip()
+                  for line in lines for phrase in line.split("  "))
+        # Remove blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+
+        return text
+    except requests.RequestException as e:
+        print(f"Error fetching URL {url}: {e}")
+        return f"Error fetching URL {url}: {str(e)}"
+
+
+def summarize_text(text: str, max_length: int = 1000) -> str:
+    """Summarize text to a maximum length.
+
+    Args:
+        text: The text to summarize.
+        max_length: Maximum length of the summary.
+
+    Returns:
+        The summarized text.
+    """
+    if len(text) <= max_length:
+        return text
+
+    # Simple truncation with ellipsis for now
+    return text[:max_length] + "...\n[Text truncated due to length]"
+
+
+def get_tracked_repos() -> str:
+    """
+    Get the tracked repositories
+
+    Returns:
+        - List of tracked repositories
+    """
+    tracked_repos_path = os.path.join(base_dir, 'config', 'repos.txt')
+    with open(tracked_repos_path, 'r') as file:
+        tracked_repos = file.readlines()
+    tracked_repos = [repo.strip() for repo in tracked_repos]
+    return tracked_repos
+
+# Keep everything but tool calls
+
+
+def is_tool_related(
+        x: dict,) -> bool:
+    if 'tool_calls' in x.keys() or x['role'] == 'tool':
+        return True
 
 
 def check_not_empty(data: str) -> bool:
@@ -164,6 +274,22 @@ def generate_feedback_response(
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
 
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = summarize_text(content)
+            url_contents[url] = summarized_content
+
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
+
     prompt_kwargs = {
         "repo_name": repo_name,
         "repo_path": repo_path,
@@ -232,6 +358,22 @@ def generate_new_response(
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
 
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = summarize_text(content)
+            url_contents[url] = summarized_content
+
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
+
     # Create base agents
     user = create_user_agent()
     file_assistant = create_agent("file_assistant", llm_config)
@@ -267,7 +409,7 @@ def generate_new_response(
     )
 
     results_to_summarize = [
-        [x for x in this_result.chat_history if not bot_tools.is_tool_related(
+        [x for x in this_result.chat_history if not is_tool_related(
             x)]
         for this_result in chat_results
     ]
@@ -320,6 +462,22 @@ def generate_edit_command_response(
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
+
+    # Extract URLs from issue and scrape content
+    urls = extract_urls_from_issue(issue)
+    url_contents = {}
+
+    if urls:
+        print(f"Found {len(urls)} URLs in issue")
+        for url in urls:
+            print(f"Scraping content from {url}")
+            content = scrape_text_from_url(url)
+            # Summarize content to avoid token limits
+            summarized_content = summarize_text(content)
+            url_contents[url] = summarized_content
+
+        # Add URL contents to issue details
+        details['url_contents'] = url_contents
 
     user = create_user_agent()
     generate_edit_command_assistant = create_agent(
@@ -706,7 +864,7 @@ def process_repository(
 
 if __name__ == '__main__':
     # Get list of repositories to process
-    tracked_repos = bot_tools.get_tracked_repos()
+    tracked_repos = get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
     pprint(tracked_repos)
 

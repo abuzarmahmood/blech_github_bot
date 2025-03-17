@@ -17,6 +17,7 @@ import string
 import triggers
 from urlextract import URLExtract
 
+
 # Get callable tool functions
 tool_funcs = []
 for func in dir(bot_tools):
@@ -31,7 +32,6 @@ agent_system_messages = {
         DO NOT MAKE ANY CHANGES TO THE FILES OR CREATE NEW FILES. Only provide information or suggestions.
         NEVER ask for user input and NEVER expect it.
         Return file names that are relevant, and if possible, specific lines where changes can be made.
-        Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
         Reply "TERMINATE" in the end when everything is done.
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
@@ -198,12 +198,23 @@ def generate_prompt(
     last_comment_str, comments_str, all_comments = parse_comments(
         repo_name, repo_path, details, issue)
 
+    # Add URL content information if available
+    url_content_str = ""
+    if 'url_contents' in details and details['url_contents']:
+        url_content_str = "\nURLs found in issue:\n"
+        for url, content in details['url_contents'].items():
+            # Truncate content preview to avoid extremely long prompts
+            content_preview = content[:500] + \
+                "..." if len(content) > 500 else content
+            url_content_str += f"\n- URL: {url}\n- Content preview: {content_preview}\n"
+
     boilerplate_text = f"""
         Repository: {repo_name}
         Local path: {repo_path}
         Title: {details['title']}
         Body: {details['body']}
-        {last_comment_str}  # Focus on addressing this comment
+        {last_comment_str}
+        {url_content_str}
         """
 
     if agent_name == "file_assistant":
@@ -213,7 +224,6 @@ def generate_prompt(
 
     Generate a helpful and specific response addressing the issue contents.
     Use the tools you have. Do not ask for user input or expect it.
-    To find details of files use read_merged_summary or read_merged_docstrings
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
 
     Return response in format:
@@ -271,7 +281,6 @@ def generate_prompt(
 
     Use the tools you have. Do not ask for user input or expect it.
     DO NOT SUGGEST CODE EXECUTIONS. Only make code editing suggestions.
-    To find details of files use read_merged_summary or read_merged_docstrings
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
     Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
     Finish the job by suggesting specific lines in specific files where changes can be made.
