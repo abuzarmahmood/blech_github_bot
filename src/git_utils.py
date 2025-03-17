@@ -417,13 +417,16 @@ def update_self_repo(
 
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
+    # Get repo username/repo_name
+    url_splits = git_repo.remotes.origin.url.split('/')[-2:]
+    repo_basename = url_splits[-1].split('.')[0]
+    repo_name = url_splits[-2] + '/' + repo_basename
 
     # Initialize GitHub client
     client = get_github_client()
     github_repo = get_repository(client, repo_name)
     # Determine the default branch
     default_branch = github_repo.default_branch
-    repo_name = github_repo.full_name
 
     print(f"Updating self-repo {repo_name}...")
 
