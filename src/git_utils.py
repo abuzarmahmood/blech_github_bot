@@ -402,7 +402,9 @@ def get_linked_pr(issue: Issue) -> PullRequest:
     return None
 
 
-def update_self_repo(repo_path: str) -> None:
+def update_self_repo(
+        repo_path: str,
+) -> None:
     """
     Pull latest changes for the bot's own repository, handling tracked config files.
 
@@ -421,6 +423,9 @@ def update_self_repo(repo_path: str) -> None:
     github_repo = get_repository(client, repo_name)
     # Determine the default branch
     default_branch = github_repo.default_branch
+    repo_name = github_repo.full_name
+
+    print(f"Updating self-repo {repo_name}...")
 
     # Backup config/repos.txt
     config_repos_path = os.path.join(repo_path, 'config', 'repos.txt')
