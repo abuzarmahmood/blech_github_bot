@@ -44,7 +44,7 @@ def get_issue_related_branches(
         issue_title_cleaned = issue.title.replace(' ', '-').lower()
         # Remove any punctuation from the title
         issue_title_cleaned = ''.join(
-            char for char in issue_title_cleaned if char.isalnum() or char == '-')
+            char for char in issue_title_cleaned if char.isalnum() or char == '-' or char == '_')
         possible_branch_name = f"{issue.number}-{issue_title_cleaned}"
 
         fetched_heads = repo.git.ls_remote('--heads', 'origin').splitlines()
