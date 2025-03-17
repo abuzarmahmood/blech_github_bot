@@ -14,6 +14,7 @@ from branch_handler import (
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
+from github.IssueComment import IssueComment
 from github.PullRequest import PullRequest
 from dotenv import load_dotenv
 import re
