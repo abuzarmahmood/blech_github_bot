@@ -416,6 +416,12 @@ def update_self_repo(repo_path: str) -> None:
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
 
+    # Initialize GitHub client
+    client = get_github_client()
+    github_repo = get_repository(client, repo_name)
+    # Determine the default branch
+    default_branch = github_repo.default_branch
+
     # Backup config/repos.txt
     config_repos_path = os.path.join(repo_path, 'config', 'repos.txt')
     backup_path = os.path.join(repo_path, 'config', 'repos.txt.backup')
@@ -443,15 +449,6 @@ def update_self_repo(repo_path: str) -> None:
 
     if remote_commit and local_commit != remote_commit:
         print("Remote is ahead. Force pulling latest changes for self-repo.")
-        # Get the default branch name
-        default_branch = None
-        for ref in git_repo.references:
-            if ref.name == 'HEAD':
-                default_branch = ref.reference.name.replace('refs/heads/', '')
-                break
-
-        if not default_branch:
-            default_branch = 'master'  # Fallback
 
         # Hard reset to remote branch
         git_repo.git.reset('--hard', f'origin/{default_branch}')

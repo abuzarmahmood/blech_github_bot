@@ -55,6 +55,10 @@ load_dotenv()
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
 
+# Read config/params.json
+with open(os.path.join(base_dir, 'config', 'params.json')) as f:
+    params = json.load(f)
+
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     raise ValueError("OpenAI API key not found in environment variables")
@@ -868,15 +872,19 @@ def initialize_bot() -> None:
     """
     Initialize the bot and ensure it is up-to-date.
     """
-    # Path to the bot's own repository
-    self_repo_path = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))
+    if params['auto_update']:
+        print("Updating bot repository...")
+        # Path to the bot's own repository
+        self_repo_path = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__)))
 
-    # Update the bot's own repository
-    from git_utils import update_self_repo
-    print(f"Updating bot repository at {self_repo_path}")
-    update_self_repo(self_repo_path)
-    print("Bot repository update complete")
+        # Update the bot's own repository
+        from git_utils import update_self_repo
+        print(f"Updating bot repository at {self_repo_path}")
+        update_self_repo(self_repo_path)
+        print("Bot repository update complete")
+    else:
+        print("Auto-update is disabled. Skipping bot repository update.")
 
 
 if __name__ == '__main__':
