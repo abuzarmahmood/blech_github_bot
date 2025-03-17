@@ -474,8 +474,6 @@ def run_bash_script(
     return out
 
 
-
-
 # def read_merged_docstrings(repo_name: str) -> str:
 #     """Read the merged docstrings JSON file from a repository
 #

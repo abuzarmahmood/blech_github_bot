@@ -76,8 +76,6 @@ def check_not_empty(data: str) -> bool:
         return False
 
 
-
-
 def summarize_relevant_comments(
         issue: Issue,
         repo_name: str,
