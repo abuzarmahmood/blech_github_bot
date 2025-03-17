@@ -130,7 +130,7 @@ def checkout_branch(repo_path: str, branch_name: str, create: bool = False) -> N
     """
     repo = git.Repo(repo_path)
     # Get rid of uncommited local changes
-    repo.git.checkout(repo_path)
+    repo.git.clean('-f')
     if create and branch_name not in repo.heads:
         repo.create_head(branch_name)
         print(f"Created branch {branch_name}")
