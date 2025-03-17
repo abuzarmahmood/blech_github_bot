@@ -66,6 +66,58 @@ llm_config = {
 ############################################################
 
 
+def scrape_text_from_url(url: str) -> str:
+    """Scrape text content from a given URL.
+
+    Args:
+        url: The URL to scrape text from.
+
+    Returns:
+        The scraped text content.
+    """
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Raise an error for bad responses
+        soup = bs4.BeautifulSoup(response.text, 'html.parser')
+
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()
+
+        # Get text
+        text = soup.get_text()
+
+        # Break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # Break multi-headlines into a line each
+        chunks = (phrase.strip()
+                  for line in lines for phrase in line.split("  "))
+        # Remove blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+
+        return text
+    except requests.RequestException as e:
+        print(f"Error fetching URL {url}: {e}")
+        return f"Error fetching URL {url}: {str(e)}"
+
+
+def summarize_text(text: str, max_length: int = 1000) -> str:
+    """Summarize text to a maximum length.
+
+    Args:
+        text: The text to summarize.
+        max_length: Maximum length of the summary.
+
+    Returns:
+        The summarized text.
+    """
+    if len(text) <= max_length:
+        return text
+
+    # Simple truncation with ellipsis for now
+    return text[:max_length] + "...\n[Text truncated due to length]"
+
+
 def get_tracked_repos() -> str:
     """
     Get the tracked repositories
@@ -197,9 +249,9 @@ def generate_feedback_response(
         print(f"Found {len(urls)} URLs in issue")
         for url in urls:
             print(f"Scraping content from {url}")
-            content = bot_tools.scrape_text_from_url(url)
+            content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
-            summarized_content = bot_tools.summarize_text(content)
+            summarized_content = summarize_text(content)
             url_contents[url] = summarized_content
 
         # Add URL contents to issue details
@@ -312,9 +364,9 @@ def generate_new_response(
         print(f"Found {len(urls)} URLs in issue")
         for url in urls:
             print(f"Scraping content from {url}")
-            content = bot_tools.scrape_text_from_url(url)
+            content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
-            summarized_content = bot_tools.summarize_text(content)
+            summarized_content = summarize_text(content)
             url_contents[url] = summarized_content
 
         # Add URL contents to issue details
@@ -417,9 +469,9 @@ def generate_edit_command_response(
         print(f"Found {len(urls)} URLs in issue")
         for url in urls:
             print(f"Scraping content from {url}")
-            content = bot_tools.scrape_text_from_url(url)
+            content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
-            summarized_content = bot_tools.summarize_text(content)
+            summarized_content = summarize_text(content)
             url_contents[url] = summarized_content
 
         # Add URL contents to issue details

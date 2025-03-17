@@ -33,7 +33,6 @@ agent_system_messages = {
         NEVER ask for user input and NEVER expect it.
         Return file names that are relevant, and if possible, specific lines where changes can be made.
         Instead of listing the whole dir, use read_merged_summary or read_merged_docstrings
-        If URLs are present in the issue, use scrape_text_from_url to extract content and analyze it.
         Reply "TERMINATE" in the end when everything is done.
         """,
     "edit_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
@@ -44,13 +43,11 @@ agent_system_messages = {
         NEVER ask for user input and NEVER expect it.
         If possible, suggest concrete code changes or additions that can be made. Be specific about what files and what lines.
         Include file paths, line numbers, and exact code changes where possible.
-        If URLs are present in the issue, use scrape_text_from_url to extract content and analyze it.
         Format the command in a way that can be parsed by automated tools.
         Reply "TERMINATE" in the end when everything is done.
         """,
     "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
-        If URLs are present in the issue, use the scraped content to provide more context in your summary.
         """,
     "feedback_assistant": """You are a helpful GitHub bot that processes user feedback on previous bot responses.
         Analyze the user's feedback carefully and suggest improvements to the original response.
