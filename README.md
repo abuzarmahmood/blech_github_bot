@@ -70,6 +70,14 @@ owner/repo1
 owner/repo2
 ```
 
+6. Configure bot behavior in `config/params.json`:
+```json
+{
+    "auto_update": true
+}
+```
+- `auto_update`: Controls whether the bot automatically updates itself with the latest changes from its repository. Set to `true` to enable auto-updates or `false` to disable them.
+
 ## Usage
 
 Run the bot:
@@ -134,6 +142,13 @@ OPENAI_API_KEY=your_openai_key
 ```
 owner/repo1
 owner/repo2
+```
+
+5. Configure bot behavior in `config/params.json`:
+```json
+{
+    "auto_update": true  # Enable/disable bot self-updates
+}
 ```
 
 5. Run the bot:
