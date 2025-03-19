@@ -37,7 +37,7 @@ A Python bot that monitors GitHub repositories and automatically responds to iss
   - beautifulsoup4
   - aider-chat
 
-## Setup
+## Get Started
 
 1. Clone the repository:
 ```bash
@@ -78,6 +78,15 @@ owner/repo2
 ```
 - `auto_update`: Controls whether the bot automatically updates itself with the latest changes from its repository. Set to `true` to enable auto-updates or `false` to disable them.
 
+7. Run the bot:
+```bash
+# Run once
+python src/response_agent.py
+
+# Or run continuously with the shell script
+./src/run_response_agent.sh --delay 300  # Check every 5 minutes
+```
+
 ## Usage
 
 Run the bot:
@@ -108,57 +117,6 @@ The bot will:
 - `src/run_response_agent.sh`: Script for continuous bot operation
 - `config/repos.txt`: List of repositories to monitor
 - `config/params.json`: Bot configuration parameters
-
-## Get Started
-
-1. Set up your environment:
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-2. Install required CLI tools:
-```bash
-# Install GitHub CLI
-# For Linux: https://github.com/cli/cli/blob/trunk/docs/install_linux.md
-# For macOS: brew install gh
-# For Windows: winget install GitHub.cli
-
-# Install Aider
-pip install aider-chat
-```
-
-3. Configure your environment variables in `.env`:
-```
-GITHUB_TOKEN=your_github_token
-OPENAI_API_KEY=your_openai_key
-```
-
-4. Add repositories to monitor in `config/repos.txt`:
-```
-owner/repo1
-owner/repo2
-```
-
-5. Configure bot behavior in `config/params.json`:
-```json
-{
-    "auto_update": true  # Enable/disable bot self-updates
-}
-```
-
-5. Run the bot:
-```bash
-# Run once
-python src/response_agent.py
-
-# Or run continuously with the shell script
-./src/run_response_agent.sh --delay 300  # Check every 5 minutes
-```
 
 ## AI Agent Architecture
 
