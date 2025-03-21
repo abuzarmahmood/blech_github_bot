@@ -494,6 +494,71 @@ def update_self_repo(
         os.remove(backup_path)
 
 
+def perform_github_search(query: str) -> str:
+    """
+    Perform a search on GitHub using the provided query and extract code URLs.
+
+    Args:
+        query: The search query string.
+
+    Returns:
+        A string containing search results with code snippets.
+    """
+    client = get_github_client()
+    
+    try:
+        # Search for code with the given query
+        search_results = client.search_code(query=query)
+        
+        # Limit results to avoid rate limiting (GitHub API has limits)
+        max_results = 5
+        results_str = f"GitHub search results for query: '{query}'\n\n"
+        count = 0
+        
+        for file in search_results:
+            if count >= max_results:
+                break
+                
+            count += 1
+            code_url = file.html_url
+            repo_name = file.repository.full_name
+            file_path = file.path
+            
+            results_str += f"Result {count}:\n"
+            results_str += f"Repository: {repo_name}\n"
+            results_str += f"File: {file_path}\n"
+            results_str += f"URL: {code_url}\n"
+            
+            try:
+                # Fetch the file content using the API
+                repo = client.get_repo(repo_name)
+                file_content = repo.get_contents(file_path, ref=file.repository.default_branch)
+                
+                # Decode content - handle binary files gracefully
+                try:
+                    code_snippet = file_content.decoded_content.decode('utf-8')
+                    
+                    # Truncate very large files
+                    if len(code_snippet) > 2000:
+                        code_snippet = code_snippet[:2000] + "\n... (content truncated, see full file at URL) ..."
+                    
+                    results_str += f"Code snippet:\n```\n{code_snippet}\n```\n\n"
+                except UnicodeDecodeError:
+                    results_str += "(Binary file, content not displayed)\n\n"
+            except Exception as e:
+                results_str += f"(Error fetching file content: {str(e)})\n\n"
+        
+        if count == 0:
+            results_str += "No results found for this query."
+        elif count == max_results:
+            results_str += f"Note: Results limited to {max_results} items. Refine your query for more specific results."
+            
+        return results_str
+        
+    except Exception as e:
+        return f"Error performing GitHub search: {str(e)}"
+
+
 if __name__ == '__main__':
     client = get_github_client()
     repo = get_repository(client, 'katzlabbrandeis/blech_clust')
