@@ -265,5 +265,5 @@ def search_github(query: str) -> str:
     # Import here to avoid circular imports
     sys.path.append(src_dir)
     from git_utils import perform_github_search
-    
+
     return perform_github_search(query)
