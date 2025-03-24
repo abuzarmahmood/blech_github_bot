@@ -643,6 +643,10 @@ def process_issue(
             pr_number = int(urls.split('/')[-1])
             pr = repo.get_pull(pr_number)
 
+            # Check if PR has "blech_bot" tag
+            if "blech_bot" not in [label.name for label in pr.labels]:
+                return False, "PR does not have blech_bot tag"
+
             comments = list(pr.get_issue_comments())
             # find the latest bot comment
             latest_bot_idx = -1
