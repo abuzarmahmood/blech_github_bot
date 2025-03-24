@@ -5,6 +5,8 @@ from typing import List, Dict, Optional, Tuple
 import os
 import subprocess
 import git
+import requests
+import re
 from branch_handler import (
     get_issue_related_branches,
     get_current_branch,
@@ -376,6 +378,96 @@ def push_changes_with_authentication(
         return success_bool, None
     else:
         return success_bool, error_msg
+
+
+def get_workflow_run_logs(repo: Repository, run_id: int) -> List[str]:
+    """
+    Fetch and parse logs from a GitHub Actions workflow run
+
+    Args:
+        repo: The GitHub repository
+        run_id: ID of the workflow run
+
+    Returns:
+        List of extracted log lines
+
+    Raises:
+        RuntimeError: If logs cannot be fetched
+        ValueError: If GitHub token is missing
+        PermissionError: If user lacks required permissions
+    """
+    token = os.getenv('GITHUB_TOKEN')
+    if not token:
+        raise ValueError("GitHub token not found in environment variables")
+
+    try:
+        # Get workflow run logs
+        logs_url = f"https://api.github.com/repos/{repo.full_name}/actions/runs/{run_id}/logs"
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+        response = requests.get(logs_url, headers=headers)
+
+        if response.status_code == 403:
+            raise PermissionError(
+                "Insufficient permissions to access workflow logs. "
+                "Admin rights to the repository are required."
+            )
+        elif response.status_code == 404:
+            raise RuntimeError(
+                f"Workflow run with ID {run_id} not found in repository {repo.full_name}"
+            )
+
+        response.raise_for_status()
+
+        # Check if response is HTML (error page) instead of logs
+        content_type = response.headers.get('content-type', '')
+        if 'text/html' in content_type:
+            raise RuntimeError(
+                "Received HTML response instead of logs. "
+                "This likely indicates an authentication or permission issue."
+            )
+
+        return response.text.splitlines()
+
+    except requests.exceptions.RequestException as e:
+        raise RuntimeError(f"Failed to fetch workflow logs: {str(e)}")
+
+
+def extract_errors_from_logs(log_lines: List[str]) -> List[str]:
+    """
+    Extract error messages from workflow log lines
+
+    Args:
+        log_lines: List of log lines to parse
+
+    Returns:
+        List of extracted error messages
+    """
+    error_lines = []
+    capture = False
+    for line in log_lines:
+        # Start capturing on error indicators
+        if any(indicator in line for indicator in [
+            "Traceback (most recent call last):",
+            "error:",
+            "Error:",
+            "ERROR:",
+            "FAILED"
+        ]):
+            capture = True
+            error_lines.append(line)
+            continue
+
+        # Keep capturing until we hit a likely end
+        if capture:
+            error_lines.append(line)
+            if line.strip() == "" or "Process completed" in line:
+                capture = False
+
+    return error_lines
 
 
 def has_linked_pr(issue: Issue) -> bool:
