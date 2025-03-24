@@ -248,6 +248,7 @@ def generate_prompt(
     Do not look for files again. Use the files suggested by the previous agent.
     Provide code blocks which will address the issue where you can and suggest specific lines in specific files where changes can be made.
     Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
+    If you're unsure about a suggested change, use search_github to find similar code snippets in the repository.
 
     Format your output with the following structure:
     - Summary of user's issues and requests
@@ -283,6 +284,7 @@ def generate_prompt(
     DO NOT SUGGEST CODE EXECUTIONS. Only make code editing suggestions.
     If those are not functioning, use tools like search_for_file to search for .py files, or other tools you have.
     Try to read the whole file (readfile) to understand context where possible. If file is too large, search for specific functions or classes (get_func_code). If you can't find functions to classes, try reading sets of lines repeatedly (readlines).
+    If you're unsure about a suggested change, use search_github to find similar code snippets in the repository.
     Finish the job by suggesting specific lines in specific files where changes can be made.
 
     Previous Response:
@@ -313,6 +315,7 @@ def generate_prompt(
     Include file paths, line numbers, and exact code changes where possible.
     Format the command in a way that can be parsed by automated tools.
     First try searching for files to get paths.
+    If you're unsure about a suggested change, use search_github to find similar code snippets in the repository.
 
     Format your output with the following structure:
     - Summary of user's issues and requests

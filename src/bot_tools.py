@@ -250,3 +250,20 @@ def get_func_code(
     # Get code for function
     code = "".join(lines[start_line:end_line])
     return code
+
+
+def search_github(query: str) -> str:
+    """
+    Search GitHub for a given query and return code snippets.
+
+    Args:
+        query: The search query string.
+
+    Returns:
+        A string containing search results with code snippets.
+    """
+    # Import here to avoid circular imports
+    sys.path.append(src_dir)
+    from git_utils import perform_github_search
+
+    return perform_github_search(query)
