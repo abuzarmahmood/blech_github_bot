@@ -494,7 +494,10 @@ def update_self_repo(
         os.remove(backup_path)
 
 
-def perform_github_search(query: str) -> str:
+def perform_github_search(
+        query: str,
+        max_snippet_length: int = 2000,  # lines
+) -> str:
     """
     Perform a search on GitHub using the provided query and extract code URLs.
 
@@ -508,18 +511,14 @@ def perform_github_search(query: str) -> str:
 
     try:
         # Search for code with the given query
-        search_results = client.search_code(query=query)
+        search_results = client.search_code(query=query, language='Python')
 
         # Limit results to avoid rate limiting (GitHub API has limits)
         max_results = 5
         results_str = f"GitHub search results for query: '{query}'\n\n"
-        count = 0
 
-        for file in search_results:
-            if count >= max_results:
-                break
+        for count, file in enumerate(search_results[:max_results]):
 
-            count += 1
             code_url = file.html_url
             repo_name = file.repository.full_name
             file_path = file.path
@@ -529,26 +528,29 @@ def perform_github_search(query: str) -> str:
             results_str += f"File: {file_path}\n"
             results_str += f"URL: {code_url}\n"
 
-            try:
-                # Fetch the file content using the API
-                repo = client.get_repo(repo_name)
-                file_content = repo.get_contents(
-                    file_path, ref=file.repository.default_branch)
+            code_snippet = file.decoded_content.decode('utf-8')
 
-                # Decode content - handle binary files gracefully
-                try:
-                    code_snippet = file_content.decoded_content.decode('utf-8')
+            # try:
+            #     # Fetch the file content using the API
+            #     repo = client.get_repo(repo_name)
+            #     file_content = repo.get_contents(
+            #         file_path, ref=file.repository.default_branch)
 
-                    # Truncate very large files
-                    if len(code_snippet) > 2000:
-                        code_snippet = code_snippet[:2000] + \
-                            "\n... (content truncated, see full file at URL) ..."
+            #     # Decode content - handle binary files gracefully
+            #     try:
+            #         code_snippet = file_content.decoded_content.decode('utf-8')
 
-                    results_str += f"Code snippet:\n```\n{code_snippet}\n```\n\n"
-                except UnicodeDecodeError:
-                    results_str += "(Binary file, content not displayed)\n\n"
-            except Exception as e:
-                results_str += f"(Error fetching file content: {str(e)})\n\n"
+            # Truncate very large files
+            if len(code_snippet) > max_snippet_length:
+                code_snippet = code_snippet[:max_snippet_length] + \
+                    "\n... (content truncated, see full file at URL) ..."
+
+                results_str += f"Code snippet:\n```\n{code_snippet}\n```\n\n"
+
+            #     except UnicodeDecodeError:
+            #         results_str += "(Binary file, content not displayed)\n\n"
+            # except Exception as e:
+            #     results_str += f"(Error fetching file content: {str(e)})\n\n"
 
         if count == 0:
             results_str += "No results found for this query."
