@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import string
 import requests
 from github.PullRequest import PullRequest
-from git_utils import get_workflow_run_logs, extract_errors_from_logs, clean_response
 import triggers
 from agents import (
     create_user_agent,
@@ -37,6 +36,9 @@ from git_utils import (
     has_linked_pr,
     push_changes_with_authentication,
     get_auto_fix_attempt_count,
+    get_workflow_run_logs,
+    extract_errors_from_logs,
+    clean_response,
 )
 from github.Repository import Repository
 from github.Issue import Issue
