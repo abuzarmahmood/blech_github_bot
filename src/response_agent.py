@@ -698,7 +698,7 @@ def process_issue(
 
                             if not push_success:
                                 return False, f"Failed to push changes: {err_msg}"
-                            
+
                             # Write response with success message
                             write_str = f"Applied changes based on comment:\n<details><summary>View Aider Output</summary>\n\n```\n{aider_output}\n```\n</details>"
                         else:
@@ -770,10 +770,10 @@ def process_issue(
                         issue,
                         branch_name
                     )
-                    
+
                     if not push_success:
                         return False, f"Failed to push changes: {err_msg}"
-                
+
                 # Create PR even if no changes were made (for debugging purposes)
                 pr_url = create_pull_request_from_issue(issue, repo_path)
                 pr_number = pr_url.split('/')[-1]
