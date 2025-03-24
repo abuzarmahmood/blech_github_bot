@@ -530,27 +530,12 @@ def perform_github_search(
 
             code_snippet = file.decoded_content.decode('utf-8')
 
-            # try:
-            #     # Fetch the file content using the API
-            #     repo = client.get_repo(repo_name)
-            #     file_content = repo.get_contents(
-            #         file_path, ref=file.repository.default_branch)
-
-            #     # Decode content - handle binary files gracefully
-            #     try:
-            #         code_snippet = file_content.decoded_content.decode('utf-8')
-
             # Truncate very large files
             if len(code_snippet) > max_snippet_length:
                 code_snippet = code_snippet[:max_snippet_length] + \
                     "\n... (content truncated, see full file at URL) ..."
 
                 results_str += f"Code snippet:\n```\n{code_snippet}\n```\n\n"
-
-            #     except UnicodeDecodeError:
-            #         results_str += "(Binary file, content not displayed)\n\n"
-            # except Exception as e:
-            #     results_str += f"(Error fetching file content: {str(e)})\n\n"
 
         if count == 0:
             results_str += "No results found for this query."
