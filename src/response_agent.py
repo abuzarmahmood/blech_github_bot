@@ -852,7 +852,7 @@ def process_issue(
             pr_obj = repo.get_pull(issue_or_pr.number)
             branch_name = get_pr_branch(pr_obj)
             repo_path = bot_tools.get_local_repo_path(repo_name)
-            
+
             # If we have an associated issue, use it for context in our response
             issue_context = associated_issue if associated_issue else issue_or_pr
 
