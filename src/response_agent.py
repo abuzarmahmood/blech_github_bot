@@ -36,6 +36,7 @@ from git_utils import (
 )
 from github.Repository import Repository
 from github.Issue import Issue
+from github.PullRequest import PullRequest
 from branch_handler import (
     checkout_branch,
     back_to_master_branch,
