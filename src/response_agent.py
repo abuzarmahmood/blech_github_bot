@@ -861,9 +861,14 @@ def process_issue(
             os.chdir(repo_path)
             checkout_branch(repo_path, branch_name, create=False)
 
+            summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
+                issue_or_pr, repo_name)
+            if summary_comment_str == '':
+                summary_comment_str = 'No relevant comments found'
+
             # First generate edit command from previous discussion
             response, _ = generate_edit_command_response(
-                issue_or_pr, repo_name)
+                issue_or_pr, repo_name, summary_comment_str)
 
             # branch_name = get_development_branch(
             #     issue_or_pr, repo_path, create=True)
