@@ -507,7 +507,7 @@ def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
         True if the object is a pull request, False otherwise
     """
     # return hasattr(issue_or_pr, 'merge_commit_sha')
-    return 'pull' in issue.html_url
+    return 'pull' in issue_or_pr.html_url
 
 
 def update_self_repo(

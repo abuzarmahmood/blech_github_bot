@@ -846,12 +846,20 @@ def process_issue(
 
         # Process a PR with no associated issue and blech_bot_tag
         elif is_pr and has_bot_mention and not associated_issue:
+            # Get repo object and pull request
+            client = get_github_client()
+            repo = get_repository(client, repo_name)
             pr_obj = repo.get_pull(issue_or_pr.number)
             branch_name = get_pr_branch(pr_obj)
+            repo_path = bot_tools.get_local_repo_path(repo_name)
             # branch_name = get_development_branch(
             #     issue_or_pr, repo_path, create=False)
             # if branch_name is not None:
             #     return False, f"Branch {branch_name} already exists for issue #{issue_or_pr.number}"
+
+            original_dir = os.getcwd()
+            os.chdir(repo_path)
+            checkout_branch(repo_path, branch_name, create=False)
 
             # First generate edit command from previous discussion
             response, _ = generate_edit_command_response(
@@ -859,17 +867,10 @@ def process_issue(
 
             # branch_name = get_development_branch(
             #     issue_or_pr, repo_path, create=True)
-            original_dir = os.getcwd()
-            os.chdir(repo_path)
-            checkout_branch(repo_path, branch_name, create=False)
 
             try:
                 # Run aider with the generated command
                 aider_output = run_aider(response, repo_path)
-
-                # Get repo object and pull request
-                client = get_github_client()
-                repo = get_repository(client, repo_name)
 
                 # Push changes with authentication
                 push_success, err_msg = push_changes_with_authentication(
