@@ -625,20 +625,21 @@ def process_issue(
     is_pr = is_pull_request(issue_or_pr)
     entity_type = "PR" if is_pr else "issue"
     print(f"Processing {entity_type} #{issue_or_pr.number}")
-    
+
     try:
         # Handle PR differently
         if is_pr:
             pr = issue_or_pr
             # Check if PR has blech_bot label
             has_bot_mention = triggers.has_blech_bot_tag(pr)
-            
+
             # If PR doesn't have blech_bot label, check if it has an associated issue with the label
             if not has_bot_mention:
                 associated_issue = get_associated_issue(pr)
                 if associated_issue and triggers.has_blech_bot_tag(associated_issue):
                     # Use the associated issue for processing
-                    print(f"PR #{pr.number} has associated issue #{associated_issue.number} with blech_bot tag")
+                    print(
+                        f"PR #{pr.number} has associated issue #{associated_issue.number} with blech_bot tag")
                     has_bot_mention = True
                 else:
                     return False, f"PR #{pr.number} does not have blech_bot label and no associated issue with blech_bot tag"
@@ -649,11 +650,12 @@ def process_issue(
                 issue_or_pr) or "[ blech_bot ]" in issue_or_pr.title.lower()
             if not has_bot_mention:
                 return False, "Issue does not have blech_bot tag or mention in title"
-                
+
         # Check if already responded without user feedback
         already_responded = triggers.has_bot_response(
             issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
-        pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue_or_pr)
+        pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(
+            issue_or_pr)
         if already_responded and not pr_comment_bool:
             return False, f"{entity_type} already has a bot response without feedback from user"
 
@@ -754,7 +756,7 @@ def process_issue(
             # Only issues can be developed, not PRs
             if is_pr:
                 return False, "Cannot develop a PR, only issues can be developed"
-                
+
             print('Triggered by [ develop_issue ] command')
             repo_path = bot_tools.get_local_repo_path(repo_name)
 
@@ -773,9 +775,11 @@ def process_issue(
                 return False, f"Issue #{issue_or_pr.number} is already under development"
 
             # First generate edit command from previous discussion
-            response, _ = generate_edit_command_response(issue_or_pr, repo_name)
+            response, _ = generate_edit_command_response(
+                issue_or_pr, repo_name)
 
-            branch_name = get_development_branch(issue_or_pr, repo_path, create=True)
+            branch_name = get_development_branch(
+                issue_or_pr, repo_path, create=True)
             original_dir = os.getcwd()
             os.chdir(repo_path)
             checkout_branch(repo_path, branch_name, create=False)
@@ -841,10 +845,11 @@ def process_issue(
         if not is_pr and has_linked_pr(issue_or_pr):
             linked_pr = get_linked_pr(issue_or_pr)
             if linked_pr and triggers.has_user_feedback(linked_pr):
-                print(f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number} with user feedback")
+                print(
+                    f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number} with user feedback")
                 # Process the PR instead of the issue
                 return process_issue(linked_pr, repo_name)
-        
+
         # Generate and post response
         trigger = check_triggers(issue_or_pr)
         response_func = response_selector(trigger)

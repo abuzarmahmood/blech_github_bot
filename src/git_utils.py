@@ -424,29 +424,29 @@ def get_linked_pr(issue: Issue) -> Optional[PullRequest]:
                 return repo.get_pull(pr_number)
 
     return None
-    
-    
+
+
 def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
     """
     Get the associated issue for a pull request
-    
+
     Args:
         pr: The GitHub pull request to check
-        
+
     Returns:
         The associated Issue object or None if not found
     """
     # Check if PR body contains "Fixes #X" or "Closes #X" or similar
     if not pr.body:
         return None
-        
+
     # Look for common issue reference patterns
     issue_ref_patterns = [
         r"(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)",
         r"(?:issue|issues)\s+#(\d+)",
         r"#(\d+)"
     ]
-    
+
     for pattern in issue_ref_patterns:
         matches = re.findall(pattern, pr.body, re.IGNORECASE)
         if matches:
@@ -455,7 +455,7 @@ def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
                 return pr.repository.get_issue(issue_number)
             except Exception:
                 continue
-                
+
     # If no match found in body, check PR title
     if pr.title:
         for pattern in issue_ref_patterns:
@@ -466,17 +466,17 @@ def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
                     return pr.repository.get_issue(issue_number)
                 except Exception:
                     continue
-    
+
     return None
 
 
 def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
     """
     Check if an object is a pull request
-    
+
     Args:
         issue_or_pr: The GitHub issue or pull request to check
-        
+
     Returns:
         True if the object is a pull request, False otherwise
     """
