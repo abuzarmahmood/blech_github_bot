@@ -844,31 +844,34 @@ def process_issue(
 
             return True, None
 
-        # Process a PR with no associated issue and blech_bot_tag
-        elif is_pr and has_bot_mention and not associated_issue:
+        # Process a PR with blech_bot_tag (with or without associated issue)
+        elif is_pr and has_bot_mention:
             # Get repo object and pull request
             client = get_github_client()
             repo = get_repository(client, repo_name)
             pr_obj = repo.get_pull(issue_or_pr.number)
             branch_name = get_pr_branch(pr_obj)
             repo_path = bot_tools.get_local_repo_path(repo_name)
-            # branch_name = get_development_branch(
-            #     issue_or_pr, repo_path, create=False)
-            # if branch_name is not None:
-            #     return False, f"Branch {branch_name} already exists for issue #{issue_or_pr.number}"
+            
+            # If we have an associated issue, use it for context in our response
+            issue_context = associated_issue if associated_issue else issue_or_pr
 
             original_dir = os.getcwd()
             os.chdir(repo_path)
             checkout_branch(repo_path, branch_name, create=False)
 
+            # Use the associated issue for context if available, otherwise use the PR
+            context_item = associated_issue if associated_issue else issue_or_pr
             summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
-                issue_or_pr, repo_name)
+                context_item, repo_name)
             if summary_comment_str == '':
                 summary_comment_str = 'No relevant comments found'
 
             # First generate edit command from previous discussion
+            # Use the associated issue for context if available
+            context_item = associated_issue if associated_issue else issue_or_pr
             response, _ = generate_edit_command_response(
-                issue_or_pr, repo_name, summary_comment_str)
+                context_item, repo_name, summary_comment_str)
 
             # branch_name = get_development_branch(
             #     issue_or_pr, repo_path, create=True)
@@ -929,10 +932,10 @@ def process_issue(
         # Handle linked PR for issues
         if not is_pr and has_linked_pr(issue_or_pr):
             linked_pr = get_linked_pr(issue_or_pr)
-            if linked_pr and triggers.has_user_feedback(linked_pr):
+            if linked_pr:
                 print(
-                    f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number} with user feedback")
-                # Process the PR instead of the issue
+                    f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number}")
+                # Always process the PR instead of the issue when a linked PR exists
                 return process_issue(linked_pr, repo_name)
 
         # Generate and post response
