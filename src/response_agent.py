@@ -1,7 +1,7 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
 """
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 from dotenv import load_dotenv
 import string
@@ -29,7 +29,10 @@ from git_utils import (
     create_pull_request_from_issue,
     get_development_branch,
     has_linked_pr,
+    get_linked_pr,
     push_changes_with_authentication,
+    get_associated_issue,
+    is_pull_request,
 )
 from github.Repository import Repository
 from github.Issue import Issue
@@ -606,30 +609,52 @@ def response_selector(trigger: str) -> Callable:
 
 
 def process_issue(
-    issue: Issue,
+    issue_or_pr: Union[Issue, PullRequest],
     repo_name: str,
 ) -> Tuple[bool, Optional[str]]:
     """
-    Process a single issue - check if it needs response and generate one
+    Process a single issue or PR - check if it needs response and generate one
 
     Args:
-        issue: The GitHub issue to process
+        issue_or_pr: The GitHub issue or PR to process
 
     Returns:
         Tuple of (whether response was posted, optional error message)
     """
-    print(f"Processing issue #{issue.number}")
+    is_pr = is_pull_request(issue_or_pr)
+    entity_type = "PR" if is_pr else "issue"
+    print(f"Processing {entity_type} #{issue_or_pr.number}")
+    
     try:
-        # Check if issue has blech_bot tag or blech_bot in title, and no existing response
-        has_bot_mention = triggers.has_blech_bot_tag(
-            issue) or "[ blech_bot ]" in issue.title.lower()
-        if not has_bot_mention:
-            return False, "Issue does not have blech_bot tag or mention in title"
+        # Handle PR differently
+        if is_pr:
+            pr = issue_or_pr
+            # Check if PR has blech_bot label
+            has_bot_mention = triggers.has_blech_bot_tag(pr)
+            
+            # If PR doesn't have blech_bot label, check if it has an associated issue with the label
+            if not has_bot_mention:
+                associated_issue = get_associated_issue(pr)
+                if associated_issue and triggers.has_blech_bot_tag(associated_issue):
+                    # Use the associated issue for processing
+                    print(f"PR #{pr.number} has associated issue #{associated_issue.number} with blech_bot tag")
+                    has_bot_mention = True
+                else:
+                    return False, f"PR #{pr.number} does not have blech_bot label and no associated issue with blech_bot tag"
+        else:
+            # Regular issue processing
+            # Check if issue has blech_bot tag or blech_bot in title
+            has_bot_mention = triggers.has_blech_bot_tag(
+                issue_or_pr) or "[ blech_bot ]" in issue_or_pr.title.lower()
+            if not has_bot_mention:
+                return False, "Issue does not have blech_bot tag or mention in title"
+                
+        # Check if already responded without user feedback
         already_responded = triggers.has_bot_response(
-            issue) and not triggers.has_user_feedback(issue)
-        pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue)
+            issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
+        pr_comment_bool, pr_comment = triggers.has_pr_creation_comment(issue_or_pr)
         if already_responded and not pr_comment_bool:
-            return False, "Issue already has a bot response without feedback from user"
+            return False, f"{entity_type} already has a bot response without feedback from user"
 
         # Check for user comments on PR first
         if pr_comment_bool:
@@ -655,7 +680,7 @@ def process_issue(
                 comments) - 1
 
             branch_name = get_development_branch(
-                issue, repo_path, create=False)
+                issue_or_pr, repo_path, create=False)
 
             # Only run if branch exists and user comment is found on PR
             if branch_name and user_feedback_bool:
@@ -677,14 +702,14 @@ def process_issue(
                     if user_comment:
                         # Summarize relevant comments
                         summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
-                            issue, repo_name)
+                            issue_or_pr, repo_name)
 
                         if summary_comment_str == '':
                             summary_comment_str = 'No relevant comments found'
 
                         # Pass to generate_edit_command agent first
                         response, _ = generate_edit_command_response(
-                            issue, repo_name, summary_comment_str)
+                            issue_or_pr, repo_name, summary_comment_str)
 
                         # Then run aider with the generated command
                         aider_output = run_aider(response, repo_path)
@@ -724,28 +749,32 @@ def process_issue(
                         f"Failed to process PR comment: {str(e)}")
 
         # Check for develop_issue trigger next
-        elif triggers.has_develop_issue_trigger(issue):
+        elif triggers.has_develop_issue_trigger(issue_or_pr):
+            # Only issues can be developed, not PRs
+            if is_pr:
+                return False, "Cannot develop a PR, only issues can be developed"
+                
             print('Triggered by [ develop_issue ] command')
             repo_path = bot_tools.get_local_repo_path(repo_name)
 
             # Check for existing branches
             branch_name = get_development_branch(
-                issue, repo_path, create=False)
+                issue_or_pr, repo_path, create=False)
             # if branch_name is not None:
-            #     return False, f"Branch {branch_name} already exists for issue #{issue.number}"
+            #     return False, f"Branch {branch_name} already exists for issue #{issue_or_pr.number}"
 
             # Check for linked PRs
-            if has_linked_pr(issue):
-                return False, f"Issue #{issue.number} already has a linked pull request"
+            if has_linked_pr(issue_or_pr):
+                return False, f"Issue #{issue_or_pr.number} already has a linked pull request"
 
             # Check if issue has label "under_development"
-            if "under_development" in [label.name for label in issue.labels]:
-                return False, f"Issue #{issue.number} is already under development"
+            if "under_development" in [label.name for label in issue_or_pr.labels]:
+                return False, f"Issue #{issue_or_pr.number} is already under development"
 
             # First generate edit command from previous discussion
-            response, _ = generate_edit_command_response(issue, repo_name)
+            response, _ = generate_edit_command_response(issue_or_pr, repo_name)
 
-            branch_name = get_development_branch(issue, repo_path, create=True)
+            branch_name = get_development_branch(issue_or_pr, repo_path, create=True)
             original_dir = os.getcwd()
             os.chdir(repo_path)
             checkout_branch(repo_path, branch_name, create=False)
@@ -761,22 +790,22 @@ def process_issue(
                 # Push changes with authentication
                 push_success, err_msg = push_changes_with_authentication(
                     repo_path,
-                    issue,
+                    issue_or_pr,
                     branch_name
                 )
 
-                pr_url = create_pull_request_from_issue(issue, repo_path)
+                pr_url = create_pull_request_from_issue(issue_or_pr, repo_path)
                 pr_number = pr_url.split('/')[-1]
                 pull = repo.get_pull(int(pr_number))
 
                 # Create pull request
                 write_issue_response(
-                    issue,
+                    issue_or_pr,
                     f"Created pull request: {pr_url}\nContinue discussion there."
                 )
 
                 # Mark issue with label "under_development"
-                issue.add_to_labels("under_development")
+                issue_or_pr.add_to_labels("under_development")
 
                 if not push_success:
                     return False, f"Failed to push changes: {err_msg}"
@@ -807,13 +836,21 @@ def process_issue(
 
             return True, None
 
+        # Handle linked PR for issues
+        if not is_pr and has_linked_pr(issue_or_pr):
+            linked_pr = get_linked_pr(issue_or_pr)
+            if linked_pr and triggers.has_user_feedback(linked_pr):
+                print(f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number} with user feedback")
+                # Process the PR instead of the issue
+                return process_issue(linked_pr, repo_name)
+        
         # Generate and post response
-        trigger = check_triggers(issue)
+        trigger = check_triggers(issue_or_pr)
         response_func = response_selector(trigger)
         if response_func is None:
-            return False, f"No trigger found for issue #{issue.number}"
-        response, all_content = response_func(issue, repo_name)
-        write_issue_response(issue, response)
+            return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
+        response, all_content = response_func(issue_or_pr, repo_name)
+        write_issue_response(issue_or_pr, response)
         return True, None
 
     except Exception as e:
@@ -880,7 +917,7 @@ def process_repository(
     repo_name: str,
 ) -> None:
     """
-    Process all open issues in a repository
+    Process all open issues and PRs in a repository
 
     Args:
         repo_name: Full name of repository (owner/repo)
@@ -912,13 +949,14 @@ def process_repository(
     # Get open issues
     open_issues = repo.get_issues(state='open')
 
-    # Process each issue
-    for issue in open_issues:
-        success, error = process_issue(issue, repo_name)
+    # Process each issue and PR
+    for item in open_issues:
+        entity_type = "PR" if is_pull_request(item) else "issue"
+        success, error = process_issue(item, repo_name)
         if success:
-            print(f"Successfully processed issue #{issue.number}")
+            print(f"Successfully processed {entity_type} #{item.number}")
         else:
-            print(f"Skipped issue #{issue.number}: {error}")
+            print(f"Skipped {entity_type} #{item.number}: {error}")
 
 
 def initialize_bot() -> None:
