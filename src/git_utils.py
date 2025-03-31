@@ -189,6 +189,19 @@ def update_repository(repo_path: str) -> None:
     origin.pull()
 
 
+def get_pr_branch(pr: PullRequest) -> str:
+    """
+    Get the branch name for a pull request
+
+    Args:
+        pr: The GitHub pull request to check
+
+    Returns:
+        The branch name of the pull request
+    """
+    return pr.head.ref
+
+
 def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
     """
     Gets or creates a development branch for an issue
@@ -436,37 +449,50 @@ def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
     Returns:
         The associated Issue object or None if not found
     """
-    # Check if PR body contains "Fixes #X" or "Closes #X" or similar
-    if not pr.body:
-        return None
 
-    # Look for common issue reference patterns
-    issue_ref_patterns = [
-        r"(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)",
-        r"(?:issue|issues)\s+#(\d+)",
-        r"#(\d+)"
-    ]
+    pr_timeline_events = list(pr.get_timeline())
+    # Check if any timeline event is a cross-reference to an issue
+    for event in pr_timeline_events:
+        if event.event == "cross-referenced":
+            # Check if the reference is to an issue
+            if event.source:
+                for key, val in event.source.raw_data.items():
+                    if isinstance(val, dict) and 'issue' in val['html_url']:
+                        issue_number = val['number']
+                        repo = pr.repository
+                        return repo.get_issue(issue_number)
 
-    for pattern in issue_ref_patterns:
-        matches = re.findall(pattern, pr.body, re.IGNORECASE)
-        if matches:
-            try:
-                issue_number = int(matches[0])
-                return pr.repository.get_issue(issue_number)
-            except Exception:
-                continue
-
-    # If no match found in body, check PR title
-    if pr.title:
-        for pattern in issue_ref_patterns:
-            matches = re.findall(pattern, pr.title, re.IGNORECASE)
-            if matches:
-                try:
-                    issue_number = int(matches[0])
-                    return pr.repository.get_issue(issue_number)
-                except Exception:
-                    continue
-
+    # # Check if PR body contains "Fixes #X" or "Closes #X" or similar
+    # if not pr.body:
+    #     return None
+    #
+    # # Look for common issue reference patterns
+    # issue_ref_patterns = [
+    #     r"(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)",
+    #     r"(?:issue|issues)\s+#(\d+)",
+    #     r"#(\d+)"
+    # ]
+    #
+    # for pattern in issue_ref_patterns:
+    #     matches = re.findall(pattern, pr.body, re.IGNORECASE)
+    #     if matches:
+    #         try:
+    #             issue_number = int(matches[0])
+    #             return pr.repository.get_issue(issue_number)
+    #         except Exception:
+    #             continue
+    #
+    # # If no match found in body, check PR title
+    # if pr.title:
+    #     for pattern in issue_ref_patterns:
+    #         matches = re.findall(pattern, pr.title, re.IGNORECASE)
+    #         if matches:
+    #             try:
+    #                 issue_number = int(matches[0])
+    #                 return pr.repository.get_issue(issue_number)
+    #             except Exception:
+    #                 continue
+    #
     return None
 
 
@@ -480,7 +506,8 @@ def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
     Returns:
         True if the object is a pull request, False otherwise
     """
-    return hasattr(issue_or_pr, 'merge_commit_sha')
+    # return hasattr(issue_or_pr, 'merge_commit_sha')
+    return 'pull' in issue.html_url
 
 
 def update_self_repo(
