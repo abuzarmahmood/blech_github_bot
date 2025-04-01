@@ -284,12 +284,15 @@ def summarize_relevant_comments(
             results_to_summarize=[comment],
         )
 
-        comment_summary_results = comment_summary_assistant.initiate_chat(
-            comment_summary_assistant,
+        chat_config = dict(
+            recipient=comment_summary_assistant,
             message=summary_prompt,
-            max_turns=1,
+            max_turns=20,
+            summary_method="reflection_with_llm",
             silent=params['print_llm_output']
         )
+        comment_summary_results = comment_summary_assistant.initiate_chat(
+            chat_config)
 
         response = comment_summary_results.chat_history[-1]['content']
         summarized_comments.append(response)
@@ -376,17 +379,14 @@ def generate_feedback_response(
         feedback_text=feedback_text,
     )
 
-    feedback_results = user.initiate_chats(
-        [
-            {
-                "recipient": feedback_assistant,
-                "message": feedback_prompt,
-                "max_turns": max_turns,
-                "summary_method": "reflection_with_llm",
-                "silent": params['print_llm_output']
-            }
-        ]
+    chat_config = dict(
+        recipient=feedback_assistant,
+        message=feedback_prompt,
+        max_turns=max_turns,
+        summary_method="reflection_with_llm",
+        silent=params['print_llm_output']
     )
+    feedback_results = user.initiate_chats([chat_config])
 
     for this_chat in feedback_results[0].chat_history[::-1]:
         this_content = this_chat['content']
@@ -456,24 +456,24 @@ def generate_new_response(
     file_prompt = generate_prompt("file_assistant", **prompt_kwargs)
     edit_prompt = generate_prompt("edit_assistant", **prompt_kwargs)
 
-    chat_results = user.initiate_chats(
-        [
-            {
-                "recipient": file_assistant,
-                "message": file_prompt,
-                "max_turns": 20,
-                "summary_method": "last_msg",
-                "silent": params['print_llm_output']
-            },
-            {
-                "recipient": edit_assistant,
-                "message": edit_prompt,
-                "max_turns": 20,
-                "summary_method": "reflection_with_llm",
-                "silent": params['print_llm_output']
-            },
-        ]
-    )
+    chat_configs = [
+        dict(
+            recipient=file_assistant,
+            message=file_prompt,
+            max_turns=20,
+            summary_method="last_msg",
+            silent=params['print_llm_output']
+        ),
+        dict(
+            recipient=edit_assistant,
+            message=edit_prompt,
+            max_turns=20,
+            summary_method="reflection_with_llm",
+            silent=params['print_llm_output']
+        ),
+    ]
+
+    chat_results = user.initiate_chats(chat_configs)
 
     results_to_summarize = [
         [x for x in this_result.chat_history if not is_tool_related(
@@ -566,19 +566,15 @@ def generate_edit_command_response(
             repo_name, repo_path, details, issue
         )
 
-    chat_results = user.initiate_chats(
-        [
-            {
-                "recipient": generate_edit_command_assistant,
-                "message": generate_edit_command_prompt,
-                "max_turns": 20,
-                "summary_method": "reflection_with_llm",
-                "silent": params['print_llm_output']
-            },
-        ]
+    chat_config = dict(
+        silent=params['print_llm_output'],
+        recipient=generate_edit_command_assistant,
+        message=generate_edit_command_prompt,
+        max_turns=20,
+        summary_method="reflection_with_llm",
     )
+    chat_results = user.initiate_chats([chat_config])
 
-    # response = chat_results[0].chat_history[-1]['content']
     for this_chat in chat_results[0].chat_history[::-1]:
         this_content = this_chat['content']
         if check_not_empty(this_content):
@@ -1148,7 +1144,8 @@ def initialize_bot() -> None:
     Initialize the bot and ensure it is up-to-date.
     """
     if params['auto_update']:
-        print("Updating bot repository...")
+        print('===============================')
+        print("== Updating bot repository...")
         # Path to the bot's own repository
         self_repo_path = os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))
@@ -1159,9 +1156,17 @@ def initialize_bot() -> None:
         update_self_repo(self_repo_path)
         print("Bot repository update complete")
         print("Exiting to apply updates. Please restart the bot.")
+        print('===============================')
         os._exit(0)  # Terminate process to allow restart with updates
     else:
+        print('===============================')
         print("Auto-update is disabled. Skipping bot repository update.")
+        print('===============================')
+
+    if not params['print_llm_output']:
+        print('===============================')
+        print("LLM output printing is disabled. Set 'print_llm_output' to true in the parameters to enable.")
+        print('===============================')
 
 
 if __name__ == '__main__':
