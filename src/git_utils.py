@@ -60,10 +60,20 @@ def get_open_issues(repo: Repository) -> List[Issue]:
 
 
 def get_issue_comments(issue: Issue) -> List[IssueComment]:
-    """Get all comments for a specific issue or pull request"""
+    """Get all comments for a specific issue or pull request, ignoring Graphite-related comments"""
+    # Text to identify Graphite-related comments
+    ignore_text = "This stack of pull requests is managed by"
+
     if isinstance(issue, PullRequest):
-        return list(issue.get_issue_comments())
-    return list(issue.get_comments())
+        comments = issue.get_issue_comments()
+    else:
+        comments = issue.get_comments()
+
+    # Filter out comments containing the ignore_text
+    filtered_comments = [
+        comment for comment in comments if ignore_text not in comment.body]
+
+    return list(filtered_comments)
 
 
 def create_issue_comment(
