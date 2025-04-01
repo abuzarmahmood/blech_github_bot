@@ -121,12 +121,12 @@ def scrape_text_from_url(url: str) -> str:
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses
-        
+
         # Check if the content type is text-based
         content_type = response.headers.get('Content-Type', '')
         if 'text' not in content_type and 'html' not in content_type and 'json' not in content_type:
             return f"Non-text content detected at URL {url}: {content_type}"
-            
+
         soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
         # Remove script and style elements
