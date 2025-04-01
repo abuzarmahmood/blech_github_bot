@@ -1,7 +1,7 @@
 """
 Utility functions for interacting with GitHub API
 """
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Union
 import os
 import subprocess
 import git
@@ -54,8 +54,9 @@ def get_repository(client: Github, repo_name: str) -> Repository:
 
 
 def get_open_issues(repo: Repository) -> List[Issue]:
-    """Get all open issues from repository"""
-    return list(repo.get_issues(state='open'))
+    """Get all open issues and pull requests from repository"""
+    # This already returns both issues and PRs with the GitHub API
+    return list(repo.get_issues(state='open', sort='created', direction='asc'))
 
 
 def get_issue_comments(issue: Issue) -> List[IssueComment]:
@@ -187,6 +188,19 @@ def update_repository(repo_path: str) -> None:
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
     origin.pull()
+
+
+def get_pr_branch(pr: PullRequest) -> str:
+    """
+    Get the branch name for a pull request
+
+    Args:
+        pr: The GitHub pull request to check
+
+    Returns:
+        The branch name of the pull request
+    """
+    return pr.head.ref
 
 
 def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -> str:
@@ -378,52 +392,44 @@ def push_changes_with_authentication(
         return success_bool, error_msg
 
 
-def has_linked_pr(issue: Issue) -> bool:
+def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
     """
-    Check if an issue has a linked pull request
+    Get the associated issue for a pull request
 
     Args:
-        issue: The GitHub issue to check
+        pr: The GitHub pull request to check
 
     Returns:
-        True if the issue has a linked PR, False otherwise
+        The associated Issue object or None if not found
     """
-    # Get timeline events to check for PR links
-    timeline = list(issue.get_timeline())
 
-    # Check if any timeline event is a cross-reference to a PR
-    for event in timeline:
+    pr_timeline_events = list(pr.get_timeline())
+    # Check if any timeline event is a cross-reference to an issue
+    for event in pr_timeline_events:
         if event.event == "cross-referenced":
-            # Check if the reference is to a PR
-            if event.source and event.source.type == "PullRequest":
-                return True
-
-    return False
-
-
-def get_linked_pr(issue: Issue) -> PullRequest:
-    """
-    Get the linked pull request for an issue
-
-    Args:
-        issue: The GitHub issue to check
-
-    Returns:
-        The linked PullRequest object or None if not found
-    """
-    # Get timeline events to check for PR links
-    timeline = list(issue.get_timeline())
-
-    # Check if any timeline event is a cross-reference to a PR
-    for event in timeline:
-        if event.event == "cross-referenced":
-            # Check if the reference is to a PR
-            if event.source and event.source.type == "PullRequest":
-                pr_number = event.source.issue.number
-                repo = issue.repository
-                return repo.get_pull(pr_number)
+            # Check if the reference is to an issue
+            if event.source:
+                for key, val in event.source.raw_data.items():
+                    if isinstance(val, dict) and 'issue' in val['html_url']:
+                        issue_number = val['number']
+                        repo = pr.repository
+                        return repo.get_issue(issue_number)
 
     return None
+
+
+def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
+    """
+    Check if an object is a pull request
+
+    Args:
+        issue_or_pr: The GitHub issue or pull request to check
+
+    Returns:
+        True if the object is a pull request, False otherwise
+    """
+    # return hasattr(issue_or_pr, 'merge_commit_sha')
+    return 'pull' in issue_or_pr.html_url
 
 
 def update_self_repo(
@@ -546,6 +552,49 @@ def perform_github_search(
 
     except Exception as e:
         return f"Error performing GitHub search: {str(e)}"
+
+
+def has_linked_pr(issue: Issue) -> bool:
+    """
+    Check if an issue has a linked pull request
+    Args:
+        issue: The GitHub issue to check
+    Returns:
+        True if the issue has a linked PR, False otherwise
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                return True
+    return False
+
+
+def get_linked_pr(issue: Issue) -> Optional[PullRequest]:
+    """
+    Get the linked pull request for an issue
+    Args:
+        issue: The GitHub issue to check
+    Returns:
+        The linked PullRequest object or None if not found
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                pr_number = event.source.issue.number
+                repo = issue.repository
+                return repo.get_pull(pr_number)
+
+    return None
 
 
 if __name__ == '__main__':
