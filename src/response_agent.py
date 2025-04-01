@@ -1152,6 +1152,8 @@ def initialize_bot() -> None:
         print(f"Updating bot repository at {self_repo_path}")
         update_self_repo(self_repo_path)
         print("Bot repository update complete")
+        print("Exiting to apply updates. Please restart the bot.")
+        os._exit(0)  # Terminate process to allow restart with updates
     else:
         print("Auto-update is disabled. Skipping bot repository update.")
 
