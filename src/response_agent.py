@@ -386,11 +386,15 @@ def generate_feedback_response(
         ]
     )
 
+    turns_used = len(feedback_results[0].chat_history)
     for this_chat in feedback_results[0].chat_history[::-1]:
         this_content = this_chat['content']
         if check_not_empty(this_content):
             updated_response = this_content
+            if turns_used >= max_turns:
+                updated_response += f"\n\nNote: The processing was incomplete as the maximum number of turns ({max_turns}) was reached."
             break
+
     all_content = [original_response, feedback_text, updated_response]
     # Clean the response first to remove any existing signatures
     updated_response = clean_response(updated_response)
@@ -496,7 +500,10 @@ def generate_new_response(
         max_turns=1,
     )
 
+    turns_used = len(summary_results.chat_history)
     response = summary_results.chat_history[-1]['content']
+    if turns_used >= 10:  # Assuming max_turns is 10 here
+        response += f"\n\nNote: The processing was incomplete as the maximum number of turns (10) was reached."
     all_content = results_to_summarize + [response]
 
     # Clean the response first to remove any existing signatures
@@ -573,10 +580,13 @@ def generate_edit_command_response(
     )
 
     # response = chat_results[0].chat_history[-1]['content']
+    turns_used = len(chat_results[0].chat_history)
     for this_chat in chat_results[0].chat_history[::-1]:
         this_content = this_chat['content']
         if check_not_empty(this_content):
             response = this_content
+            if turns_used >= 10:  # Assuming max_turns is 10 here
+            response += f"\n\nNote: The processing was incomplete as the maximum number of turns (10) was reached."
             break
     all_content = [response]
     # Clean the response first to remove any existing signatures

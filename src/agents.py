@@ -103,12 +103,23 @@ def register_functions(
 ############################################################
 
 
-def is_terminate_msg(x: dict) -> bool:
+def is_terminate_msg(x: dict, agent=None) -> bool:
     """
-    Returns true if terminate conditions are met
+    Returns true if terminate conditions are met:
+    - Message ends with TERMINATE
+    - Max turns reached (if agent provided)
     """
     content = x['content']
-    # Remove punctuation
+
+    # Check turns limit if agent provided
+    if agent and hasattr(agent, 'max_turns'):
+        if not hasattr(agent, 'turns_used'):
+            agent.turns_used = 0
+        agent.turns_used += 1
+        if agent.turns_used >= agent.max_turns:
+            return True
+
+    # Check for TERMINATE message
     if type(content) is str:
         clean_content = content.translate(
             str.maketrans('', '', string.punctuation))
@@ -123,9 +134,11 @@ def create_user_agent():
     user = UserProxyAgent(
         name="User",
         human_input_mode="NEVER",
-        is_termination_msg=is_terminate_msg,
+        is_termination_msg=lambda x: is_terminate_msg(x, user),
         code_execution_config=False
     )
+    user.max_turns = 10  # Set default max_turns
+    user.turns_used = 0  # Initialize turn counter
 
     user = register_functions(user, register_how="execution")
 
