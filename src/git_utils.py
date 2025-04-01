@@ -392,54 +392,6 @@ def push_changes_with_authentication(
         return success_bool, error_msg
 
 
-def has_linked_pr(issue: Issue) -> bool:
-    """
-    Check if an issue has a linked pull request
-
-    Args:
-        issue: The GitHub issue to check
-
-    Returns:
-        True if the issue has a linked PR, False otherwise
-    """
-    # Get timeline events to check for PR links
-    timeline = list(issue.get_timeline())
-
-    # Check if any timeline event is a cross-reference to a PR
-    for event in timeline:
-        if event.event == "cross-referenced":
-            # Check if the reference is to a PR
-            if event.source and event.source.type == "PullRequest":
-                return True
-
-    return False
-
-
-def get_linked_pr(issue: Issue) -> Optional[PullRequest]:
-    """
-    Get the linked pull request for an issue
-
-    Args:
-        issue: The GitHub issue to check
-
-    Returns:
-        The linked PullRequest object or None if not found
-    """
-    # Get timeline events to check for PR links
-    timeline = list(issue.get_timeline())
-
-    # Check if any timeline event is a cross-reference to a PR
-    for event in timeline:
-        if event.event == "cross-referenced":
-            # Check if the reference is to a PR
-            if event.source and event.source.type == "PullRequest":
-                pr_number = event.source.issue.number
-                repo = issue.repository
-                return repo.get_pull(pr_number)
-
-    return None
-
-
 def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
     """
     Get the associated issue for a pull request
@@ -463,37 +415,6 @@ def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
                         repo = pr.repository
                         return repo.get_issue(issue_number)
 
-    # # Check if PR body contains "Fixes #X" or "Closes #X" or similar
-    # if not pr.body:
-    #     return None
-    #
-    # # Look for common issue reference patterns
-    # issue_ref_patterns = [
-    #     r"(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)",
-    #     r"(?:issue|issues)\s+#(\d+)",
-    #     r"#(\d+)"
-    # ]
-    #
-    # for pattern in issue_ref_patterns:
-    #     matches = re.findall(pattern, pr.body, re.IGNORECASE)
-    #     if matches:
-    #         try:
-    #             issue_number = int(matches[0])
-    #             return pr.repository.get_issue(issue_number)
-    #         except Exception:
-    #             continue
-    #
-    # # If no match found in body, check PR title
-    # if pr.title:
-    #     for pattern in issue_ref_patterns:
-    #         matches = re.findall(pattern, pr.title, re.IGNORECASE)
-    #         if matches:
-    #             try:
-    #                 issue_number = int(matches[0])
-    #                 return pr.repository.get_issue(issue_number)
-    #             except Exception:
-    #                 continue
-    #
     return None
 
 
