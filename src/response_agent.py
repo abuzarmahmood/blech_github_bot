@@ -842,11 +842,6 @@ def respond_pr_comment_flow(
                     aider_output=aider_output,
                     llm_config=llm_config,
                     write_str=write_str
-                    else:
-                    # Handle case where there are no user comments
-                    pr_msg="No user feedback found to process on the PR."
-                    print(pr_msg)
-                    return True, pr_msg
                 )
 
                 # Clean up
