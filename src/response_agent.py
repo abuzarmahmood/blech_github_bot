@@ -78,6 +78,25 @@ llm_config = {
 ############################################################
 
 
+def tab_print(x):
+    """
+    Print with tab indentation for readability
+    """
+    """
+    Print with tab indentation for readability
+    :param x: The object to print
+    """
+    if isinstance(x, str):
+        print('\t' + x)
+    elif isinstance(x, dict):
+        pprint(x)
+    elif isinstance(x, list):
+        for item in x:
+            print('\t' + str(item))
+    else:
+        print('\t' + str(x))
+
+
 def extract_urls_from_issue(issue: Issue) -> List[str]:
     """
     Extract URLs from issue body and comments
@@ -146,7 +165,7 @@ def scrape_text_from_url(url: str) -> str:
 
         return text
     except requests.RequestException as e:
-        print(f"Error fetching URL {url}: {e}")
+        tab_print(f"Error fetching URL {url}: {e}")
         return f"Error fetching URL {url}: {str(e)}"
 
 
@@ -308,9 +327,9 @@ def generate_feedback_response(
     Returns:
         Tuple of (updated response text, full conversation history)
     """
-    print('===============================')
-    print('Generating feedback response')
-    print('===============================')
+    tab_print('===============================')
+    tab_print('Generating feedback response')
+    tab_print('===============================')
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
 
@@ -319,9 +338,9 @@ def generate_feedback_response(
     url_contents = {}
 
     if urls:
-        print(f"Found {len(urls)} URLs in issue")
+        tab_print(f"Found {len(urls)} URLs in issue")
         for url in urls:
-            print(f"Scraping content from {url}")
+            tab_print(f"Scraping content from {url}")
             content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
             summarized_content = summarize_text(content)
@@ -395,9 +414,9 @@ def generate_new_response(
     Returns:
         Tuple of (response text, conversation history)
     """
-    print('===============================')
-    print('Generating new response')
-    print('===============================')
+    tab_print('===============================')
+    tab_print('Generating new response')
+    tab_print('===============================')
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
     details = get_issue_details(issue)
@@ -407,9 +426,9 @@ def generate_new_response(
     url_contents = {}
 
     if urls:
-        print(f"Found {len(urls)} URLs in issue")
+        tab_print(f"Found {len(urls)} URLs in issue")
         for url in urls:
-            print(f"Scraping content from {url}")
+            tab_print(f"Scraping content from {url}")
             content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
             summarized_content = summarize_text(content)
@@ -503,9 +522,9 @@ def generate_edit_command_response(
     Returns:
         Tuple of (response text, conversation history)
     """
-    print('===============================')
-    print('Generating edit command response')
-    print('===============================')
+    tab_print('===============================')
+    tab_print('Generating edit command response')
+    tab_print('===============================')
 
     # Get path to repository and issue details
     repo_path = bot_tools.get_local_repo_path(repo_name)
@@ -516,9 +535,9 @@ def generate_edit_command_response(
     url_contents = {}
 
     if urls:
-        print(f"Found {len(urls)} URLs in issue")
+        tab_print(f"Found {len(urls)} URLs in issue")
         for url in urls:
-            print(f"Scraping content from {url}")
+            tab_print(f"Scraping content from {url}")
             content = scrape_text_from_url(url)
             # Summarize content to avoid token limits
             summarized_content = summarize_text(content)
@@ -583,13 +602,13 @@ def check_triggers(issue: Issue) -> str:
         The trigger phrase found in the issue
     """
     if triggers.has_generate_edit_command_trigger(issue):
-        print('Triggered by generate_edit_command')
+        tab_print('Triggered by generate_edit_command')
         return "generate_edit_command"
     elif triggers.has_user_feedback(issue):
-        print('Triggered by user feedback')
+        tab_print('Triggered by user feedback')
         return "feedback"
     elif not triggers.has_bot_response(issue):
-        print('Triggered by new issue')
+        tab_print('Triggered by new issue')
         return "new_response"
     else:
         return None
@@ -619,6 +638,7 @@ def write_pr_comment(
         response: str,
         aider_output: str,
         llm_config: dict,
+        write_str: str = None,
 ) -> None:
     """
     Write a comment on the pull request with the generated response and aider output
@@ -646,7 +666,7 @@ def develop_issue_flow(
     if is_pr:
         return False, "Cannot develop a PR, only issues can be developed"
 
-    print('Triggered by [ develop_issue ] command')
+    tab_print('Triggered by [ develop_issue ] command')
     repo_path = bot_tools.get_local_repo_path(repo_name)
 
     # Check for existing branches
@@ -709,7 +729,8 @@ def develop_issue_flow(
             pull,
             write_str,
             aider_output=aider_output,
-            llm_config=llm_config
+            llm_config=llm_config,
+            write_str=write_str
         )
 
         # Switch back to main branch
@@ -725,6 +746,7 @@ def develop_issue_flow(
         os.chdir(original_dir)
         raise RuntimeError(
             f"Failed to process develop issue: {str(e)}")
+        return False, f"Failed to process develop issue: {str(e)}"
 
     return True, None
 
@@ -736,7 +758,7 @@ def respond_pr_comment_flow(
 ) -> Tuple[bool, Optional[str]]:
 
     try:
-        print("Attempting to get PR branch details")
+        tab_print("Attempting to get PR branch details")
         repo_path = bot_tools.get_local_repo_path(repo_name)
         repo = get_repository(get_github_client(), repo_name)
 
@@ -749,8 +771,9 @@ def respond_pr_comment_flow(
         comments = list(pr.get_issue_comments())
 
         if not comments:
-            print("No comments found on the PR")
-            print("If PR was generated using `develop_issue`, something went wrong.")
+            tab_print("No comments found on the PR")
+            tab_print(
+                "If PR was generated using `develop_issue`, something went wrong.")
 
         # find the latest bot comment
         latest_bot_idx = -1
@@ -764,14 +787,16 @@ def respond_pr_comment_flow(
 
         branch_name = get_development_branch(
             issue_or_pr, repo_path, create=False)
+
     except Exception as e:
         pr_msg = f"Failed to process PR comment flow: {str(e)}"
-        print(pr_msg)
+        tab_print(pr_msg)
+        return False, pr_msg
 
     # Only run if branch exists and user comment is found on PR
     if branch_name and user_feedback_bool:
         user_comment = comments[-1].body
-        print('Triggered by user comment on PR')
+        tab_print('Triggered by user comment on PR')
 
         try:
             original_dir = os.getcwd()
@@ -815,7 +840,13 @@ def respond_pr_comment_flow(
                     pr,
                     write_str,
                     aider_output=aider_output,
-                    llm_config=llm_config
+                    llm_config=llm_config,
+                    write_str=write_str
+                    else:
+                    # Handle case where there are no user comments
+                    pr_msg="No user feedback found to process on the PR."
+                    print(pr_msg)
+                    return True, pr_msg
                 )
 
                 # Clean up
@@ -833,6 +864,11 @@ def respond_pr_comment_flow(
             os.chdir(original_dir)
             raise RuntimeError(
                 f"Failed to process PR comment: {str(e)}")
+    else:
+        # Handle case where there are no user comments
+        pr_msg = "No user feedback found to process on the PR."
+        tab_print(pr_msg)
+        return True, pr_msg
 
 
 def standalone_pr_flow(
@@ -878,7 +914,8 @@ def standalone_pr_flow(
             pr_obj,
             write_str,
             aider_output=aider_output,
-            llm_config=llm_config
+            llm_config=llm_config,
+            write_str=write_str
         )
 
         # Switch back to main branch
@@ -894,6 +931,7 @@ def standalone_pr_flow(
         os.chdir(original_dir)
         raise RuntimeError(
             f"Failed to process develop issue: {str(e)}")
+        return False, f"Failed to process standalone PR flow: {str(e)}"
 
     return True, None
 
@@ -919,25 +957,28 @@ def process_issue(
 
     # Handle PR differently
     if is_pr:
-        print('Detected as a Pull Request (PR)')
+        tab_print('Detected as a Pull Request (PR)')
         # Check if PR has blech_bot label
         associated_issue = get_associated_issue(issue_or_pr)
 
         # If PR doesn't have blech_bot label, check if it has an associated issue with the label
         if not has_bot_mention:
-            print('PR does not have blech_bot label, checking associated issue')
+            tab_print(
+                'PR does not have blech_bot label, checking associated issue')
             if associated_issue and triggers.has_blech_bot_tag(associated_issue):
                 # Use the associated issue for processing
-                print(
+                tab_print(
                     f"PR #{issue_or_pr.number} has associated issue #{associated_issue.number} with blech_bot tag")
                 # Overwrite has_bot_mention to True to process the PR based on the associated issue
                 has_bot_mention = True
             else:
                 return False, f"PR #{issue_or_pr.number} does not have blech_bot label and no associated issue with blech_bot tag"
 
-        # Process a PR with no associated issue but has blech_bot_tag
-        if is_pr and has_bot_mention and not associated_issue:
-            print('Processing standalone PR flow since no associated issue found')
+            # Process a PR with no associated issue and blech_bot_tag
+        elif is_pr and has_bot_mention and not associated_issue:
+            tab_print(
+                'Processing standalone PR flow since no associated issue found')
+
             result, err_msg = standalone_pr_flow(
                 issue_or_pr,
                 repo_name
@@ -960,7 +1001,7 @@ def process_issue(
 
         # Process PR Already created from issue
         if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
-            print('Checking for comments on PR generated by this issue')
+            tab_print('Checking for comments on PR generated by this issue')
             result, err_msg = respond_pr_comment_flow(
                 issue_or_pr,
                 repo_name,
@@ -1073,7 +1114,7 @@ def process_repository(
     try:
         checkout_branch(repo_dir, default_branch)
     except Exception as e:
-        print(
+        tab_print(
             f"Error switching to default branch '{default_branch}': {str(e)}")
         return
     # Update repository
@@ -1094,9 +1135,9 @@ def process_repository(
             # Capture the error and print the traceback for debugging
             error = str(e)
         if success:
-            print(f"Successfully processed {entity_type} #{item.number}")
+            tab_print(f"Successfully processed {entity_type} #{item.number}")
         else:
-            print(f"Skipped {entity_type} #{item.number}: {error}")
+            tab_print(f"Skipped {entity_type} #{item.number}: {error}")
 
 
 def initialize_bot() -> None:
@@ -1132,9 +1173,9 @@ if __name__ == '__main__':
         print(f'\n=== Processing repository: {repo_name} ===')
         try:
             process_repository(repo_name)
-            print(f'Completed processing {repo_name}')
+            tab_print(f'Completed processing {repo_name}')
         except Exception as e:
-            print(f'Error processing {repo_name}: {str(e)}')
+            tab_print(f'Error processing {repo_name}: {str(e)}')
             continue
 
     print('\nCompleted processing all repositories')
