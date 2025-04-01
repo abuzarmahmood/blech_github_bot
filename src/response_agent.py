@@ -1168,7 +1168,7 @@ if __name__ == '__main__':
         print(f'\n=== Processing repository: {repo_name} ===')
         try:
             process_repository(repo_name)
-            tab_print(f'Completed processing {repo_name}')
+            print(f'Completed processing {repo_name}')
         except Exception as e:
             tab_print(f'Error processing {repo_name}: {str(e)}')
             continue
