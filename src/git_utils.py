@@ -574,7 +574,7 @@ def has_linked_pr(issue: Issue) -> bool:
     return False
 
 
-def get_linked_pr(issue: Issue) -> PullRequest:
+def get_linked_pr(issue: Issue) -> Optional[PullRequest]:
     """
     Get the linked pull request for an issue
     Args:
