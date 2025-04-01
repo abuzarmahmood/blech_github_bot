@@ -768,7 +768,9 @@ def respond_pr_comment_flow(
         pr_number = int(urls.split('/')[-1])
         pr = repo.get_pull(pr_number)
 
-        comments = list(pr.get_issue_comments())
+        # comments = list(pr.get_issue_comments())
+        # Use the helper function to get comments to filter graphite comments
+        comments = get_issue_comments(pr)
 
         if not comments:
             tab_print("No comments found on the PR")
