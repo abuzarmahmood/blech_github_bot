@@ -287,8 +287,6 @@ def summarize_relevant_comments(
         chat_config = dict(
             recipient=comment_summary_assistant,
             message=summary_prompt,
-            max_turns=20,
-            summary_method="reflection_with_llm",
             silent=params['print_llm_output']
         )
         comment_summary_results = comment_summary_assistant.initiate_chat(
