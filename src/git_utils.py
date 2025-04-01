@@ -554,6 +554,49 @@ def perform_github_search(
         return f"Error performing GitHub search: {str(e)}"
 
 
+def has_linked_pr(issue: Issue) -> bool:
+    """
+    Check if an issue has a linked pull request
+    Args:
+        issue: The GitHub issue to check
+    Returns:
+        True if the issue has a linked PR, False otherwise
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                return True
+    return False
+
+
+def get_linked_pr(issue: Issue) -> PullRequest:
+    """
+    Get the linked pull request for an issue
+    Args:
+        issue: The GitHub issue to check
+    Returns:
+        The linked PullRequest object or None if not found
+    """
+    # Get timeline events to check for PR links
+    timeline = list(issue.get_timeline())
+
+    # Check if any timeline event is a cross-reference to a PR
+    for event in timeline:
+        if event.event == "cross-referenced":
+            # Check if the reference is to a PR
+            if event.source and event.source.type == "PullRequest":
+                pr_number = event.source.issue.number
+                repo = issue.repository
+                return repo.get_pull(pr_number)
+
+    return None
+
+
 if __name__ == '__main__':
     client = get_github_client()
     repo = get_repository(client, 'katzlabbrandeis/blech_clust')

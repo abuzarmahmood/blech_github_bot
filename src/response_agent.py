@@ -28,8 +28,6 @@ from git_utils import (
     get_issue_comments,
     create_pull_request_from_issue,
     get_development_branch,
-    has_linked_pr,
-    get_linked_pr,
     push_changes_with_authentication,
     get_associated_issue,
     is_pull_request,
@@ -649,9 +647,9 @@ def develop_issue_flow(
     branch_name = get_development_branch(
         issue_or_pr, repo_path, create=False)
 
-    # Check for linked PRs
-    if has_linked_pr(issue_or_pr):
-        return False, f"Issue #{issue_or_pr.number} already has a linked pull request"
+    # # Check for linked PRs
+    # if has_linked_pr(issue_or_pr):
+    #     return False, f"Issue #{issue_or_pr.number} already has a linked pull request"
 
     # Check if issue has label "under_development"
     if "under_development" in [label.name for label in issue_or_pr.labels]:
@@ -905,11 +903,13 @@ def process_issue(
 
     # Handle PR differently
     if is_pr:
+        print('Detected as a Pull Request (PR)')
         # Check if PR has blech_bot label
-        associated_issue = get_associated_issue(pr_or_issue)
+        associated_issue = get_associated_issue(issue_or_pr)
 
         # If PR doesn't have blech_bot label, check if it has an associated issue with the label
         if not has_bot_mention:
+            print('PR does not have blech_bot label, checking associated issue')
             if associated_issue and triggers.has_blech_bot_tag(associated_issue):
                 # Use the associated issue for processing
                 print(
@@ -918,6 +918,17 @@ def process_issue(
                 has_bot_mention = True
             else:
                 return False, f"PR #{pr.number} does not have blech_bot label and no associated issue with blech_bot tag"
+
+            # Process a PR with no associated issue and blech_bot_tag
+        elif is_pr and has_bot_mention and not associated_issue:
+            print('Processing standalone PR flow since no associated issue found')
+
+            result, err_msg = standalone_pr_flow(
+                issue_or_pr,
+                repo_name
+            )
+            return result, err_msg
+
     else:  # It's an issue
         if not has_bot_mention:
             return False, "Issue does not have blech_bot tag or mention in title"
@@ -926,49 +937,42 @@ def process_issue(
         pr_creation_comment_bool, pr_creation_comment = triggers.has_pr_creation_comment(
             issue_or_pr)
 
-        # Generate and post response
-        trigger = check_triggers(issue_or_pr)
-        response_func = response_selector(trigger)
-        if response_func is None:
-            return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
-        response, all_content = response_func(issue_or_pr, repo_name)
-        write_issue_response(issue_or_pr, response)
-        return True, None
+        # Check if already responded without user feedback
+        already_responded = triggers.has_bot_response(
+            issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
+        if already_responded and not pr_creation_comment_bool:
+            return False, f"{entity_type} already has a bot response without feedback from user"
 
-    # Check if already responded without user feedback
-    already_responded = triggers.has_bot_response(
-        issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
-    if already_responded and not pr_creation_comment_bool:
-        return False, f"{entity_type} already has a bot response without feedback from user"
+        # Process PR Already created from issue
+        if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
+            result, err_msg = respond_pr_comment_flow(
+                issue_or_pr,
+                repo_name,
+                pr_comment
+            )
+            return result, err_msg
 
-    # Process PR Already created from issue
-    if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
-        result, err_msg = respond_pr_comment_flow(
-            issue_or_pr,
-            repo_name,
-            pr_comment
-        )
-        return result, err_msg
+        # Developing pull request from issue
+        # Check for develop_issue trigger next
+        elif triggers.has_develop_issue_trigger(issue_or_pr):
 
-    # Developing pull request from issue
-    # Check for develop_issue trigger next
-    elif triggers.has_develop_issue_trigger(issue_or_pr):
+            result, err_msg = develop_issue_flow(
+                issue_or_pr,
+                repo_name,
+                is_pr=is_pr
+            )
+            return result, err_msg
 
-        result, err_msg = develop_issue_flow(
-            issue_or_pr,
-            repo_name,
-            is_pr=is_pr
-        )
-        return result, err_msg
-
-    # Process a PR with no associated issue and blech_bot_tag
-    elif is_pr and has_bot_mention and not associated_issue:
-
-        result, err_msg = standalone_pr_flow(
-            issue_or_pr,
-            repo_name
-        )
-        return result, err_msg
+        # Process as new issue
+        else:
+            # Generate and post response
+            trigger = check_triggers(issue_or_pr)
+            response_func = response_selector(trigger)
+            if response_func is None:
+                return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
+            response, all_content = response_func(issue_or_pr, repo_name)
+            write_issue_response(issue_or_pr, response)
+            return True, None
 
 
 def run_aider(message: str, repo_path: str) -> str:
