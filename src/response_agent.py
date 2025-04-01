@@ -938,21 +938,6 @@ def process_issue(
             )
             return result, err_msg
 
-        # Process a PR with an associated issue that has blech_bot_tag
-        elif is_pr and has_bot_mention and associated_issue:
-            print(
-                f'Processing PR #{issue_or_pr.number} with associated issue #{associated_issue.number}')
-            # Check if there are user comments on the PR that need to be addressed
-            if triggers.has_user_comment_on_pr(issue_or_pr):
-                print('Found user comment on PR, processing')
-                result, err_msg = standalone_pr_flow(
-                    issue_or_pr,
-                    repo_name
-                )
-                return result, err_msg
-            else:
-                return False, f"PR #{issue_or_pr.number} has no new user comments to process"
-
     else:  # It's an issue
         if not has_bot_mention:
             return False, "Issue does not have blech_bot tag or mention in title"
