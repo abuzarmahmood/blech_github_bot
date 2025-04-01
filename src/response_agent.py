@@ -288,6 +288,7 @@ def summarize_relevant_comments(
             comment_summary_assistant,
             message=summary_prompt,
             max_turns=1,
+            silent=params['print_llm_output']
         )
 
         response = comment_summary_results.chat_history[-1]['content']
@@ -382,6 +383,7 @@ def generate_feedback_response(
                 "message": feedback_prompt,
                 "max_turns": max_turns,
                 "summary_method": "reflection_with_llm",
+                "silent": params['print_llm_output']
             }
         ]
     )
@@ -461,12 +463,14 @@ def generate_new_response(
                 "message": file_prompt,
                 "max_turns": 20,
                 "summary_method": "last_msg",
+                "silent": params['print_llm_output']
             },
             {
                 "recipient": edit_assistant,
                 "message": edit_prompt,
                 "max_turns": 20,
                 "summary_method": "reflection_with_llm",
+                "silent": params['print_llm_output']
             },
         ]
     )
@@ -494,6 +498,7 @@ def generate_new_response(
         summary_assistant,
         message=summary_prompt,
         max_turns=1,
+        silent=params['print_llm_output']
     )
 
     response = summary_results.chat_history[-1]['content']
@@ -568,6 +573,7 @@ def generate_edit_command_response(
                 "message": generate_edit_command_prompt,
                 "max_turns": 20,
                 "summary_method": "reflection_with_llm",
+                "silent": params['print_llm_output']
             },
         ]
     )
