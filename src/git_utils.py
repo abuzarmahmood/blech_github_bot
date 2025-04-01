@@ -55,6 +55,7 @@ def get_repository(client: Github, repo_name: str) -> Repository:
 
 def get_open_issues(repo: Repository) -> List[Issue]:
     """Get all open issues and pull requests from repository"""
+    # This already returns both issues and PRs with the GitHub API
     return list(repo.get_issues(state='open', sort='created', direction='asc'))
 
 

@@ -946,10 +946,10 @@ def process_issue(
         # Handle linked PR for issues
         if not is_pr and has_linked_pr(issue_or_pr):
             linked_pr = get_linked_pr(issue_or_pr)
-            if linked_pr and triggers.has_user_feedback(linked_pr):
+            if linked_pr:
                 print(
-                    f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number} with user feedback")
-                # Process the PR instead of the issue
+                    f"Issue #{issue_or_pr.number} has linked PR #{linked_pr.number}")
+                # Always process the PR instead of the issue when a linked PR exists
                 return process_issue(linked_pr, repo_name)
 
         # Generate and post response
