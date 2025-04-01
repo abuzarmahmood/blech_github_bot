@@ -403,32 +403,6 @@ def push_changes_with_authentication(
         return success_bool, error_msg
 
 
-def get_associated_issue(pr: PullRequest) -> Optional[Issue]:
-    """
-    Get the associated issue for a pull request
-
-    Args:
-        pr: The GitHub pull request to check
-
-    Returns:
-        The associated Issue object or None if not found
-    """
-
-    pr_timeline_events = list(pr.get_timeline())
-    # Check if any timeline event is a cross-reference to an issue
-    for event in pr_timeline_events:
-        if event.event == "cross-referenced":
-            # Check if the reference is to an issue
-            if event.source:
-                for key, val in event.source.raw_data.items():
-                    if isinstance(val, dict) and 'issue' in val['html_url']:
-                        issue_number = val['number']
-                        repo = pr.repository
-                        return repo.get_issue(issue_number)
-
-    return None
-
-
 def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
     """
     Check if an object is a pull request
