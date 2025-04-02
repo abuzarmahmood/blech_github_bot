@@ -788,7 +788,7 @@ def respond_pr_comment_flow(
         comments = get_issue_comments(pr)
 
         if not comments:
-            tab_print("No comments found on the PR")
+            tab_print(f"No comments found on the PR# {pr_number}")
             tab_print(
                 "If PR was generated using `develop_issue`, something went wrong.")
 
@@ -806,7 +806,7 @@ def respond_pr_comment_flow(
             issue_or_pr, repo_path, create=False)
 
     except Exception as e:
-        pr_msg = f"Failed to process PR comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        pr_msg = f"Failed to process PR {pr_number} comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         tab_print(pr_msg)
         # Log error to the issue with signature
         write_issue_response(issue_or_pr, add_signature_to_comment(
@@ -816,7 +816,7 @@ def respond_pr_comment_flow(
     # Only run if branch exists and user comment is found on PR
     if branch_name and user_feedback_bool:
         user_comment = comments[-1].body
-        tab_print('Triggered by user comment on PR')
+        tab_print(f'Triggered by user comment on PR #{pr_number}')
 
         try:
             original_dir = os.getcwd()
@@ -883,7 +883,7 @@ def respond_pr_comment_flow(
             os.chdir(original_dir)
 
             # Log detailed error to the PR with signature
-            error_msg = f"Failed to process PR comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+            error_msg = f"Failed to process PR# {pr_number} comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
             write_pr_comment(
                 pr,
                 error_msg,
@@ -896,7 +896,7 @@ def respond_pr_comment_flow(
             return False, error_msg
     else:
         # Handle case where there are no user comments
-        pr_msg = "No user feedback found to process on the PR."
+        pr_msg = f"No user feedback found to process on the PR #{pr_number}"
         tab_print(pr_msg)
         return True, pr_msg
 
