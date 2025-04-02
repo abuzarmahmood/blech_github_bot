@@ -1124,11 +1124,15 @@ def initialize_bot() -> None:
         # Update the bot's own repository
         from git_utils import update_self_repo
         print(f"Updating bot repository at {self_repo_path}")
-        update_self_repo(self_repo_path)
-        print("Bot repository update complete")
-        print("Exiting to apply updates. Please restart the bot.")
-        print('===============================')
-        os._exit(0)  # Terminate process to allow restart with updates
+        update_performed = update_self_repo(self_repo_path)
+        if update_performed:
+            print("Bot repository update complete")
+            print("Exiting to apply updates. Please restart the bot.")
+            print('===============================')
+            os._exit(0)  # Terminate process to allow restart with updates
+        else:
+            print("Bot already up to date")
+            print('===============================')
     else:
         print('===============================')
         print("Auto-update is disabled. Skipping bot repository update.")
