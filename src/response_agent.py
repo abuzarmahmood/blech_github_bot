@@ -747,7 +747,8 @@ def develop_issue_flow(
         os.chdir(original_dir)
         # Log error to the issue with signature
         error_msg = f"Failed to process develop issue: {str(e)}"
-        write_issue_response(issue_or_pr, add_signature_to_comment(error_msg, llm_config['model']))
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
         raise RuntimeError(error_msg)
         return False, error_msg
 
@@ -869,7 +870,8 @@ def respond_pr_comment_flow(
                 error_msg,
                 aider_output="",
                 llm_config=llm_config,
-                write_str=add_signature_to_comment(error_msg, llm_config['model'])
+                write_str=add_signature_to_comment(
+                    error_msg, llm_config['model'])
             )
             raise RuntimeError(error_msg)
     else:
@@ -939,7 +941,8 @@ def standalone_pr_flow(
         os.chdir(original_dir)
         # Log error to the PR with signature
         error_msg = f"Failed to process standalone PR flow: {str(e)}"
-        write_issue_response(issue_or_pr, add_signature_to_comment(error_msg, llm_config['model']))
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
         raise RuntimeError(error_msg)
         return False, error_msg
 
