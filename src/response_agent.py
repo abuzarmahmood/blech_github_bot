@@ -1,5 +1,10 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
+
+3 outcomes types for processing each issue or PR:
+    1. Processed successfully and response posted
+    2. Skipped because triggers were not met
+    3. Error processing the issue or PR
 """
 from typing import Optional, Tuple, List, Union
 
