@@ -498,6 +498,7 @@ def update_self_repo(
         shutil.copy2(backup_path, config_repos_path)
         os.remove(backup_path)
 
+
 return update_performed
 
 
