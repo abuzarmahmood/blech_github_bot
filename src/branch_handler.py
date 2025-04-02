@@ -37,6 +37,8 @@ def get_issue_related_branches(
             related_branches.append((branch_name, url))
     except Exception as e:
         print(f"Error getting related branches: {str(e)}")
+        # We can't directly log to the issue here as we don't have access to write_issue_response
+        # This will be caught by the calling function
 
     if len(related_branches) == 0:
 

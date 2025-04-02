@@ -744,9 +744,11 @@ def develop_issue_flow(
         delete_branch(repo_path, branch_name, force=True)
         # Return to original directory
         os.chdir(original_dir)
-        raise RuntimeError(
-            f"Failed to process develop issue: {str(e)}")
-        return False, f"Failed to process develop issue: {str(e)}"
+        # Log error to the issue with signature
+        error_msg = f"Failed to process develop issue: {str(e)}"
+        write_issue_response(issue_or_pr, add_signature_to_comment(error_msg, llm_config['model']))
+        raise RuntimeError(error_msg)
+        return False, error_msg
 
     return True, None
 
@@ -859,8 +861,16 @@ def respond_pr_comment_flow(
             back_to_master_branch(repo_path)
             # Return to original directory
             os.chdir(original_dir)
-            raise RuntimeError(
-                f"Failed to process PR comment: {str(e)}")
+            # Log error to the PR with signature
+            error_msg = f"Failed to process PR comment: {str(e)}"
+            write_pr_comment(
+                pr,
+                error_msg,
+                aider_output="",
+                llm_config=llm_config,
+                write_str=add_signature_to_comment(error_msg, llm_config['model'])
+            )
+            raise RuntimeError(error_msg)
     else:
         # Handle case where there are no user comments
         pr_msg = "No user feedback found to process on the PR."
@@ -926,9 +936,11 @@ def standalone_pr_flow(
         delete_branch(repo_path, branch_name, force=True)
         # Return to original directory
         os.chdir(original_dir)
-        raise RuntimeError(
-            f"Failed to process develop issue: {str(e)}")
-        return False, f"Failed to process standalone PR flow: {str(e)}"
+        # Log error to the PR with signature
+        error_msg = f"Failed to process standalone PR flow: {str(e)}"
+        write_issue_response(issue_or_pr, add_signature_to_comment(error_msg, llm_config['model']))
+        raise RuntimeError(error_msg)
+        return False, error_msg
 
     return True, None
 
@@ -1058,10 +1070,11 @@ def run_aider(message: str, repo_path: str) -> str:
         return result.stdout
 
     except FileNotFoundError:
-        raise ValueError(
-            "Aider not found. Please install it first with 'pip install aider-chat'")
+        error_msg = "Aider not found. Please install it first with 'pip install aider-chat'"
+        raise ValueError(error_msg)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to run aider: {e.stderr}")
+        error_msg = f"Failed to run aider: {e.stderr}"
+        raise RuntimeError(error_msg)
 
 
 def process_repository(
@@ -1091,8 +1104,10 @@ def process_repository(
     try:
         checkout_branch(repo_dir, default_branch)
     except Exception as e:
-        tab_print(
-            f"Error switching to default branch '{default_branch}': {str(e)}")
+        error_msg = f"Error switching to default branch '{default_branch}': {str(e)}"
+        tab_print(error_msg)
+        # We can't log this to an issue since we're processing the whole repository
+        # But we'll print it for logging purposes
         return
     # Update repository
     update_repository(repo_dir)
