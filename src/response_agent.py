@@ -31,6 +31,7 @@ from git_utils import (
     push_changes_with_authentication,
     is_pull_request,
     get_pr_branch,
+    add_signature_to_comment,
 )
 from github.Repository import Repository
 from github.Issue import Issue
