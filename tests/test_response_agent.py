@@ -1,6 +1,9 @@
 """
 Tests for the response_agent.py module
 """
+import src.response_agent as response_agent
+from src.bot_tools import create_mock_issue, create_mock_comment, create_mock_pull_request
+from src import bot_tools
 import os
 import sys
 import pytest
@@ -12,9 +15,6 @@ src_dir = os.path.join(os.path.dirname(
 sys.path.append(src_dir)
 
 # Import after adding src to path
-from src import bot_tools
-from src.bot_tools import create_mock_issue, create_mock_comment, create_mock_pull_request
-import src.response_agent as response_agent
 
 
 # Mock GitHub objects
