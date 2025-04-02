@@ -747,10 +747,10 @@ def develop_issue_flow(
             delete_branch(repo_path, branch_name, force=True)
         except Exception as cleanup_error:
             tab_print(f"Error during cleanup: {str(cleanup_error)}")
-        
+
         # Return to original directory
         os.chdir(original_dir)
-        
+
         # Log detailed error to the issue with signature
         error_msg = f"Failed to process develop issue: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         write_issue_response(issue_or_pr, add_signature_to_comment(
@@ -873,10 +873,10 @@ def respond_pr_comment_flow(
                 back_to_master_branch(repo_path)
             except Exception as cleanup_error:
                 tab_print(f"Error during cleanup: {str(cleanup_error)}")
-                
+
             # Return to original directory
             os.chdir(original_dir)
-            
+
             # Log detailed error to the PR with signature
             error_msg = f"Failed to process PR comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
             write_pr_comment(
@@ -955,10 +955,10 @@ def standalone_pr_flow(
                 back_to_master_branch(repo_path)
             except Exception as cleanup_error:
                 tab_print(f"Error during cleanup: {str(cleanup_error)}")
-                
+
             # Return to original directory
             os.chdir(original_dir)
-            
+
             # Log detailed error to the PR with signature
             error_msg = f"Failed to process standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
             write_issue_response(issue_or_pr, add_signature_to_comment(
@@ -967,7 +967,7 @@ def standalone_pr_flow(
             return False, error_msg
 
         return True, None
-        
+
     except Exception as e:
         # Handle errors in the initial setup
         error_msg = f"Failed to initialize standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
@@ -993,13 +993,13 @@ def process_issue(
     is_pr = is_pull_request(issue_or_pr)
     entity_type = "PR" if is_pr else "issue"
     print(f"Processing {entity_type} #{issue_or_pr.number}")
-    
+
     try:
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
             return False, f"{entity_type} #{issue_or_pr.number} does not have blech_bot label"
-        
+
         # Check if a pr_creation comment exists for the issue
         pr_creation_comment_bool, pr_creation_comment = triggers.has_pr_creation_comment(
             issue_or_pr)
@@ -1056,7 +1056,8 @@ def process_issue(
     except Exception as e:
         # Log the error to the issue/PR with signature
         error_msg = f"Error processing {entity_type} #{issue_or_pr.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-        write_issue_response(issue_or_pr, add_signature_to_comment(error_msg, llm_config['model']))
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
         tab_print(f"Error logged to {entity_type}: {error_msg}")
         return False, error_msg
 
@@ -1156,7 +1157,7 @@ def process_repository(
             # We can't log this to an issue since we're processing the whole repository
             # But we'll print it for logging purposes
             return
-            
+
         # Update repository
         update_repository(repo_dir)
 
@@ -1169,7 +1170,8 @@ def process_repository(
             try:
                 success, error = process_issue(item, repo_name)
                 if success:
-                    tab_print(f"Successfully processed {entity_type} #{item.number}")
+                    tab_print(
+                        f"Successfully processed {entity_type} #{item.number}")
                 else:
                     tab_print(f"Skipped {entity_type} #{item.number}: {error}")
             except Exception as e:
@@ -1177,10 +1179,12 @@ def process_repository(
                 tab_print(error_msg)
                 # Try to log the error to the issue/PR
                 try:
-                    write_issue_response(item, add_signature_to_comment(error_msg, llm_config['model']))
+                    write_issue_response(item, add_signature_to_comment(
+                        error_msg, llm_config['model']))
                     tab_print(f"Error logged to {entity_type}")
                 except Exception as log_error:
-                    tab_print(f"Failed to log error to {entity_type}: {str(log_error)}")
+                    tab_print(
+                        f"Failed to log error to {entity_type}: {str(log_error)}")
     except Exception as e:
         error_msg = f"Error processing repository {repo_name}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         tab_print(error_msg)
