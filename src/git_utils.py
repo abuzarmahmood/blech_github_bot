@@ -303,7 +303,17 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
         elif len(branch_dict) == 1:
             print(f"Found branch: {list(branch_dict.keys())[0]}")
             return list(branch_dict.keys())[0]
-        elif create:
+        elif len(branch_dict) == 0:  # Use PR to get branch
+            pr = get_linked_pr(issue)
+            if pr:
+                branch_name = get_pr_branch(pr)
+                print(f"Found branch from linked PR: {branch_name}")
+                return branch_name
+        else:
+            print("No development branch found")
+            return None
+
+        if create:
             try:
                 # Change to repo directory
                 original_dir = os.getcwd()
@@ -381,9 +391,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
                     os.chdir(original_dir)
 
                 raise RuntimeError(error_msg)
-        else:
-            print("No development branch found")
-            return None
+
     except Exception as e:
         # Catch-all for any unexpected errors
         error_msg = f"Error in get_development_branch: {str(e)}\n\n```\n{traceback.format_exc()}\n```"

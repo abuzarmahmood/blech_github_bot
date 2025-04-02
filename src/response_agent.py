@@ -802,8 +802,10 @@ def respond_pr_comment_flow(
         user_feedback_bool = latest_bot_idx >= 0 and latest_bot_idx < len(
             comments) - 1
 
-        branch_name = get_development_branch(
-            issue_or_pr, repo_path, create=False)
+        # branch_name = get_development_branch(
+        #     issue_or_pr, repo_path, create=False)
+        branch_name = get_pr_branch(pr)
+        tab_print(f"Found branch name: {branch_name}")
 
     except Exception as e:
         pr_msg = f"Failed to process PR {pr_number} comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
