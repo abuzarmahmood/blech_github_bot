@@ -269,6 +269,8 @@ def search_github(query: str) -> str:
     return perform_github_search(query)
 
 # Testing utilities
+
+
 def create_mock_issue(
         issue_number: int = 1,
         title: str = "Test Issue",
@@ -278,20 +280,20 @@ def create_mock_issue(
 ) -> dict:
     """
     Create a mock issue for testing purposes.
-    
+
     Args:
         issue_number: The issue number
         title: The issue title
         body: The issue body
         labels: List of label names
         user_login: Username of issue creator
-        
+
     Returns:
         A dictionary representing a GitHub issue
     """
     if labels is None:
         labels = ["blech_bot"]
-    
+
     return {
         "number": issue_number,
         "title": title,
@@ -302,6 +304,7 @@ def create_mock_issue(
         "html_url": f"https://github.com/test/test/issues/{issue_number}"
     }
 
+
 def create_mock_comment(
         comment_id: int = 1,
         body: str = "Test comment",
@@ -310,13 +313,13 @@ def create_mock_comment(
 ) -> dict:
     """
     Create a mock comment for testing purposes.
-    
+
     Args:
         comment_id: The comment ID
         body: The comment body
         user_login: Username of commenter
         created_at: Creation timestamp
-        
+
     Returns:
         A dictionary representing a GitHub comment
     """
@@ -328,6 +331,7 @@ def create_mock_comment(
         "html_url": f"https://github.com/test/test/issues/comments/{comment_id}"
     }
 
+
 def create_mock_pull_request(
         pr_number: int = 1,
         title: str = "Test PR",
@@ -337,14 +341,14 @@ def create_mock_pull_request(
 ) -> dict:
     """
     Create a mock pull request for testing purposes.
-    
+
     Args:
         pr_number: The PR number
         title: The PR title
         body: The PR body
         branch: The branch name
         user_login: Username of PR creator
-        
+
     Returns:
         A dictionary representing a GitHub pull request
     """
