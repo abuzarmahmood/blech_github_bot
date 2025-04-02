@@ -136,6 +136,9 @@ def checkout_branch(repo_path: str, branch_name: str, create: bool = False) -> N
         print(f"Created branch {branch_name}")
     repo.git.checkout(branch_name)
     print(f"Checked out branch {branch_name}")
+    # Force align branch with remote
+    repo.git.reset('--hard', f'origin/{branch_name}')
+    print(f"Branch {branch_name} aligned with remote")
 
 
 def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None:
