@@ -5,20 +5,20 @@ from typing import Optional, Tuple, List, Union
 
 from dotenv import load_dotenv
 import string
-import triggers
-from agents import (
+from src import triggers
+from src.agents import (
     create_user_agent,
     create_agent,
     generate_prompt,
     parse_comments
 )
 from urlextract import URLExtract
-import agents
+from src import agents
 from autogen import AssistantAgent
-import bot_tools
+from src import bot_tools
 import os
 
-from git_utils import (
+from src.git_utils import (
     get_github_client,
     get_repository,
     write_issue_response,
@@ -35,7 +35,7 @@ from git_utils import (
 from github.Repository import Repository
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from branch_handler import (
+from src.branch_handler import (
     checkout_branch,
     back_to_master_branch,
     delete_branch
