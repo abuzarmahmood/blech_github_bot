@@ -1,8 +1,6 @@
 """
 Tests for the response_agent.py module
 """
-from bot_tools import create_mock_issue, create_mock_comment, create_mock_pull_request
-import response_agent
 import os
 import sys
 import pytest
@@ -12,6 +10,11 @@ from unittest.mock import MagicMock, patch
 src_dir = os.path.join(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))), 'src')
 sys.path.append(src_dir)
+
+# Import after adding src to path
+from src import bot_tools
+from src.bot_tools import create_mock_issue, create_mock_comment, create_mock_pull_request
+import src.response_agent as response_agent
 
 
 # Mock GitHub objects
