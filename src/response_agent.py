@@ -2,9 +2,9 @@
 Agent for generating responses to GitHub issues using pyautogen
 
 3 outcomes types for processing each issue or PR:
-    1. Processed successfully and response posted
-    2. Skipped because triggers were not met
-    3. Error processing the issue or PR
+    1. Success: Processed successfully and response posted
+    2. Skip: Skipped because triggers were not met (e.g., no bot tag, already responded)
+    3. Error: An error occurred during processing (e.g., exception thrown)
 """
 from typing import Optional, Tuple, List, Union
 
@@ -1003,6 +1003,7 @@ def process_issue(
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
+            # This is a skip outcome, not an error
             return False, f"{entity_type} #{issue_or_pr.number} does not have blech_bot label"
 
         # Check if a pr_creation comment exists for the issue
@@ -1012,6 +1013,7 @@ def process_issue(
         already_responded = triggers.has_bot_response(
             issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
         if already_responded and not pr_creation_comment_bool:
+            # This is a skip outcome, not an error
             return False, f"{entity_type} already has a bot response without feedback from user"
 
         has_error = triggers.has_error_comment(issue_or_pr)
@@ -1057,13 +1059,15 @@ def process_issue(
                 trigger = check_triggers(issue_or_pr)
                 response_func = response_selector(trigger)
                 if response_func is None:
+                    # This is a skip outcome, not an error
                     return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
                 response, all_content = response_func(issue_or_pr, repo_name)
                 write_issue_response(issue_or_pr, response)
                 return True, None
     except Exception as e:
-        # Log the error to the issue/PR with signature
+        # This is a true error outcome
         error_msg = f"Error processing {entity_type} #{issue_or_pr.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        # Log the error to the issue/PR with signature
         write_issue_response(issue_or_pr, add_signature_to_comment(
             error_msg, llm_config['model']))
         tab_print(f"Error logged to {entity_type}: {error_msg}")
@@ -1176,13 +1180,22 @@ def process_repository(
         for item in open_issues:
             entity_type = "PR" if is_pull_request(item) else "issue"
             try:
-                success, error = process_issue(item, repo_name)
+                # Process the issue/PR and determine the outcome
+                success, message = process_issue(item, repo_name)
                 if success:
+                    # Success outcome
                     tab_print(
                         f"Successfully processed {entity_type} #{item.number}")
                 else:
-                    tab_print(f"Skipped {entity_type} #{item.number}: {error}")
+                    # Determine if this is a skip or error outcome based on message content
+                    if "Error" in message or "error" in message or "Exception" in message:
+                        # This is an error outcome
+                        tab_print(f"Error processing {entity_type} #{item.number}: {message}")
+                    else:
+                        # This is a skip outcome
+                        tab_print(f"Skipped {entity_type} #{item.number}: {message}")
             except Exception as e:
+                # This is a true error outcome
                 error_msg = f"Error processing {entity_type} #{item.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
                 tab_print(error_msg)
                 # Try to log the error to the issue/PR
