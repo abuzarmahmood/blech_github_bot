@@ -290,7 +290,7 @@ def summarize_relevant_comments(
             silent=params['print_llm_output']
         )
         comment_summary_results = comment_summary_assistant.initiate_chat(
-            chat_config)
+            **chat_config)
 
         response = comment_summary_results.chat_history[-1]['content']
         summarized_comments.append(response)
