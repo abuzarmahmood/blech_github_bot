@@ -18,18 +18,40 @@ def has_blech_bot_tag(issue: Issue) -> bool:
     return any(label.name == "blech_bot" for label in issue.labels)
 
 
-def has_generate_edit_command_trigger(issue: Issue) -> bool:
+def has_generate_edit_command_trigger(issue: Issue) -> tuple[bool, str]:
     """
     Check if the issue comments contain the trigger for generate_edit_command
+    and if the current branch can be pushed
 
     Args:
         issue: The GitHub issue to check
 
     Returns:
-        True if the trigger phrase is found in any comment
+        Tuple of (trigger_found, error_message)
+        - trigger_found: True if the trigger phrase is found in any comment
+        - error_message: Error message if branch can't be pushed, empty string otherwise
     """
+    from agents import can_push_to_branch
+    from git_utils import get_development_branch
+    import os
+    
     comments = get_issue_comments(issue)
-    return any("[ generate_edit_command ]" in comment.body for comment in comments)
+    trigger_found = any("[ generate_edit_command ]" in comment.body for comment in comments)
+    
+    if trigger_found:
+        # Get the repository path from the issue
+        from bot_tools import get_local_repo_path
+        
+        # Extract repo name from issue URL
+        repo_name = issue.repository.full_name
+        repo_path = get_local_repo_path(repo_name)
+        
+        # Check if the branch can be pushed
+        branch_name = get_development_branch(issue, repo_path, create=False)
+        if branch_name and not can_push_to_branch(repo_path, branch_name):
+            return True, f"Cannot push to branch {branch_name}"
+    
+    return trigger_found, ""
 
 
 def has_bot_response(issue: Issue) -> bool:
