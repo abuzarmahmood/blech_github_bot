@@ -165,7 +165,7 @@ def can_push_to_branch(repo_path: str, branch_name: str = None) -> bool:
     try:
         if branch_name is None:
             branch_name = get_current_branch(repo_path)
-        
+
         # Use git push --dry-run to check pushability
         result = subprocess.run(
             ['git', 'push', '--dry-run', 'origin', branch_name],
@@ -179,6 +179,7 @@ def can_push_to_branch(repo_path: str, branch_name: str = None) -> bool:
         return True
     except subprocess.CalledProcessError:
         return False
+
 
 def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
     """Parse comments for the issue or pull request"""

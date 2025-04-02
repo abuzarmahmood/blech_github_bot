@@ -34,23 +34,24 @@ def has_generate_edit_command_trigger(issue: Issue) -> tuple[bool, str]:
     from agents import can_push_to_branch
     from git_utils import get_development_branch
     import os
-    
+
     comments = get_issue_comments(issue)
-    trigger_found = any("[ generate_edit_command ]" in comment.body for comment in comments)
-    
+    trigger_found = any(
+        "[ generate_edit_command ]" in comment.body for comment in comments)
+
     if trigger_found:
         # Get the repository path from the issue
         from bot_tools import get_local_repo_path
-        
+
         # Extract repo name from issue URL
         repo_name = issue.repository.full_name
         repo_path = get_local_repo_path(repo_name)
-        
+
         # Check if the branch can be pushed
         branch_name = get_development_branch(issue, repo_path, create=False)
         if branch_name and not can_push_to_branch(repo_path, branch_name):
             return True, f"Cannot push to branch {branch_name}"
-    
+
     return trigger_found, ""
 
 

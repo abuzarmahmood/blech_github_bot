@@ -601,7 +601,8 @@ def check_triggers(issue: Issue) -> str:
     Returns:
         The trigger phrase found in the issue
     """
-    has_edit_trigger, error_msg = triggers.has_generate_edit_command_trigger(issue)
+    has_edit_trigger, error_msg = triggers.has_generate_edit_command_trigger(
+        issue)
     if has_edit_trigger:
         if error_msg:
             tab_print(f'Triggered by generate_edit_command but: {error_msg}')
