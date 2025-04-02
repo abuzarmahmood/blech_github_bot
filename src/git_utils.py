@@ -472,19 +472,23 @@ def update_self_repo(
                 break
             except AttributeError:
                 continue
-        
+
         if not remote_commit:
-            print(f"Could not find {default_branch} or common branches on remote")
+            print(
+                f"Could not find {default_branch} or common branches on remote")
             return  # Exit function if we can't determine remote commit
 
     if remote_commit and local_commit != remote_commit:
-        print(f"Remote is ahead. Local commit: {local_commit.hexsha[:7]}, Remote commit: {remote_commit.hexsha[:7]}")
-        print(f"Force pulling latest changes for self-repo from {default_branch} branch.")
+        print(
+            f"Remote is ahead. Local commit: {local_commit.hexsha[:7]}, Remote commit: {remote_commit.hexsha[:7]}")
+        print(
+            f"Force pulling latest changes for self-repo from {default_branch} branch.")
 
         # Hard reset to remote branch
         git_repo.git.reset('--hard', f'origin/{default_branch}')
     else:
-        print(f"Self-repo is up-to-date. Current commit: {local_commit.hexsha[:7]}")
+        print(
+            f"Self-repo is up-to-date. Current commit: {local_commit.hexsha[:7]}")
 
     # Restore config/repos.txt
     if has_backup:
