@@ -5,7 +5,7 @@ from typing import List, Dict, Optional, Tuple, Union
 import os
 import subprocess
 import git
-from branch_handler import (
+from src.branch_handler import (
     get_issue_related_branches,
     get_current_branch,
     checkout_branch,
