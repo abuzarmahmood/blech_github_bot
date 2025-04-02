@@ -121,6 +121,20 @@ def has_pr_creation_comment(issue: Issue) -> bool:
         return False, None
 
 
+def has_error_comment(issue: Issue) -> bool:
+    """
+    Check if an issue has comments indicating an error
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the issue has error comments, False otherwise
+    """
+    comments = get_issue_comments(issue)
+    return 'Error' in comments[-1].body if comments else False
+
+
 def has_user_comment_on_pr(issue: Issue) -> bool:
     """
     Check if there is a user comment on a pull request that needs processing

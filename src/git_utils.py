@@ -89,7 +89,6 @@ def get_issue_comments(issue: Issue) -> List[IssueComment]:
     """Get all comments for a specific issue or pull request, ignoring Graphite-related comments"""
     # Text to identify Graphite-related comments
     # ignore_text = "This stack of pull requests is managed by"
-    # ignore_text = "app.grapite.dev"
     ignore_text = "app.graphite.dev"
 
     if isinstance(issue, PullRequest):
@@ -101,11 +100,13 @@ def get_issue_comments(issue: Issue) -> List[IssueComment]:
     comment_bodies = [x.body for x in comments]
     # Drop punctuation and newlines
     # comments = [x.translate(str.maketrans('', '', string.punctuation + '\n')) for x in comment_bodies]
-    comments = [" ".join(x.split()) for x in comment_bodies]
+    comment_bodies = [" ".join(x.split()) for x in comment_bodies]
 
     # Filter out comments containing the ignore_text
     filtered_comments = [
-        comment for comment in comments if ignore_text not in comment]
+        comment for comment, comment_body in zip(comments, comment_bodies)
+        if ignore_text not in comment_body
+    ]
 
     return list(filtered_comments)
 
