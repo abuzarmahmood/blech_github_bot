@@ -419,7 +419,7 @@ def is_pull_request(issue_or_pr: Union[Issue, PullRequest]) -> bool:
 
 def update_self_repo(
         repo_path: str,
-) -> None:
+) -> bool:
     """
     Pull latest changes for the bot's own repository, handling tracked config files.
 
@@ -462,6 +462,7 @@ def update_self_repo(
     # Check if the remote is ahead
     local_commit = git_repo.head.commit
     remote_commit = None
+    update_performed = False
     try:
         remote_commit = origin.refs[default_branch].commit
     except AttributeError:
@@ -486,6 +487,7 @@ def update_self_repo(
 
         # Hard reset to remote branch
         git_repo.git.reset('--hard', f'origin/{default_branch}')
+        update_performed = True
     else:
         print(
             f"Self-repo is up-to-date. Current commit: {local_commit.hexsha[:7]}")
@@ -495,6 +497,8 @@ def update_self_repo(
         print(f"Restoring {config_repos_path}")
         shutil.copy2(backup_path, config_repos_path)
         os.remove(backup_path)
+
+return update_performed
 
 
 def perform_github_search(
