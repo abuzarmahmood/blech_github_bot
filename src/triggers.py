@@ -100,7 +100,7 @@ def has_pull_request_trigger(issue: Issue) -> bool:
     return "Created pull request" in comments[-1].body
 
 
-def has_pr_creation_comment(issue: Issue) -> bool:
+def has_pr_creation_comment(issue: Issue) -> tuple:
     """
     Check if an issue has comments indicating a PR was created
 
@@ -108,7 +108,9 @@ def has_pr_creation_comment(issue: Issue) -> bool:
         issue: The GitHub issue to check
 
     Returns:
-        True if the issue has PR comments, False otherwise
+        Tuple of (bool, comment_body or None)
+        - bool: True if the issue has PR comments, False otherwise
+        - comment_body: The body of the PR creation comment if found, None otherwise
     """
     comments = get_issue_comments(issue)
     pr_comment_bool = any(

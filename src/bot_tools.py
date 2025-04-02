@@ -78,20 +78,6 @@ def search_for_file(
         return "File not found"
 
 
-def estimate_tokens(text: str) -> int:
-    """Estimate the number of tokens in text by splitting on whitespace
-
-    Args:
-        text: Text to estimate tokens for
-
-    Returns:
-        Estimated token count
-    """
-    if not text:
-        return 0
-    return len(text.split())
-
-
 def readfile(
         filepath: str,
 ) -> str:
@@ -123,9 +109,9 @@ def readfile(
     # Add line numbers
     numbered_lines = [f"{i:04}: {line}" for i, line in enumerate(data)]
 
-    # Check total tokens
+    # Check total tokens (estimate by splitting on whitespace)
     full_content = "".join(numbered_lines)
-    total_tokens = estimate_tokens(full_content)
+    total_tokens = len(full_content.split()) if full_content else 0
 
     if total_tokens <= token_threshold:
         return full_content
@@ -135,7 +121,7 @@ def readfile(
     included_lines = []
 
     for line in numbered_lines:
-        line_tokens = estimate_tokens(line)
+        line_tokens = len(line.split()) if line else 0
         if current_tokens + line_tokens > token_threshold:
             break
         included_lines.append(line)
@@ -178,9 +164,9 @@ def readlines(
     numbered_lines = [f"{i+start_line:04}: {line}" for i,
                       line in enumerate(lines)]
 
-    # Check total tokens
+    # Check total tokens (estimate by splitting on whitespace)
     full_content = "".join(numbered_lines)
-    total_tokens = estimate_tokens(full_content)
+    total_tokens = len(full_content.split()) if full_content else 0
 
     if total_tokens <= token_threshold:
         return full_content
@@ -190,7 +176,7 @@ def readlines(
     included_lines = []
 
     for line in numbered_lines:
-        line_tokens = estimate_tokens(line)
+        line_tokens = len(line.split()) if line else 0
         if current_tokens + line_tokens > token_threshold:
             break
         included_lines.append(line)
