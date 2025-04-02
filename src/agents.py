@@ -176,7 +176,7 @@ def can_push_to_branch(repo_path: str, branch_name: str = None) -> bool:
         )
         # If "Everything up-to-date" is in the output, there's nothing to push
         # If there's no error and something to push, we can push
-        return True
+        return "Everything up-to-date" not in result.stdout
     except subprocess.CalledProcessError:
         return False
 
