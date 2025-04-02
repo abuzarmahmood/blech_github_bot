@@ -267,3 +267,93 @@ def search_github(query: str) -> str:
     from git_utils import perform_github_search
 
     return perform_github_search(query)
+
+# Testing utilities
+def create_mock_issue(
+        issue_number: int = 1,
+        title: str = "Test Issue",
+        body: str = "This is a test issue",
+        labels: list = None,
+        user_login: str = "test_user"
+) -> dict:
+    """
+    Create a mock issue for testing purposes.
+    
+    Args:
+        issue_number: The issue number
+        title: The issue title
+        body: The issue body
+        labels: List of label names
+        user_login: Username of issue creator
+        
+    Returns:
+        A dictionary representing a GitHub issue
+    """
+    if labels is None:
+        labels = ["blech_bot"]
+    
+    return {
+        "number": issue_number,
+        "title": title,
+        "body": body,
+        "labels": [{"name": label} for label in labels],
+        "user": {"login": user_login},
+        "comments_url": f"https://api.github.com/repos/test/test/issues/{issue_number}/comments",
+        "html_url": f"https://github.com/test/test/issues/{issue_number}"
+    }
+
+def create_mock_comment(
+        comment_id: int = 1,
+        body: str = "Test comment",
+        user_login: str = "test_user",
+        created_at: str = "2023-01-01T00:00:00Z"
+) -> dict:
+    """
+    Create a mock comment for testing purposes.
+    
+    Args:
+        comment_id: The comment ID
+        body: The comment body
+        user_login: Username of commenter
+        created_at: Creation timestamp
+        
+    Returns:
+        A dictionary representing a GitHub comment
+    """
+    return {
+        "id": comment_id,
+        "body": body,
+        "user": {"login": user_login},
+        "created_at": created_at,
+        "html_url": f"https://github.com/test/test/issues/comments/{comment_id}"
+    }
+
+def create_mock_pull_request(
+        pr_number: int = 1,
+        title: str = "Test PR",
+        body: str = "This is a test PR",
+        branch: str = "test-branch",
+        user_login: str = "test_user"
+) -> dict:
+    """
+    Create a mock pull request for testing purposes.
+    
+    Args:
+        pr_number: The PR number
+        title: The PR title
+        body: The PR body
+        branch: The branch name
+        user_login: Username of PR creator
+        
+    Returns:
+        A dictionary representing a GitHub pull request
+    """
+    return {
+        "number": pr_number,
+        "title": title,
+        "body": body,
+        "head": {"ref": branch},
+        "user": {"login": user_login},
+        "html_url": f"https://github.com/test/test/pull/{pr_number}",
+        "comments_url": f"https://api.github.com/repos/test/test/issues/{pr_number}/comments"
+    }
