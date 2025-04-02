@@ -20,12 +20,12 @@ def mock_issue():
     issue.body = "This is a test issue"
     issue.state = "open"
     issue.html_url = "https://github.com/test/repo/issues/123"
-    
+
     # Add labels
     label = MagicMock()
     label.name = "bug"
     issue.labels = [label]
-    
+
     return issue
 
 
@@ -38,14 +38,14 @@ def mock_issue_with_label(label_name="bug"):
         issue.title = "Test Issue"
         issue.body = "This is a test issue"
         issue.state = "open"
-        
+
         # Add label
         label = MagicMock()
         label.name = label_name
         issue.labels = [label]
-        
+
         return issue
-    
+
     return _create_issue(label_name)
 
 
@@ -58,12 +58,12 @@ def mock_pull_request():
     pr.body = "This is a test pull request"
     pr.state = "open"
     pr.html_url = "https://github.com/test/repo/pull/456"
-    
+
     # Add head reference
     head = MagicMock()
     head.ref = "feature-branch"
     pr.head = head
-    
+
     return pr
 
 
@@ -75,7 +75,7 @@ def mock_repository():
     repo.name = "repo"
     repo.clone_url = "https://github.com/test/repo.git"
     repo.default_branch = "main"
-    
+
     return repo
 
 
