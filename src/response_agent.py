@@ -5,7 +5,7 @@ from typing import Optional, Tuple, List, Union
 
 from dotenv import load_dotenv
 import string
-import triggers
+from src import triggers
 from agents import (
     create_user_agent,
     create_agent,
