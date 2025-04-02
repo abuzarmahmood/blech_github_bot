@@ -301,6 +301,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
                 write_issue_response(issue, error_msg_with_signature)
             raise RuntimeError(error_msg)
         elif len(branch_dict) == 1:
+            print(f"Found branch: {list(branch_dict.keys())[0]}")
             return list(branch_dict.keys())[0]
         elif create:
             try:
@@ -322,6 +323,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
                 # Return to original directory
                 os.chdir(original_dir)
 
+                print(f"Created branch: {related_branch[0][0]}")
                 return related_branch[0][0]
 
             except FileNotFoundError:
@@ -380,6 +382,7 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
 
                 raise RuntimeError(error_msg)
         else:
+            print("No development branch found")
             return None
     except Exception as e:
         # Catch-all for any unexpected errors
