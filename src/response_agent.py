@@ -1190,10 +1190,12 @@ def process_repository(
                     # Determine if this is a skip or error outcome based on message content
                     if "Error" in message or "error" in message or "Exception" in message:
                         # This is an error outcome
-                        tab_print(f"Error processing {entity_type} #{item.number}: {message}")
+                        tab_print(
+                            f"Error processing {entity_type} #{item.number}: {message}")
                     else:
                         # This is a skip outcome
-                        tab_print(f"Skipped {entity_type} #{item.number}: {message}")
+                        tab_print(
+                            f"Skipped {entity_type} #{item.number}: {message}")
             except Exception as e:
                 # This is a true error outcome
                 error_msg = f"Error processing {entity_type} #{item.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
