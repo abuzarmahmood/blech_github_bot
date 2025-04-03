@@ -1,5 +1,10 @@
 """
 Agent for generating responses to GitHub issues using pyautogen
+
+3 outcomes types for processing each issue or PR:
+    1. Success: Processed successfully and response posted
+    2. Skip: Skipped because triggers were not met (e.g., no bot tag, already responded)
+    3. Error: An error occurred during processing (e.g., exception thrown)
 """
 from typing import Optional, Tuple, List, Union
 
@@ -675,10 +680,6 @@ def develop_issue_flow(
     branch_name = get_development_branch(
         issue_or_pr, repo_path, create=False)
 
-    # # Check for linked PRs
-    # if has_linked_pr(issue_or_pr):
-    #     return False, f"Issue #{issue_or_pr.number} already has a linked pull request"
-
     # Check if issue has label "under_development"
     if "under_development" in [label.name for label in issue_or_pr.labels]:
         return False, f"Issue #{issue_or_pr.number} is already under development"
@@ -702,7 +703,7 @@ def develop_issue_flow(
         repo = get_repository(client, repo_name)
 
         # Push changes with authentication
-        push_success, err_msg = push_changes_with_authentication(
+        push_changes_with_authentication(
             repo_path,
             issue_or_pr,
             branch_name
@@ -720,9 +721,6 @@ def develop_issue_flow(
 
         # Mark issue with label "under_development"
         issue_or_pr.add_to_labels("under_development")
-
-        if not push_success:
-            return False, f"Failed to push changes: {err_msg}"
 
         # write_issue_response(issue, "Generated edit command:\n" + response)
         write_str = f"Generated edit command:\n---\n{response}\n\n" + \
@@ -745,18 +743,20 @@ def develop_issue_flow(
         try:
             back_to_master_branch(repo_path)
             delete_branch(repo_path, branch_name, force=True)
+            clean_error_msg = ""
         except Exception as cleanup_error:
-            tab_print(f"Error during cleanup: {str(cleanup_error)}")
+            clean_error_msg = f"ERROR during cleanup: {str(cleanup_error)}"
+            tab_print(clean_error_msg)
 
         # Return to original directory
         os.chdir(original_dir)
 
         # Log detailed error to the issue with signature
-        error_msg = f"Failed to process develop issue: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-        write_issue_response(issue_or_pr, add_signature_to_comment(
-            error_msg, llm_config['model']))
+        error_msg = f"ERROR: Failed to process develop issue: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        if clean_error_msg:
+            error_msg += f"\n\n{clean_error_msg}"
         tab_print(f"Error logged to issue: {error_msg}")
-        return False, error_msg
+        raise Exception(error_msg)
 
     return True, None
 
@@ -783,7 +783,7 @@ def respond_pr_comment_flow(
         comments = get_issue_comments(pr)
 
         if not comments:
-            tab_print("No comments found on the PR")
+            tab_print(f"No comments found on the PR# {pr_number}")
             tab_print(
                 "If PR was generated using `develop_issue`, something went wrong.")
 
@@ -797,21 +797,20 @@ def respond_pr_comment_flow(
         user_feedback_bool = latest_bot_idx >= 0 and latest_bot_idx < len(
             comments) - 1
 
-        branch_name = get_development_branch(
-            issue_or_pr, repo_path, create=False)
+        # branch_name = get_development_branch(
+        #     issue_or_pr, repo_path, create=False)
+        branch_name = get_pr_branch(pr)
+        tab_print(f"Found branch name: {branch_name}")
 
     except Exception as e:
-        pr_msg = f"Failed to process PR comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        pr_msg = f"ERROR: Failed to process PR {pr_number} comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         tab_print(pr_msg)
-        # Log error to the issue with signature
-        write_issue_response(issue_or_pr, add_signature_to_comment(
-            pr_msg, llm_config['model']))
-        return False, pr_msg
+        raise Exception(pr_msg)
 
     # Only run if branch exists and user comment is found on PR
     if branch_name and user_feedback_bool:
         user_comment = comments[-1].body
-        tab_print('Triggered by user comment on PR')
+        tab_print(f'Triggered by user comment on PR #{pr_number}')
 
         try:
             original_dir = os.getcwd()
@@ -841,13 +840,10 @@ def respond_pr_comment_flow(
                 aider_output = run_aider(response, repo_path)
 
                 # Push changes
-                push_success, err_msg = push_changes_with_authentication(
+                push_changes_with_authentication(
                     repo_path,
                     pr,
                     branch_name)
-
-                if not push_success:
-                    return False, f"Failed to push changes: {err_msg}"
 
                 # Write response
                 write_str = f"Applied changes based on comment:\n<details><summary>View Aider Output</summary>\n\n```\n{aider_output}\n```\n</details>"
@@ -878,22 +874,14 @@ def respond_pr_comment_flow(
             os.chdir(original_dir)
 
             # Log detailed error to the PR with signature
-            error_msg = f"Failed to process PR comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-            write_pr_comment(
-                pr,
-                error_msg,
-                aider_output="",
-                llm_config=llm_config,
-                write_str=add_signature_to_comment(
-                    error_msg, llm_config['model'])
-            )
+            error_msg = f"Failed to process PR# {pr_number} comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
             tab_print(f"Error logged to PR: {error_msg}")
-            return False, error_msg
+            raise Exception(error_msg)
     else:
         # Handle case where there are no user comments
-        pr_msg = "No user feedback found to process on the PR."
+        pr_msg = f"No user feedback found to process on the PR #{pr_number}"
         tab_print(pr_msg)
-        return True, pr_msg
+        return False, pr_msg
 
 
 def standalone_pr_flow(
@@ -927,7 +915,7 @@ def standalone_pr_flow(
             aider_output = run_aider(response, repo_path)
 
             # Push changes with authentication
-            push_success, err_msg = push_changes_with_authentication(
+            push_changes_with_authentication(
                 repo_path,
                 issue_or_pr,
                 branch_name
@@ -961,20 +949,16 @@ def standalone_pr_flow(
 
             # Log detailed error to the PR with signature
             error_msg = f"Failed to process standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-            write_issue_response(issue_or_pr, add_signature_to_comment(
-                error_msg, llm_config['model']))
             tab_print(f"Error logged to PR: {error_msg}")
-            return False, error_msg
+            raise Exception(error_msg)
 
         return True, None
 
     except Exception as e:
         # Handle errors in the initial setup
         error_msg = f"Failed to initialize standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-        write_issue_response(issue_or_pr, add_signature_to_comment(
-            error_msg, llm_config['model']))
         tab_print(f"Error logged to PR: {error_msg}")
-        return False, error_msg
+        raise Exception(error_msg)
 
 
 def process_issue(
@@ -998,6 +982,7 @@ def process_issue(
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
+            # This is a skip outcome, not an error
             return False, f"{entity_type} #{issue_or_pr.number} does not have blech_bot label"
 
         # Check if a pr_creation comment exists for the issue
@@ -1007,7 +992,10 @@ def process_issue(
         already_responded = triggers.has_bot_response(
             issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
         if already_responded and not pr_creation_comment_bool:
+            # This is a skip outcome, not an error
             return False, f"{entity_type} already has a bot response without feedback from user"
+
+        has_error = triggers.has_error_comment(issue_or_pr)
 
         # Handle PR differently
         if is_pr:
@@ -1023,7 +1011,8 @@ def process_issue(
         else:  # It's an issue
 
             # Process PR Already created from issue
-            if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
+            # If PR has been created, respond if it has an unresponded comment
+            if pr_creation_comment_bool and not has_error:
                 # respond_pr_comment_flow checks for unresolved comments on PR
                 tab_print('Checking for comments on PR generated by this issue')
                 result, err_msg = respond_pr_comment_flow(
@@ -1049,17 +1038,19 @@ def process_issue(
                 trigger = check_triggers(issue_or_pr)
                 response_func = response_selector(trigger)
                 if response_func is None:
+                    # This is a skip outcome, not an error
                     return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
                 response, all_content = response_func(issue_or_pr, repo_name)
                 write_issue_response(issue_or_pr, response)
                 return True, None
     except Exception as e:
-        # Log the error to the issue/PR with signature
+        # This is a true error outcome
         error_msg = f"Error processing {entity_type} #{issue_or_pr.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        # Log the error to the issue/PR with signature
         write_issue_response(issue_or_pr, add_signature_to_comment(
             error_msg, llm_config['model']))
         tab_print(f"Error logged to {entity_type}: {error_msg}")
-        return False, error_msg
+        return False, f"ERROR: {error_msg}"
 
 
 def run_aider(message: str, repo_path: str) -> str:
@@ -1167,24 +1158,24 @@ def process_repository(
         # Process each issue and PR
         for item in open_issues:
             entity_type = "PR" if is_pull_request(item) else "issue"
-            try:
-                success, error = process_issue(item, repo_name)
-                if success:
+
+            # Process the issue/PR and determine the outcome
+            success, message = process_issue(item, repo_name)
+            if success:
+                # Success outcome
+                tab_print(
+                    f"Successfully processed {entity_type} #{item.number}")
+            else:
+                # Determine if this is a skip or error outcome based on message content
+                if "ERROR" in message:
+                    # This is an error outcome
                     tab_print(
-                        f"Successfully processed {entity_type} #{item.number}")
+                        f"ERROR processing {entity_type} #{item.number}: {message}")
                 else:
-                    tab_print(f"Skipped {entity_type} #{item.number}: {error}")
-            except Exception as e:
-                error_msg = f"Error processing {entity_type} #{item.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-                tab_print(error_msg)
-                # Try to log the error to the issue/PR
-                try:
-                    write_issue_response(item, add_signature_to_comment(
-                        error_msg, llm_config['model']))
-                    tab_print(f"Error logged to {entity_type}")
-                except Exception as log_error:
+                    # This is a skip outcome
                     tab_print(
-                        f"Failed to log error to {entity_type}: {str(log_error)}")
+                        f"Skipped {entity_type} #{item.number}: {message}")
+
     except Exception as e:
         error_msg = f"Error processing repository {repo_name}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         tab_print(error_msg)

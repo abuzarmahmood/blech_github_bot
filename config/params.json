@@ -1,4 +1,4 @@
 {
-    "auto_update": true,
+    "auto_update": false,
     "print_llm_output": false
 }
