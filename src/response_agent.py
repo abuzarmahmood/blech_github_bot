@@ -6,6 +6,7 @@ from typing import Optional, Tuple, List, Union
 from dotenv import load_dotenv
 import string
 import triggers
+import traceback
 from agents import (
     create_user_agent,
     create_agent,
@@ -31,6 +32,7 @@ from git_utils import (
     push_changes_with_authentication,
     is_pull_request,
     get_pr_branch,
+    add_signature_to_comment,
 )
 from github.Repository import Repository
 from github.Issue import Issue
@@ -740,13 +742,21 @@ def develop_issue_flow(
 
     except Exception as e:
         # Clean up on error
-        back_to_master_branch(repo_path)
-        delete_branch(repo_path, branch_name, force=True)
+        try:
+            back_to_master_branch(repo_path)
+            delete_branch(repo_path, branch_name, force=True)
+        except Exception as cleanup_error:
+            tab_print(f"Error during cleanup: {str(cleanup_error)}")
+
         # Return to original directory
         os.chdir(original_dir)
-        raise RuntimeError(
-            f"Failed to process develop issue: {str(e)}")
-        return False, f"Failed to process develop issue: {str(e)}"
+
+        # Log detailed error to the issue with signature
+        error_msg = f"Failed to process develop issue: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
+        tab_print(f"Error logged to issue: {error_msg}")
+        return False, error_msg
 
     return True, None
 
@@ -791,8 +801,11 @@ def respond_pr_comment_flow(
             issue_or_pr, repo_path, create=False)
 
     except Exception as e:
-        pr_msg = f"Failed to process PR comment flow: {str(e)}"
+        pr_msg = f"Failed to process PR comment flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
         tab_print(pr_msg)
+        # Log error to the issue with signature
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            pr_msg, llm_config['model']))
         return False, pr_msg
 
     # Only run if branch exists and user comment is found on PR
@@ -856,11 +869,26 @@ def respond_pr_comment_flow(
 
         except Exception as e:
             # Clean up on error
-            back_to_master_branch(repo_path)
+            try:
+                back_to_master_branch(repo_path)
+            except Exception as cleanup_error:
+                tab_print(f"Error during cleanup: {str(cleanup_error)}")
+
             # Return to original directory
             os.chdir(original_dir)
-            raise RuntimeError(
-                f"Failed to process PR comment: {str(e)}")
+
+            # Log detailed error to the PR with signature
+            error_msg = f"Failed to process PR comment: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+            write_pr_comment(
+                pr,
+                error_msg,
+                aider_output="",
+                llm_config=llm_config,
+                write_str=add_signature_to_comment(
+                    error_msg, llm_config['model'])
+            )
+            tab_print(f"Error logged to PR: {error_msg}")
+            return False, error_msg
     else:
         # Handle case where there are no user comments
         pr_msg = "No user feedback found to process on the PR."
@@ -873,64 +901,80 @@ def standalone_pr_flow(
         repo_name: str,
 ) -> Tuple[bool, Optional[str]]:
 
-    # Get repo object and pull request
-    client = get_github_client()
-    repo = get_repository(client, repo_name)
-    pr_obj = repo.get_pull(issue_or_pr.number)
-    branch_name = get_pr_branch(pr_obj)
-    repo_path = bot_tools.get_local_repo_path(repo_name)
-
-    original_dir = os.getcwd()
-    os.chdir(repo_path)
-    checkout_branch(repo_path, branch_name, create=False)
-
-    summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
-        issue_or_pr, repo_name)
-    if summary_comment_str == '':
-        summary_comment_str = 'No relevant comments found'
-
-    # First generate edit command from previous discussion
-    response, _ = generate_edit_command_response(
-        issue_or_pr, repo_name, summary_comment_str)
-
     try:
-        # Run aider with the generated command
-        aider_output = run_aider(response, repo_path)
+        # Get repo object and pull request
+        client = get_github_client()
+        repo = get_repository(client, repo_name)
+        pr_obj = repo.get_pull(issue_or_pr.number)
+        branch_name = get_pr_branch(pr_obj)
+        repo_path = bot_tools.get_local_repo_path(repo_name)
 
-        # Push changes with authentication
-        push_success, err_msg = push_changes_with_authentication(
-            repo_path,
-            issue_or_pr,
-            branch_name
-        )
+        original_dir = os.getcwd()
+        os.chdir(repo_path)
+        checkout_branch(repo_path, branch_name, create=False)
 
-        # write_issue_response(issue, "Generated edit command:\n" + response)
-        write_str = f"Generated edit command:\n---\n{response}\n\n" + \
-            f"Aider output:\n<details><summary>View Aider Output</summary>\n\n```{aider_output}```\n</details>"
-        write_pr_comment(
-            pr_obj,
-            write_str,
-            aider_output=aider_output,
-            llm_config=llm_config,
-            write_str=write_str
-        )
+        summarized_comments, comment_list, summary_comment_str = summarize_relevant_comments(
+            issue_or_pr, repo_name)
+        if summary_comment_str == '':
+            summary_comment_str = 'No relevant comments found'
 
-        # Switch back to main branch
-        back_to_master_branch(repo_path)
-        # Return to original directory
-        os.chdir(original_dir)
+        # First generate edit command from previous discussion
+        response, _ = generate_edit_command_response(
+            issue_or_pr, repo_name, summary_comment_str)
+
+        try:
+            # Run aider with the generated command
+            aider_output = run_aider(response, repo_path)
+
+            # Push changes with authentication
+            push_success, err_msg = push_changes_with_authentication(
+                repo_path,
+                issue_or_pr,
+                branch_name
+            )
+
+            # write_issue_response(issue, "Generated edit command:\n" + response)
+            write_str = f"Generated edit command:\n---\n{response}\n\n" + \
+                f"Aider output:\n<details><summary>View Aider Output</summary>\n\n```{aider_output}```\n</details>"
+            write_pr_comment(
+                pr_obj,
+                write_str,
+                aider_output=aider_output,
+                llm_config=llm_config,
+                write_str=write_str
+            )
+
+            # Switch back to main branch
+            back_to_master_branch(repo_path)
+            # Return to original directory
+            os.chdir(original_dir)
+
+        except Exception as e:
+            # Clean up on error
+            try:
+                back_to_master_branch(repo_path)
+            except Exception as cleanup_error:
+                tab_print(f"Error during cleanup: {str(cleanup_error)}")
+
+            # Return to original directory
+            os.chdir(original_dir)
+
+            # Log detailed error to the PR with signature
+            error_msg = f"Failed to process standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+            write_issue_response(issue_or_pr, add_signature_to_comment(
+                error_msg, llm_config['model']))
+            tab_print(f"Error logged to PR: {error_msg}")
+            return False, error_msg
+
+        return True, None
 
     except Exception as e:
-        # Clean up on error
-        back_to_master_branch(repo_path)
-        delete_branch(repo_path, branch_name, force=True)
-        # Return to original directory
-        os.chdir(original_dir)
-        raise RuntimeError(
-            f"Failed to process develop issue: {str(e)}")
-        return False, f"Failed to process standalone PR flow: {str(e)}"
-
-    return True, None
+        # Handle errors in the initial setup
+        error_msg = f"Failed to initialize standalone PR flow: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
+        tab_print(f"Error logged to PR: {error_msg}")
+        return False, error_msg
 
 
 def process_issue(
@@ -949,63 +993,73 @@ def process_issue(
     is_pr = is_pull_request(issue_or_pr)
     entity_type = "PR" if is_pr else "issue"
     print(f"Processing {entity_type} #{issue_or_pr.number}")
-    has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
-        or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
-    if not has_bot_mention:
-        return False, f"{entity_type} #{issue_or_pr.number} does not have blech_bot label"
-    # Check if a pr_creation comment exists for the issue
-    pr_creation_comment_bool, pr_creation_comment = triggers.has_pr_creation_comment(
-        issue_or_pr)
-    # Check if already responded without user feedback
-    already_responded = triggers.has_bot_response(
-        issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
-    if already_responded and not pr_creation_comment_bool:
-        return False, f"{entity_type} already has a bot response without feedback from user"
 
-    # Handle PR differently
-    if is_pr:
-        tab_print('Detected as a Pull Request (PR)')
-        tab_print('Processing standalone PR flow')
+    try:
+        has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
+            or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
+        if not has_bot_mention:
+            return False, f"{entity_type} #{issue_or_pr.number} does not have blech_bot label"
 
-        result, err_msg = standalone_pr_flow(
-            issue_or_pr,
-            repo_name
-        )
-        return result, err_msg
+        # Check if a pr_creation comment exists for the issue
+        pr_creation_comment_bool, pr_creation_comment = triggers.has_pr_creation_comment(
+            issue_or_pr)
+        # Check if already responded without user feedback
+        already_responded = triggers.has_bot_response(
+            issue_or_pr) and not triggers.has_user_feedback(issue_or_pr)
+        if already_responded and not pr_creation_comment_bool:
+            return False, f"{entity_type} already has a bot response without feedback from user"
 
-    else:  # It's an issue
+        # Handle PR differently
+        if is_pr:
+            tab_print('Detected as a Pull Request (PR)')
+            tab_print('Processing standalone PR flow')
 
-        # Process PR Already created from issue
-        if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
-            # respond_pr_comment_flow checks for unresolved comments on PR
-            tab_print('Checking for comments on PR generated by this issue')
-            result, err_msg = respond_pr_comment_flow(
+            result, err_msg = standalone_pr_flow(
                 issue_or_pr,
-                repo_name,
-                pr_creation_comment
+                repo_name
             )
             return result, err_msg
 
-        # Developing pull request from issue
-        # Check for develop_issue trigger next
-        elif triggers.has_develop_issue_trigger(issue_or_pr):
-            result, err_msg = develop_issue_flow(
-                issue_or_pr,
-                repo_name,
-                is_pr=is_pr
-            )
-            return result, err_msg
+        else:  # It's an issue
 
-        # Process as new issue
-        else:
-            # Generate and post response
-            trigger = check_triggers(issue_or_pr)
-            response_func = response_selector(trigger)
-            if response_func is None:
-                return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
-            response, all_content = response_func(issue_or_pr, repo_name)
-            write_issue_response(issue_or_pr, response)
-            return True, None
+            # Process PR Already created from issue
+            if pr_creation_comment_bool:  # If PR has been created, respond if it has an unresponded comment
+                # respond_pr_comment_flow checks for unresolved comments on PR
+                tab_print('Checking for comments on PR generated by this issue')
+                result, err_msg = respond_pr_comment_flow(
+                    issue_or_pr,
+                    repo_name,
+                    pr_creation_comment
+                )
+                return result, err_msg
+
+            # Developing pull request from issue
+            # Check for develop_issue trigger next
+            elif triggers.has_develop_issue_trigger(issue_or_pr):
+                result, err_msg = develop_issue_flow(
+                    issue_or_pr,
+                    repo_name,
+                    is_pr=is_pr
+                )
+                return result, err_msg
+
+            # Process as new issue
+            else:
+                # Generate and post response
+                trigger = check_triggers(issue_or_pr)
+                response_func = response_selector(trigger)
+                if response_func is None:
+                    return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
+                response, all_content = response_func(issue_or_pr, repo_name)
+                write_issue_response(issue_or_pr, response)
+                return True, None
+    except Exception as e:
+        # Log the error to the issue/PR with signature
+        error_msg = f"Error processing {entity_type} #{issue_or_pr.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        write_issue_response(issue_or_pr, add_signature_to_comment(
+            error_msg, llm_config['model']))
+        tab_print(f"Error logged to {entity_type}: {error_msg}")
+        return False, error_msg
 
 
 def run_aider(message: str, repo_path: str) -> str:
@@ -1024,7 +1078,6 @@ def run_aider(message: str, repo_path: str) -> str:
         FileNotFoundError: If aider is not installed
     """
     try:
-
         # Change to repo directory
         original_dir = os.getcwd()
         os.chdir(repo_path)
@@ -1058,10 +1111,17 @@ def run_aider(message: str, repo_path: str) -> str:
         return result.stdout
 
     except FileNotFoundError:
-        raise ValueError(
-            "Aider not found. Please install it first with 'pip install aider-chat'")
+        error_msg = "Aider not found. Please install it first with 'pip install aider-chat'"
+        os.chdir(original_dir) if 'original_dir' in locals() else None
+        raise ValueError(error_msg)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to run aider: {e.stderr}")
+        error_msg = f"Failed to run aider: {e.stderr}"
+        os.chdir(original_dir) if 'original_dir' in locals() else None
+        raise RuntimeError(error_msg)
+    except Exception as e:
+        error_msg = f"Unexpected error running aider: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        os.chdir(original_dir) if 'original_dir' in locals() else None
+        raise RuntimeError(error_msg)
 
 
 def process_repository(
@@ -1073,41 +1133,61 @@ def process_repository(
     Args:
         repo_name: Full name of repository (owner/repo)
     """
-    # Initialize GitHub client
-    client = get_github_client()
-    repo = get_repository(client, repo_name)
-
-    # Get local repository path
-    repo_dir = bot_tools.get_local_repo_path(repo_name)
-
-    # Clone repository only if not already present
-    if not os.path.exists(repo_dir):
-        repo_dir = clone_repository(repo)
-
-    # Determine the default branch
-    default_branch = repo.default_branch
-
-    # Ensure repository is on the default branch
     try:
-        checkout_branch(repo_dir, default_branch)
+        # Initialize GitHub client
+        client = get_github_client()
+        repo = get_repository(client, repo_name)
+
+        # Get local repository path
+        repo_dir = bot_tools.get_local_repo_path(repo_name)
+
+        # Clone repository only if not already present
+        if not os.path.exists(repo_dir):
+            repo_dir = clone_repository(repo)
+
+        # Determine the default branch
+        default_branch = repo.default_branch
+
+        # Ensure repository is on the default branch
+        try:
+            checkout_branch(repo_dir, default_branch)
+        except Exception as e:
+            error_msg = f"Error switching to default branch '{default_branch}': {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+            tab_print(error_msg)
+            # We can't log this to an issue since we're processing the whole repository
+            # But we'll print it for logging purposes
+            return
+
+        # Update repository
+        update_repository(repo_dir)
+
+        # Get open issues
+        open_issues = repo.get_issues(state='open')
+
+        # Process each issue and PR
+        for item in open_issues:
+            entity_type = "PR" if is_pull_request(item) else "issue"
+            try:
+                success, error = process_issue(item, repo_name)
+                if success:
+                    tab_print(
+                        f"Successfully processed {entity_type} #{item.number}")
+                else:
+                    tab_print(f"Skipped {entity_type} #{item.number}: {error}")
+            except Exception as e:
+                error_msg = f"Error processing {entity_type} #{item.number}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+                tab_print(error_msg)
+                # Try to log the error to the issue/PR
+                try:
+                    write_issue_response(item, add_signature_to_comment(
+                        error_msg, llm_config['model']))
+                    tab_print(f"Error logged to {entity_type}")
+                except Exception as log_error:
+                    tab_print(
+                        f"Failed to log error to {entity_type}: {str(log_error)}")
     except Exception as e:
-        tab_print(
-            f"Error switching to default branch '{default_branch}': {str(e)}")
-        return
-    # Update repository
-    update_repository(repo_dir)
-
-    # Get open issues
-    open_issues = repo.get_issues(state='open')
-
-    # Process each issue and PR
-    for item in open_issues:
-        entity_type = "PR" if is_pull_request(item) else "issue"
-        success, error = process_issue(item, repo_name)
-        if success:
-            tab_print(f"Successfully processed {entity_type} #{item.number}")
-        else:
-            tab_print(f"Skipped {entity_type} #{item.number}: {error}")
+        error_msg = f"Error processing repository {repo_name}: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
+        tab_print(error_msg)
 
 
 def initialize_bot() -> None:
