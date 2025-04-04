@@ -996,6 +996,10 @@ def process_issue(
             return False, f"{entity_type} already has a bot response without feedback from user"
 
         has_error = triggers.has_error_comment(issue_or_pr)
+        
+        # Skip processing if an error has been reported
+        if has_error:
+            return False, f"Error reported in {entity_type} #{issue_or_pr.number}. Skipping further processing."
 
         # Handle PR differently
         if is_pr:
