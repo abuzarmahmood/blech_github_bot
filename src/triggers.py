@@ -132,7 +132,7 @@ def has_error_comment(issue: Issue) -> bool:
         True if the issue has error comments, False otherwise
     """
     comments = get_issue_comments(issue)
-    return 'Error' in comments[-1].body if comments else False
+    return 'Traceback (most recent call last):' in comments[-1].body if comments else False
 
 
 def has_user_comment_on_pr(issue: Issue) -> bool:
