@@ -190,16 +190,16 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
 
     # Use summary agent to create a contextually relevant summary
     summary_agent = create_agent("summary_agent", llm_config)
-    
+
     # Create a prompt for the summary agent
     summary_prompt = f"""
     Please summarize the following text, focusing on the most relevant information.
     Keep your summary under {max_length} characters.
-    
+
     TEXT TO SUMMARIZE:
     {text}
     """
-    
+
     # Get summary from the agent
     summary_results = summary_agent.initiate_chat(
         summary_agent,
@@ -207,14 +207,15 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
         max_turns=1,
         silent=params['print_llm_output']
     )
-    
+
     # Extract the summary from the response
     summary = summary_results.chat_history[-1]['content']
-    
+
     # Ensure the summary is within the max length
     if len(summary) > max_length:
-        summary = summary[:max_length] + "...\n[Summary truncated due to length]"
-        
+        summary = summary[:max_length] + \
+            "...\n[Summary truncated due to length]"
+
     return summary
 
 
