@@ -195,6 +195,8 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
     summary_prompt = f"""
     Please summarize the following text, focusing on the most relevant information.
     Keep your summary under {max_length} characters.
+    Maintain all technical details and important context that would be relevant to the issue.
+    Prioritize code-related information, error messages, and specific technical requirements.
 
     TEXT TO SUMMARIZE:
     {text}
