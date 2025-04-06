@@ -176,7 +176,7 @@ def scrape_text_from_url(url: str) -> str:
 
 
 def summarize_text(text: str, max_length: int = 1000) -> str:
-    """Summarize text to a maximum length.
+    """Summarize text using a summary agent.
 
     Args:
         text: The text to summarize.
@@ -188,8 +188,31 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
     if len(text) <= max_length:
         return text
 
-    # Simple truncation with ellipsis for now
-    return text[:max_length] + "...\n[Text truncated due to length]"
+    # Use summary agent to create a contextually relevant summary
+    summary_agent = create_agent("summary_agent", llm_config)
+
+    # Create a prompt for the summary agent
+    summary_prompt = f"""
+    Please summarize the following text, focusing on the most relevant information.
+    Maintain all technical details and important context that would be relevant to the issue.
+    Prioritize code-related information, error messages, and specific technical requirements.
+
+    TEXT TO SUMMARIZE:
+    {text}
+    """
+
+    # Get summary from the agent
+    summary_results = summary_agent.initiate_chat(
+        summary_agent,
+        message=summary_prompt,
+        max_turns=1,
+        silent=params['print_llm_output']
+    )
+
+    # Extract the summary from the response
+    summary = summary_results.chat_history[-1]['content']
+
+    return summary
 
 
 def get_tracked_repos() -> str:
