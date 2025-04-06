@@ -194,7 +194,6 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
     # Create a prompt for the summary agent
     summary_prompt = f"""
     Please summarize the following text, focusing on the most relevant information.
-    Keep your summary under {max_length} characters.
     Maintain all technical details and important context that would be relevant to the issue.
     Prioritize code-related information, error messages, and specific technical requirements.
 
@@ -212,11 +211,6 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
 
     # Extract the summary from the response
     summary = summary_results.chat_history[-1]['content']
-
-    # Ensure the summary is within the max length
-    if len(summary) > max_length:
-        summary = summary[:max_length] + \
-            "...\n[Summary truncated due to length]"
 
     return summary
 
