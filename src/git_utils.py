@@ -6,7 +6,7 @@ import os
 import subprocess
 import git
 import traceback
-from branch_handler import (
+from src.branch_handler import (
     get_issue_related_branches,
     get_current_branch,
     checkout_branch,
