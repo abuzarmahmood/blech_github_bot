@@ -1,5 +1,13 @@
 from unittest.mock import Mock, patch
 import unittest
+
+import sys # noqa
+import os # noqa
+
+# Add the src directory to the path so we can import the modules
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..'))) # noqa
+
 from src.triggers import (
     has_blech_bot_tag,
     has_generate_edit_command_trigger,
@@ -11,12 +19,7 @@ from src.triggers import (
     has_error_comment,
     has_user_comment_on_pr
 )
-import sys
-import os
 
-# Add the src directory to the path so we can import the modules
-sys.path.append(os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
 
 
 class TestTriggers(unittest.TestCase):
