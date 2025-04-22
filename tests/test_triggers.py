@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Add the src directory to the path so we can import the modules
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
+
 from src.triggers import (
     has_blech_bot_tag,
     has_generate_edit_command_trigger,
@@ -11,12 +18,6 @@ from src.triggers import (
 )
 import unittest
 from unittest.mock import Mock, patch
-import sys
-import os
-
-# Add the src directory to the path so we can import the modules
-sys.path.append(os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../src')))
 
 
 class TestTriggers(unittest.TestCase):
@@ -42,7 +43,7 @@ class TestTriggers(unittest.TestCase):
         self.assertFalse(has_blech_bot_tag(issue_without_tag))
         self.assertFalse(has_blech_bot_tag(issue_empty_labels))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_generate_edit_command_trigger(self, mock_get_comments):
         # Test with trigger in comments
         mock_comment_with_trigger = Mock()
@@ -63,7 +64,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_generate_edit_command_trigger(Mock()))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_bot_response(self, mock_get_comments):
         # Test with bot response
         mock_bot_comment = Mock()
@@ -84,7 +85,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_bot_response(Mock()))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_user_feedback(self, mock_get_comments):
         # Test with user feedback after bot comment
         mock_bot_comment = Mock()
@@ -110,7 +111,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_user_feedback(Mock()))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_develop_issue_trigger(self, mock_get_comments):
         # Test with develop_issue trigger in latest comment
         mock_comment_with_trigger = Mock()
@@ -132,7 +133,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_develop_issue_trigger(Mock()))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_pull_request_trigger(self, mock_get_comments):
         # Test with pull_request trigger in latest comment
         mock_comment_with_trigger = Mock()
@@ -154,7 +155,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_pull_request_trigger(Mock()))
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_pr_creation_comment(self, mock_get_comments):
         # Test with PR creation comment
         mock_pr_comment = Mock()
@@ -202,9 +203,9 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(has_error_comment(Mock()))
 
-    @patch('triggers.get_issue_comments')
-    @patch('triggers.has_linked_pr')
-    @patch('triggers.get_linked_pr')
+    @patch('src.triggers.get_issue_comments')
+    @patch('src.triggers.has_linked_pr')
+    @patch('src.triggers.get_linked_pr')
     def test_has_user_comment_on_pr(self, mock_get_linked_pr, mock_has_linked_pr, mock_get_comments):
         # Test with user comment on issue
         mock_user_comment = Mock()
