@@ -1,4 +1,4 @@
-from triggers import (
+from src.triggers import (
     has_blech_bot_tag,
     has_generate_edit_command_trigger,
     has_bot_response,
