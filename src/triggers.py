@@ -2,7 +2,7 @@
 Functions to check specific conditions
 """
 from github import Issue
-from git_utils import get_issue_comments
+from src.git_utils import get_issue_comments, has_linked_pr, get_linked_pr
 
 
 def has_blech_bot_tag(issue: Issue) -> bool:
@@ -145,7 +145,6 @@ def has_user_comment_on_pr(issue: Issue) -> bool:
     Returns:
         True if there is a user comment on a PR that needs processing
     """
-    from git_utils import has_linked_pr, get_linked_pr
 
     # First check issue comments
     comments = get_issue_comments(issue)
