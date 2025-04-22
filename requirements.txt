@@ -8,3 +8,5 @@ urlextract>=1.0.0
 beautifulsoup4>=4.9.3
 aider-chat
 gitpython
+pytest>=7.0.0
+pytest-cov>=4.0.0

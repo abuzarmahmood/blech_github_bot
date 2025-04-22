@@ -1,4 +1,5 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/abuzarmahmood/blech_github_bot/main.svg)](https://results.pre-commit.ci/latest/github/abuzarmahmood/blech_github_bot/main)
+[![codecov](https://codecov.io/gh/abuzarmahmood/blech_github_bot/branch/main/graph/badge.svg)](https://codecov.io/gh/abuzarmahmood/blech_github_bot)
 
 # GitHub Monitor Bot
 
