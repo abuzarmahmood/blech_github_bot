@@ -1,3 +1,10 @@
+import sys # noqa
+import os # noqa
+
+# Add the src directory to the path so we can import the modules
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..'))) # noqa
+
 from src.triggers import (
     has_blech_bot_tag,
     has_generate_edit_command_trigger,
@@ -13,12 +20,7 @@ from src.git_utils import has_linked_pr, get_linked_pr
 from src.git_utils import get_issue_comments
 from unittest.mock import Mock, patch
 import unittest
-import sys
-import os
 
-# Add the src directory to the path so we can import the modules
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
 
 
 class TestTriggers(unittest.TestCase):
