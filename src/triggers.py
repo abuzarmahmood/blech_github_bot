@@ -2,7 +2,7 @@
 Functions to check specific conditions
 """
 from github import Issue
-from git_utils import get_issue_comments
+from src.git_utils import get_issue_comments
 
 
 def has_blech_bot_tag(issue: Issue) -> bool:
