@@ -8,6 +8,8 @@ import os  # noqa
 sys.path.append(os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))  # noqa
 
+from src.git_utils import get_issue_comments
+
 from src.triggers import (
     has_blech_bot_tag,
     has_generate_edit_command_trigger,
@@ -183,7 +185,7 @@ class TestTriggers(unittest.TestCase):
         self.assertFalse(result)
         self.assertIsNone(comment)
 
-    @patch('triggers.get_issue_comments')
+    @patch('src.triggers.get_issue_comments')
     def test_has_error_comment(self, mock_get_comments):
         # Test with error comment
         mock_error_comment = Mock()
