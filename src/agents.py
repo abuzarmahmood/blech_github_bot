@@ -5,8 +5,8 @@ import os
 import autogen
 import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
-from src import bot_tools
-from src.git_utils import (
+import bot_tools
+from git_utils import (
     get_github_client,
     get_repository,
     get_issue_comments,

@@ -5,7 +5,7 @@ import os  # noqa: E501
 import sys  # noqa: E501
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # noqa: E501
 from github import Issue
-from src.git_utils import get_issue_comments, has_linked_pr, get_linked_pr
+from git_utils import get_issue_comments, has_linked_pr, get_linked_pr
 
 
 def has_blech_bot_tag(issue: Issue) -> bool:
