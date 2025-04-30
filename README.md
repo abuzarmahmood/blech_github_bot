@@ -54,9 +54,14 @@ source venv/bin/activate  # On Linux/Mac
 .\venv\Scripts\activate  # On Windows
 ```
 
-3. Install dependencies:
+3. Install dependencies and tools:
 ```bash
-pip install -r requirements.txt
+# Install all dependencies and aider
+make install
+
+# Or install components separately
+make install-deps  # Just Python dependencies
+make install-aider # Just aider tool
 ```
 
 4. Create a `.env` file with your API tokens:
