@@ -31,6 +31,12 @@ clean:
 	find . -type d -name "dist" -exec rm -rf {} +
 	find . -type d -name "build" -exec rm -rf {} +
 
+test-workflows:
+	python -m tests.run_prefect_workflow_tests --debug
+
+test-workflows-normal:
+	python -m tests.run_prefect_workflow_tests --no-test-mode
+
 help:
 	@echo "Available targets:"
 	@echo "  all          : Install dependencies and aider (default)"
@@ -38,5 +44,7 @@ help:
 	@echo "  install-deps : Install Python dependencies from requirements.txt"
 	@echo "  install-aider: Install aider tool"
 	@echo "  test         : Run tests with pytest"
+	@echo "  test-workflows: Run Prefect workflow tests in test mode"
+	@echo "  test-workflows-normal: Run Prefect workflow tests in normal mode"
 	@echo "  clean        : Remove Python cache files and build artifacts"
 	@echo "  help         : Show this help message"
