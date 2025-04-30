@@ -189,7 +189,7 @@ def summarize_text(text: str, max_length: int = 1000) -> str:
         return text
 
     # Use summary agent to create a contextually relevant summary
-    summary_agent = create_agent("summary_agent", llm_config)
+    summary_agent = create_agent("summary_assistant", llm_config)
 
     # Create a prompt for the summary agent
     summary_prompt = f"""
