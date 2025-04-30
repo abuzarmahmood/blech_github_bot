@@ -1078,20 +1078,25 @@ def process_issue(
                 trigger = check_triggers(issue_or_pr)
                 response_info = response_selector(trigger)
                 response_func = response_info["func"]
-                
+
                 if test_mode:
                     # In test mode, simulate all triggers
-                    tab_print(f"TEST MODE: Simulating all triggers for {entity_type} #{issue_or_pr.number}")
-                    test_triggers = ["feedback", "generate_edit_command", "new_response"]
+                    tab_print(
+                        f"TEST MODE: Simulating all triggers for {entity_type} #{issue_or_pr.number}")
+                    test_triggers = ["feedback",
+                                     "generate_edit_command", "new_response"]
                     for test_trigger in test_triggers:
                         test_response_info = response_selector(test_trigger)
                         test_func = test_response_info["func"]
                         if test_func:
-                            tab_print(f"TEST MODE: Running {test_response_info['name']} flow")
-                            test_response, test_content = test_func(issue_or_pr, repo_name)
-                            tab_print(f"TEST MODE: {test_response_info['name']} flow completed")
+                            tab_print(
+                                f"TEST MODE: Running {test_response_info['name']} flow")
+                            test_response, test_content = test_func(
+                                issue_or_pr, repo_name)
+                            tab_print(
+                                f"TEST MODE: {test_response_info['name']} flow completed")
                     return True, "Test mode completed all trigger simulations"
-                
+
                 if response_func is None:
                     # This is a skip outcome, not an error
                     return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
@@ -1277,45 +1282,50 @@ def get_tracked_repos_task() -> List[str]:
     """Prefect task wrapper for get_tracked_repos"""
     return get_tracked_repos()
 
+
 @task(name="Initialize Bot")
 def initialize_bot_task() -> None:
     """Prefect task wrapper for initialize_bot"""
     initialize_bot()
 
+
 def create_prefect_flow(test_mode: bool = False) -> Flow:
     """
     Create a Prefect flow for orchestrating the GitHub issue response workflow
-    
+
     Args:
         test_mode: Whether to run in test mode (simulating all triggers)
-        
+
     Returns:
         Prefect Flow object
     """
     with Flow("GitHub Issue Response Flow") as flow:
         # Initialize the bot
         init = initialize_bot_task()
-        
+
         # Get list of repositories to process
         repos = get_tracked_repos_task()
-        
+
         # Process each repository
         for repo_name in repos:
             process_task = process_repository(repo_name, test_mode)
             # Set dependency to ensure initialization happens first
             process_task.set_upstream(init)
-    
+
     return flow
+
 
 if __name__ == '__main__':
     # Parse command line arguments
     import argparse
-    parser = argparse.ArgumentParser(description='Run the GitHub issue response agent')
-    parser.add_argument('--test', action='store_true', help='Run in test mode (simulate all triggers)')
+    parser = argparse.ArgumentParser(
+        description='Run the GitHub issue response agent')
+    parser.add_argument('--test', action='store_true',
+                        help='Run in test mode (simulate all triggers)')
     args = parser.parse_args()
-    
+
     # Create and run the flow
     flow = create_prefect_flow(test_mode=args.test)
     flow.run()
-    
+
     print('\nCompleted processing all repositories')
