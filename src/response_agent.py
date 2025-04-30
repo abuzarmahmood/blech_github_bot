@@ -6,8 +6,10 @@ Agent for generating responses to GitHub issues using pyautogen
     2. Skip: Skipped because triggers were not met (e.g., no bot tag, already responded)
     3. Error: An error occurred during processing (e.g., exception thrown)
 """
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Tuple, List, Union, Dict, Any
 
+from prefect import task, Flow, case
+from prefect.tasks.control_flow import merge
 from dotenv import load_dotenv
 import string
 import triggers
@@ -345,6 +347,7 @@ def summarize_relevant_comments(
     return summarized_comments, comment_list, summary_comment_str
 
 
+@task(name="Generate Feedback Response")
 def generate_feedback_response(
         issue: Issue,
         repo_name: str,
@@ -430,6 +433,7 @@ def generate_feedback_response(
     return updated_response, all_content
 
 
+@task(name="Generate New Response")
 def generate_new_response(
         issue: Issue,
         repo_name: str,
@@ -540,6 +544,7 @@ def generate_new_response(
     return response, all_content
 
 
+@task(name="Generate Edit Command Response")
 def generate_edit_command_response(
         issue: Issue,
         repo_name: str,
@@ -621,6 +626,7 @@ def generate_edit_command_response(
 ############################################################
 
 
+@task(name="Check Triggers")
 def check_triggers(issue: Issue) -> str:
     """
     Check if the issue contains any triggers for generating a response
@@ -644,23 +650,25 @@ def check_triggers(issue: Issue) -> str:
         return None
 
 
-def response_selector(trigger: str) -> Callable:
+@task(name="Response Selector")
+def response_selector(trigger: str) -> Dict[str, Any]:
     """
-    Generate a response for a GitHub issue using autogen agents
+    Select the appropriate response function based on the trigger
 
     Args:
         trigger: The trigger phrase for generating the response
 
     Returns:
+        Dictionary with the response function and its name
     """
     if trigger == "feedback":
-        return generate_feedback_response
+        return {"func": generate_feedback_response, "name": "feedback"}
     elif trigger == "generate_edit_command":
-        return generate_edit_command_response
+        return {"func": generate_edit_command_response, "name": "generate_edit_command"}
     elif trigger == "new_response":
-        return generate_new_response
+        return {"func": generate_new_response, "name": "new_response"}
     else:
-        return None
+        return {"func": None, "name": "none"}
 
 
 def write_pr_comment(
@@ -687,6 +695,7 @@ def write_pr_comment(
     pr_obj.create_issue_comment(write_str)
 
 
+@task(name="Develop Issue Flow")
 def develop_issue_flow(
         issue_or_pr: Union[Issue, PullRequest],
         repo_name: str,
@@ -784,6 +793,7 @@ def develop_issue_flow(
     return True, None
 
 
+@task(name="Respond PR Comment Flow")
 def respond_pr_comment_flow(
         issue_or_pr: Union[Issue, PullRequest],
         repo_name: str,
@@ -907,6 +917,7 @@ def respond_pr_comment_flow(
         return False, pr_msg
 
 
+@task(name="Standalone PR Flow")
 def standalone_pr_flow(
         issue_or_pr: Union[Issue, PullRequest],
         repo_name: str,
@@ -984,9 +995,11 @@ def standalone_pr_flow(
         raise Exception(error_msg)
 
 
+@task(name="Process Issue")
 def process_issue(
     issue_or_pr: Union[Issue, PullRequest],
     repo_name: str,
+    test_mode: bool = False,
 ) -> Tuple[bool, Optional[str]]:
     """
     Process a single issue or PR - check if it needs response and generate one
@@ -1063,7 +1076,22 @@ def process_issue(
             else:
                 # Generate and post response
                 trigger = check_triggers(issue_or_pr)
-                response_func = response_selector(trigger)
+                response_info = response_selector(trigger)
+                response_func = response_info["func"]
+                
+                if test_mode:
+                    # In test mode, simulate all triggers
+                    tab_print(f"TEST MODE: Simulating all triggers for {entity_type} #{issue_or_pr.number}")
+                    test_triggers = ["feedback", "generate_edit_command", "new_response"]
+                    for test_trigger in test_triggers:
+                        test_response_info = response_selector(test_trigger)
+                        test_func = test_response_info["func"]
+                        if test_func:
+                            tab_print(f"TEST MODE: Running {test_response_info['name']} flow")
+                            test_response, test_content = test_func(issue_or_pr, repo_name)
+                            tab_print(f"TEST MODE: {test_response_info['name']} flow completed")
+                    return True, "Test mode completed all trigger simulations"
+                
                 if response_func is None:
                     # This is a skip outcome, not an error
                     return False, f"No trigger found for {entity_type} #{issue_or_pr.number}"
@@ -1142,8 +1170,10 @@ def run_aider(message: str, repo_path: str) -> str:
         raise RuntimeError(error_msg)
 
 
+@task(name="Process Repository")
 def process_repository(
     repo_name: str,
+    test_mode: bool = False,
 ) -> None:
     """
     Process all open issues and PRs in a repository
@@ -1187,7 +1217,7 @@ def process_repository(
             entity_type = "PR" if is_pull_request(item) else "issue"
 
             # Process the issue/PR and determine the outcome
-            success, message = process_issue(item, repo_name)
+            success, message = process_issue(item, repo_name, test_mode)
             if success:
                 # Success outcome
                 tab_print(
@@ -1242,23 +1272,50 @@ def initialize_bot() -> None:
         print('===============================')
 
 
-if __name__ == '__main__':
-    # Initialize the bot (self-update)
+@task(name="Get Tracked Repos")
+def get_tracked_repos_task() -> List[str]:
+    """Prefect task wrapper for get_tracked_repos"""
+    return get_tracked_repos()
+
+@task(name="Initialize Bot")
+def initialize_bot_task() -> None:
+    """Prefect task wrapper for initialize_bot"""
     initialize_bot()
 
-    # Get list of repositories to process
-    tracked_repos = get_tracked_repos()
-    print(f'Found {len(tracked_repos)} tracked repositories')
-    pprint(tracked_repos)
+def create_prefect_flow(test_mode: bool = False) -> Flow:
+    """
+    Create a Prefect flow for orchestrating the GitHub issue response workflow
+    
+    Args:
+        test_mode: Whether to run in test mode (simulating all triggers)
+        
+    Returns:
+        Prefect Flow object
+    """
+    with Flow("GitHub Issue Response Flow") as flow:
+        # Initialize the bot
+        init = initialize_bot_task()
+        
+        # Get list of repositories to process
+        repos = get_tracked_repos_task()
+        
+        # Process each repository
+        for repo_name in tracked_repos:
+            process_task = process_repository(repo_name, test_mode)
+            # Set dependency to ensure initialization happens first
+            process_task.set_upstream(init)
+    
+    return flow
 
-    # Process each repository
-    for repo_name in tracked_repos:
-        print(f'\n=== Processing repository: {repo_name} ===')
-        try:
-            process_repository(repo_name)
-            print(f'Completed processing {repo_name}')
-        except Exception as e:
-            tab_print(f'Error processing {repo_name}: {str(e)}')
-            continue
-
+if __name__ == '__main__':
+    # Parse command line arguments
+    import argparse
+    parser = argparse.ArgumentParser(description='Run the GitHub issue response agent')
+    parser.add_argument('--test', action='store_true', help='Run in test mode (simulate all triggers)')
+    args = parser.parse_args()
+    
+    # Create and run the flow
+    flow = create_prefect_flow(test_mode=args.test)
+    flow.run()
+    
     print('\nCompleted processing all repositories')
