@@ -1300,7 +1300,7 @@ def create_prefect_flow(test_mode: bool = False) -> Flow:
         repos = get_tracked_repos_task()
         
         # Process each repository
-        for repo_name in tracked_repos:
+        for repo_name in repos:
             process_task = process_repository(repo_name, test_mode)
             # Set dependency to ensure initialization happens first
             process_task.set_upstream(init)
