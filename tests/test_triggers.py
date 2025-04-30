@@ -1,9 +1,9 @@
 import sys  # noqa
 import os  # noqa
 
-# Add the src directory to the path so we can import the modules
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))  # noqa
+# # Add the src directory to the path so we can import the modules
+# sys.path.insert(0, os.path.abspath(
+#     os.path.join(os.path.dirname(__file__), '..')))  # noqa
 
 from src.triggers import (
     has_blech_bot_tag,

@@ -13,19 +13,20 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Navigate to the script directory
-cd "$(dirname "$0")"
-echo "Directory: $(pwd)"
+# cd "$(dirname "$0")"
+# echo "Directory: $(pwd)"
 
 # Activate virtual environment if it exists
-if [ -f "../venv/bin/activate" ]; then
-    source ../venv/bin/activate
-    echo "Virtual environment activated from" $(realpath ../venv/bin/activate)
+VENV_ACTIVATE_PATH=$(realpath ./venv/bin/activate)
+if [ -f "$VENV_ACTIVATE_PATH" ]; then
+    source $VENV_ACTIVATE_PATH
+    echo "Virtual environment activated from" $VENV_ACTIVATE_PATH
 fi
 
 # Run the response_agent.py script in a loop with the specified delay
 echo "Running response_agent.py with delay of $DELAY seconds"
 while true; do
-    python3 response_agent.py
+    python3 src/response_agent.py
     echo "Next run in $DELAY seconds"
     sleep "$DELAY"  # Wait for the specified delay before running again
 done
