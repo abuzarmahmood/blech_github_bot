@@ -45,6 +45,9 @@ agent_system_messages = {
         Format the command in a way that can be parsed by automated tools.
         Reply "TERMINATE" in the end when everything is done.
         """,
+    "summary_agent": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
+        Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
+        """,
     "summary_assistant": """You are a helpful GitHub bot that reviews issues and generates appropriate responses.
         Analyze the issue details carefully and summarize the suggestions and changes made by other agents.
         """,
