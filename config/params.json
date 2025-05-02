@@ -1,4 +1,5 @@
 {
     "auto_update": false,
-    "print_llm_output": false
+    "print_llm_output": false,
+    "aider_model": "gpt-4o"
 }
