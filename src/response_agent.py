@@ -6,9 +6,9 @@ Agent for generating responses to GitHub issues using pyautogen
     2. Skip: Skipped because triggers were not met (e.g., no bot tag, already responded)
     3. Error: An error occurred during processing (e.g., exception thrown)
 """
+from config import llm_config
 from typing import Optional, Tuple, List, Union
 
-from dotenv import load_dotenv
 import string
 import triggers
 import traceback
@@ -52,7 +52,6 @@ import subprocess
 import os
 from pprint import pprint
 from collections.abc import Callable
-import random
 import traceback
 import json
 import re
@@ -69,16 +68,6 @@ base_dir = os.path.dirname(src_dir)
 with open(os.path.join(base_dir, 'config', 'params.json')) as f:
     params = json.load(f)
 
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    raise ValueError("OpenAI API key not found in environment variables")
-
-llm_config = {
-    "model": "gpt-4o",
-    # "model": "o3-mini-2025-01-31",
-    "api_key": api_key,
-    "temperature": random.uniform(0, 0.2),
-}
 ############################################################
 # Response patterns
 ############################################################
@@ -302,7 +291,7 @@ def summarize_relevant_comments(
     }
 
     comment_summary_assistant = create_agent(
-        "comment_summary_assistant", llm_config)
+        "comment_summary_assistant")
     summarized_comments = []
     for comment in comment_list[:-1]:
         summary_prompt = generate_prompt(
@@ -388,7 +377,7 @@ def generate_feedback_response(
         "issue": issue,
     }
     user = create_user_agent()
-    feedback_assistant = create_agent("feedback_assistant", llm_config)
+    feedback_assistant = create_agent("feedback_assistant")
 
     comments = get_issue_comments(issue)
     for comment in reversed(comments):
@@ -469,9 +458,9 @@ def generate_new_response(
 
     # Create base agents
     user = create_user_agent()
-    file_assistant = create_agent("file_assistant", llm_config)
-    edit_assistant = create_agent("edit_assistant", llm_config)
-    summary_assistant = create_agent("summary_assistant", llm_config)
+    file_assistant = create_agent("file_assistant")
+    edit_assistant = create_agent("edit_assistant")
+    summary_assistant = create_agent("summary_assistant")
     # user, file_assistant, edit_assistant = create_agents()
 
     # Get prompts and run agents
@@ -581,7 +570,7 @@ def generate_edit_command_response(
 
     user = create_user_agent()
     generate_edit_command_assistant = create_agent(
-        "generate_edit_command_assistant", llm_config)
+        "generate_edit_command_assistant")
     if summarized_comments:
         generate_edit_command_prompt = generate_prompt(
             "generate_edit_command_assistant",
@@ -1247,6 +1236,7 @@ if __name__ == '__main__':
     initialize_bot()
 
     # Get list of repositories to process
+    from config import get_tracked_repos
     tracked_repos = get_tracked_repos()
     print(f'Found {len(tracked_repos)} tracked repositories')
     pprint(tracked_repos)
