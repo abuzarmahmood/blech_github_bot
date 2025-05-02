@@ -74,7 +74,8 @@ if not api_key:
     raise ValueError("OpenAI API key not found in environment variables")
 
 llm_config = {
-    "model": params.get("aider_model", "gpt-4o"),  # Default to "gpt-4o" if not specified
+    # Default to "gpt-4o" if not specified
+    "model": params.get("aider_model", "gpt-4o"),
     "api_key": api_key,
     "temperature": random.uniform(0, 0.2),
 }
@@ -1115,7 +1116,8 @@ def run_aider(message: str, repo_path: str) -> str:
         if 'Re-run aider to use new version' in result.stdout:
             # Re-run with the same model if we get a version update message
             result = subprocess.run(
-                ['aider', '--model', aider_model, '--yes-always', '--message', message],
+                ['aider', '--model', aider_model,
+                    '--yes-always', '--message', message],
                 check=True,
                 capture_output=True,
                 text=True
