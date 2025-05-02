@@ -39,7 +39,6 @@ from src.git_utils import (
     get_pr_branch,
     add_signature_to_comment,
 )
-from config import llm_config
 from github.Repository import Repository
 from github.Issue import Issue
 from github.PullRequest import PullRequest
