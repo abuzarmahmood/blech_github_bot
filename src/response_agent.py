@@ -1104,7 +1104,8 @@ def run_aider(message: str, repo_path: str) -> str:
 
         # Run aider with the message and specified model
         result = subprocess.run(
-            ['aider', '--model', llm_config["model"], '--yes-always', '--message', message],
+            ['aider', '--model', llm_config["model"],
+                '--yes-always', '--message', message],
             check=True,
             capture_output=True,
             text=True
