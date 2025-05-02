@@ -1113,7 +1113,7 @@ def run_aider(message: str, repo_path: str) -> str:
             text=True
         )
         if 'Re-run aider to use new version' in result.stdout:
-            aider_model = params.get("aider_model", "gpt-4o")
+            # Re-run with the same model if we get a version update message
             result = subprocess.run(
                 ['aider', '--model', aider_model, '--yes-always', '--message', message],
                 check=True,
