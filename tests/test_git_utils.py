@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from src.git_utils import (
     clean_response,
     add_signature_to_comment,
@@ -27,27 +27,21 @@ from github import Github
 from unittest.mock import patch, MagicMock
 
 
-class TestGitUtils(unittest.TestCase):
+@patch('src.git_utils.get_github_client')
+def test_get_github_client(mock_get_github_client):
+    mock_get_github_client.return_value = MagicMock(spec=Github)
+    client = get_github_client()
+    assert isinstance(client, Github)
 
-    @patch('src.git_utils.get_github_client')
-    def test_get_github_client(self, mock_get_github_client):
-        mock_get_github_client.return_value = MagicMock(spec=Github)
-        client = get_github_client()
-        self.assertIsInstance(client, Github)
+def test_clean_response():
+    response = "This is a test response. "
+    cleaned_response = clean_response(response)
+    assert "" not in cleaned_response
 
-    def test_clean_response(self):
-        response = "This is a test response. "
-        cleaned_response = clean_response(response)
-        self.assertNotIn("", cleaned_response)
+def test_add_signature_to_comment():
+    comment_text = "This is a comment."
+    model = "test-model"
+    signed_comment = add_signature_to_comment(comment_text, model)
+    assert "test-model" in signed_comment
 
-    def test_add_signature_to_comment(self):
-        comment_text = "This is a comment."
-        model = "test-model"
-        signed_comment = add_signature_to_comment(comment_text, model)
-        self.assertIn("test-model", signed_comment)
-
-    # Add more tests for other functions...
-
-
-if __name__ == '__main__':
-    unittest.main()
+# Add more tests for other functions...
