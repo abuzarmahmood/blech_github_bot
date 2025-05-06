@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, Mock
 from src.git_utils import get_github_client, get_repository, get_open_issues
 
+
 class TestGitUtils(unittest.TestCase):
 
     @patch('src.git_utils.Github')
@@ -25,6 +26,7 @@ class TestGitUtils(unittest.TestCase):
         mock_repo.get_issues.return_value = [mock_issue]
         issues = get_open_issues(mock_repo)
         self.assertEqual(issues, [mock_issue])
+
 
 if __name__ == '__main__':
     unittest.main()
