@@ -217,7 +217,7 @@ def clone_repository(repo: Repository) -> str:
         token = os.getenv('GITHUB_TOKEN')
         if not token:
             raise ValueError("GitHub token not found in environment variables")
-        clone_url_with_token = f"https://x-access-token:{token}@github.com/{full_repo_name}.git"
+        clone_url_with_token = f"https://{token}@github.com/{full_repo_name}.git"
         git.Repo.clone_from(clone_url_with_token, repo_dir)
         print(f"Cloned repository {full_repo_name} to {repo_dir}")
 
