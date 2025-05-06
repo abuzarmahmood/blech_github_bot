@@ -74,7 +74,7 @@ if not api_key:
     raise ValueError("OpenAI API key not found in environment variables")
 
 llm_config = {
-    "model": params.get("aider_model", "gpt-4o"),
+    "model": params.get("model", "gpt-4o"),
     "api_key": api_key,
     "temperature": random.uniform(0, 0.2),
 }
@@ -1103,7 +1103,7 @@ def run_aider(message: str, repo_path: str) -> str:
         current_commit = git.Repo(repo_path).head.object.hexsha
 
         # Run aider with the message and specified model from params
-        aider_model = params.get("aider_model", llm_config["model"])
+        aider_model = params.get("aider_model", "gpt-4o")
         result = subprocess.run(
             ['aider', '--model', aider_model,
                 '--yes-always', '--message', message],
