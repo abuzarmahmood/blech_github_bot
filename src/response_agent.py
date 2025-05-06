@@ -84,7 +84,16 @@ llm_config = {
         "api_key": api_key,
         "temperature": random.uniform(0, 0.2),
     },
-    # Add configurations for other agents similarly
+    "summary_assistant": {
+        "model": params.get("summary_assistant_model", "gpt-4o"),
+        "api_key": api_key,
+        "temperature": random.uniform(0, 0.2),
+    },
+    "feedback_assistant": {
+        "model": params.get("feedback_assistant_model", "gpt-4o"),
+        "api_key": api_key,
+        "temperature": random.uniform(0, 0.2),
+    },
 }
 ############################################################
 # Response patterns
