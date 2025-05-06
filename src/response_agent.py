@@ -1102,9 +1102,10 @@ def run_aider(message: str, repo_path: str) -> str:
         # Current commit
         current_commit = git.Repo(repo_path).head.object.hexsha
 
-        # Run aider with the message and specified model
+        # Run aider with the message and specified model from params
+        aider_model = params.get("aider_model", llm_config["model"])
         result = subprocess.run(
-            ['aider', '--model', llm_config["model"],
+            ['aider', '--model', aider_model,
                 '--yes-always', '--message', message],
             check=True,
             capture_output=True,
@@ -1113,7 +1114,7 @@ def run_aider(message: str, repo_path: str) -> str:
         if 'Re-run aider to use new version' in result.stdout:
             # Re-run with the same model if we get a version update message
             result = subprocess.run(
-                ['aider', '--model', llm_config["model"],
+                ['aider', '--model', aider_model,
                     '--yes-always', '--message', message],
                 check=True,
                 capture_output=True,
