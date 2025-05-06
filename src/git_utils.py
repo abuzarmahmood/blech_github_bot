@@ -233,6 +233,7 @@ def update_repository(repo_path: str) -> None:
     git_repo = git.Repo(repo_path)
     origin = git_repo.remotes.origin
     origin.pull()
+    print("Repository updated with the latest changes from remote")
 
 
 def get_pr_branch(pr: PullRequest) -> str:
@@ -265,6 +266,8 @@ def get_development_branch(issue: Issue, repo_path: str, create: bool = False) -
         ValueError: If gh CLI is not installed
         RuntimeError: If multiple branches exist for the issue
     """
+    # Update repository before any branch operations
+    update_repository(repo_path)
     try:
         # Check for existing branches related to this issue
         related_branches = get_issue_related_branches(repo_path, issue)
@@ -470,8 +473,12 @@ def push_changes_with_authentication(
 
     Args:
         repo_path: Path to the local git repository
+        out_thread: The issue or PR to log errors to
         branch_name: Name of the branch to push (default: current branch)
     """
+    # Try to merge master/main branch first
+    from src.branch_handler import merge_master
+    merge_master(repo_path, out_thread)
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
 
