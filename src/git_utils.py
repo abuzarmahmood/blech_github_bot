@@ -196,7 +196,6 @@ def clone_repository(repo: Repository) -> str:
 
     Args:
         repo: The GitHub repository to clone
-        local_path: Local directory path where repo should be cloned
 
     Returns:
         Path to the cloned repository
@@ -215,7 +214,11 @@ def clone_repository(repo: Repository) -> str:
 
     # Clone if doesn't exist, or return existing path
     if not os.path.exists(repo_dir):
-        git.Repo.clone_from(repo.clone_url, repo_dir)
+        token = os.getenv('GITHUB_TOKEN')
+        if not token:
+            raise ValueError("GitHub token not found in environment variables")
+        clone_url_with_token = f"https://x-access-token:{token}@github.com/{full_repo_name}.git"
+        git.Repo.clone_from(clone_url_with_token, repo_dir)
         print(f"Cloned repository {full_repo_name} to {repo_dir}")
 
     return repo_dir
