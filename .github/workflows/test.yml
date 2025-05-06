@@ -23,7 +23,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest tests/test_triggers.py -v --cov --cov-branch --cov-report=xml
+        pytest tests/test_triggers.py tests/test_agents.py -v --cov --cov-branch --cov-report=xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
