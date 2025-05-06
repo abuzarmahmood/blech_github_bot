@@ -1,6 +1,8 @@
 {
     "auto_update": false,
     "print_llm_output": false,
-    "model": "gpt-4o",
-    "aider_model": "gpt-4o"
+    "file_assistant_model": "gpt-4o",
+    "edit_assistant_model": "gpt-4o",
+    "summary_assistant_model": "gpt-4o",
+    "feedback_assistant_model": "gpt-4o"
 }
