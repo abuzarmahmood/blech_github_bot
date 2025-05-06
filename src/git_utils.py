@@ -234,7 +234,6 @@ def update_repository(repo_path: str) -> None:
     origin = git_repo.remotes.origin
     origin.pull()
     print("Repository updated with the latest changes from remote")
-    print("Repository updated with the latest changes from remote")
 
 
 def get_pr_branch(pr: PullRequest) -> str:
@@ -477,9 +476,6 @@ def push_changes_with_authentication(
         out_thread: The issue or PR to log errors to
         branch_name: Name of the branch to push (default: current branch)
     """
-    # Try to merge master/main branch first
-    from src.branch_handler import merge_master
-    merge_master(repo_path, out_thread)
     # Try to merge master/main branch first
     from src.branch_handler import merge_master
     merge_master(repo_path, out_thread)
