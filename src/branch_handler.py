@@ -160,8 +160,6 @@ def delete_branch(repo_path: str, branch_name: str, force: bool = False) -> None
         repo.delete_head(branch_name, force=force)
 
 
-
-
 def back_to_master_branch(repo_path: str) -> None:
     """
     Switch back to master/main branch, detecting which one exists
