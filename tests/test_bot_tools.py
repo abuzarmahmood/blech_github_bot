@@ -8,6 +8,7 @@ from src.bot_tools import (
     readlines
 )
 
+
 class TestBotTools(unittest.TestCase):
 
     def test_get_local_repo_path_exists(self):
@@ -55,6 +56,7 @@ class TestBotTools(unittest.TestCase):
         filepath = "/home/exouser/Desktop/blech_github_bot/src/bot_tools.py"
         content = readlines(filepath, 0, 10)
         self.assertIn("def get_local_repo_path", content)
+
 
 if __name__ == '__main__':
     unittest.main()
