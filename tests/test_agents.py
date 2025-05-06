@@ -4,6 +4,7 @@ from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
 from github.Issue import Issue
 from unittest.mock import MagicMock
 
+
 class TestAgents(unittest.TestCase):
 
     def test_register_functions(self):
@@ -26,7 +27,8 @@ class TestAgents(unittest.TestCase):
         repo_path = "/path/to/repo"
         details = {}
         issue = MagicMock(spec=Issue)
-        last_comment_str, comments_str, all_comments = parse_comments(repo_name, repo_path, details, issue)
+        last_comment_str, comments_str, all_comments = parse_comments(
+            repo_name, repo_path, details, issue)
         self.assertIsInstance(last_comment_str, str)
         self.assertIsInstance(comments_str, str)
         self.assertIsInstance(all_comments, list)
@@ -37,8 +39,10 @@ class TestAgents(unittest.TestCase):
         repo_path = "/path/to/repo"
         details = {"title": "Test Title", "body": "Test Body"}
         issue = MagicMock(spec=Issue)
-        prompt = generate_prompt(agent_name, repo_name, repo_path, details, issue)
+        prompt = generate_prompt(
+            agent_name, repo_name, repo_path, details, issue)
         self.assertIsInstance(prompt, str)
+
 
 if __name__ == '__main__':
     unittest.main()
