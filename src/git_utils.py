@@ -139,7 +139,7 @@ def search_issues(repo: Repository, query: str) -> List[Issue]:
     return list(repo.get_issues(state='all', labels=[query]))
 
 
-def write_issue_response(issue: Issue, response_text: str) -> IssueComment:
+def write_issue_response(issue: Issue, response_text: str, agent_name: str) -> IssueComment:
     """
     Write a response to an issue with the blech_bot signature
 
