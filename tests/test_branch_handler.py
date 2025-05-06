@@ -9,6 +9,7 @@ from src.branch_handler import (
     push_changes
 )
 
+
 class TestBranchHandler(unittest.TestCase):
 
     @patch('src.branch_handler.git.Repo')
@@ -18,7 +19,7 @@ class TestBranchHandler(unittest.TestCase):
         mock_issue.number = 123
         mock_issue.title = "Test Issue"
         mock_popen.return_value.read.return_value = "branch1\turl1\nbranch2\turl2"
-        
+
         branches = get_issue_related_branches('/path/to/repo', mock_issue)
         expected_branches = [('branch1', 'url1'), ('branch2', 'url2')]
         self.assertEqual(branches, expected_branches)
@@ -39,7 +40,8 @@ class TestBranchHandler(unittest.TestCase):
     def test_delete_branch(self, mock_repo):
         mock_repo.return_value.heads = ['main', 'dev']
         delete_branch('/path/to/repo', 'dev')
-        mock_repo.return_value.delete_head.assert_called_with('dev', force=False)
+        mock_repo.return_value.delete_head.assert_called_with(
+            'dev', force=False)
 
     @patch('src.branch_handler.git.Repo')
     def test_back_to_master_branch(self, mock_repo):
@@ -52,6 +54,7 @@ class TestBranchHandler(unittest.TestCase):
         mock_repo.return_value.active_branch.name = 'dev'
         push_changes('/path/to/repo')
         mock_repo.return_value.git.push.assert_called_with('origin', 'dev')
+
 
 if __name__ == '__main__':
     unittest.main()
