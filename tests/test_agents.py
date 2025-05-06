@@ -10,15 +10,18 @@ def test_register_functions():
     registered_agent = register_functions(agent)
     assert isinstance(registered_agent, ConversableAgent)
 
+
 def test_create_user_agent():
     user_agent = create_user_agent()
     assert isinstance(user_agent, UserProxyAgent)
+
 
 def test_create_agent():
     agent_name = "edit_assistant"
     llm_config = {"key": "value"}
     agent = create_agent(agent_name, llm_config)
     assert isinstance(agent, AssistantAgent)
+
 
 def test_parse_comments():
     repo_name = "test_repo"
@@ -30,6 +33,7 @@ def test_parse_comments():
     assert isinstance(last_comment_str, str)
     assert isinstance(comments_str, str)
     assert isinstance(all_comments, list)
+
 
 def test_generate_prompt():
     agent_name = "edit_assistant"
