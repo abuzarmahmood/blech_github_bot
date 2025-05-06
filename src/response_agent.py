@@ -115,6 +115,7 @@ def filter_comments(comments: List) -> List:
     """
     return [comment for comment in comments if "Codecov Report" not in comment.body]
 
+
 def extract_urls_from_issue(issue: Issue) -> List[str]:
     """
     Extract URLs from issue body and comments
