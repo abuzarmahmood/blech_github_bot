@@ -25,6 +25,7 @@ import bot_tools
 import os
 
 from src.git_utils import (
+    get_issue_comments,
     get_github_client,
     get_repository,
     write_issue_response,
@@ -102,6 +103,18 @@ def tab_print(x):
         print('\t' + str(x))
 
 
+def filter_comments(comments: List) -> List:
+    """
+    Filter out comments containing "Codecov Report".
+
+    Args:
+        comments: List of comments to filter.
+
+    Returns:
+        Filtered list of comments.
+    """
+    return [comment for comment in comments if "Codecov Report" not in comment.body]
+
 def extract_urls_from_issue(issue: Issue) -> List[str]:
     """
     Extract URLs from issue body and comments
@@ -120,7 +133,9 @@ def extract_urls_from_issue(issue: Issue) -> List[str]:
     urls.extend(extractor.find_urls(issue_body))
 
     # Extract from comments
-    for comment in get_issue_comments(issue):
+    comments = get_issue_comments(issue)
+    comments = filter_comments(comments)
+    for comment in comments:
         comment_body = comment.body or ""
         urls.extend(extractor.find_urls(comment_body))
 
