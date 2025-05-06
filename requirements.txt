@@ -9,3 +9,4 @@ beautifulsoup4>=4.9.3
 gitpython
 pytest
 pytest-cov
+prefect>=1.0.0
