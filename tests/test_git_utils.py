@@ -33,10 +33,12 @@ def test_get_github_client(mock_get_github_client):
     client = get_github_client()
     assert isinstance(client, Github)
 
+
 def test_clean_response():
     response = "This is a test response. "
     cleaned_response = clean_response(response)
     assert "" not in cleaned_response
+
 
 def test_add_signature_to_comment():
     comment_text = "This is a comment."
