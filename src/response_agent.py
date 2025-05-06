@@ -74,9 +74,17 @@ if not api_key:
     raise ValueError("OpenAI API key not found in environment variables")
 
 llm_config = {
-    "model": params.get("model", "gpt-4o"),
-    "api_key": api_key,
-    "temperature": random.uniform(0, 0.2),
+    "file_assistant": {
+        "model": params.get("file_assistant_model", "gpt-4o"),
+        "api_key": api_key,
+        "temperature": random.uniform(0, 0.2),
+    },
+    "edit_assistant": {
+        "model": params.get("edit_assistant_model", "gpt-4o"),
+        "api_key": api_key,
+        "temperature": random.uniform(0, 0.2),
+    },
+    # Add configurations for other agents similarly
 }
 ############################################################
 # Response patterns
