@@ -22,11 +22,13 @@ def test_get_issue_related_branches(mock_popen, mock_repo):
     expected_branches = [('branch1', 'url1'), ('branch2', 'url2')]
     assert branches == expected_branches
 
+
 @patch('src.branch_handler.git.Repo')
 def test_get_current_branch(mock_repo):
     mock_repo.return_value.active_branch.name = 'main'
     branch_name = get_current_branch('/path/to/repo')
     assert branch_name == 'main'
+
 
 @patch('src.branch_handler.git.Repo')
 def test_checkout_branch(mock_repo):
@@ -34,17 +36,20 @@ def test_checkout_branch(mock_repo):
     checkout_branch('/path/to/repo', 'dev')
     mock_repo.return_value.git.checkout.assert_called_with('dev')
 
+
 @patch('src.branch_handler.git.Repo')
 def test_delete_branch(mock_repo):
     mock_repo.return_value.heads = ['main', 'dev']
     delete_branch('/path/to/repo', 'dev')
     mock_repo.return_value.delete_head.assert_called_with('dev', force=False)
 
+
 @patch('src.branch_handler.git.Repo')
 def test_back_to_master_branch(mock_repo):
     mock_repo.return_value.heads = ['main', 'dev']
     back_to_master_branch('/path/to/repo')
     mock_repo.return_value.git.checkout.assert_called_with('main')
+
 
 @patch('src.branch_handler.git.Repo')
 def test_push_changes(mock_repo):
