@@ -26,6 +26,7 @@ from src.git_utils import (
 from github import Github
 from unittest.mock import patch, MagicMock
 
+
 class TestGitUtils(unittest.TestCase):
 
     @patch('src.git_utils.get_github_client')
@@ -46,6 +47,7 @@ class TestGitUtils(unittest.TestCase):
         self.assertIn("test-model", signed_comment)
 
     # Add more tests for other functions...
+
 
 if __name__ == '__main__':
     unittest.main()
