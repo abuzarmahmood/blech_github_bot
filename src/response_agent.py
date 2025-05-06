@@ -1102,7 +1102,7 @@ def run_aider(message: str, repo_path: str) -> str:
         # Current commit
         current_commit = git.Repo(repo_path).head.object.hexsha
 
-        # Run aider with the message and specified model from params
+        # Run aider with the message and specified model from params.json
         aider_model = params.get("aider_model", "gpt-4o")
         result = subprocess.run(
             ['aider', '--model', aider_model,
