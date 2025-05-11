@@ -112,6 +112,48 @@ The bot will:
 5. Create branches and PRs when requested with "[ develop_issue ]" command
 6. Apply changes automatically using Aider when feedback is provided on PRs
 
+## Example Workflow
+
+Here's an example workflow to illustrate how you might use the GitHub Monitor Bot:
+
+1. **Setup and Configuration**
+   - Clone the repository and set up your environment as described in the "Get Started" section.
+   - Ensure your `.env` file is correctly configured with your GitHub and OpenAI API tokens.
+   - List the repositories you want to monitor in `config/repos.txt`.
+
+2. **Running the Bot**
+   - Start the bot using the command:
+     ```bash
+     python src/response_agent.py
+     ```
+   - Alternatively, run the bot continuously using the shell script:
+     ```bash
+     ./src/run_response_agent.sh --delay 300
+     ```
+
+3. **Monitoring and Responding to Issues**
+   - **User Message Example**: An issue is opened with the title "[ blech_bot ] Feature Request: Add logging".
+   - **Bot Response**: The bot analyzes the issue and responds with:
+     ```
+     Thank you for your feature request. We will review the current logging capabilities and suggest improvements. Please hold on while we gather more information.
+     ```
+
+4. **Creating Pull Requests**
+   - **User Command Example**: A comment on the issue includes "[ develop_issue ]".
+   - **Bot Processing**: The bot creates a new branch and a pull request with the proposed changes:
+     ```
+     A new branch 'feature/logging-enhancement' has been created and a pull request is now open for review.
+     ```
+
+5. **Automating Changes**
+   - **User Feedback Example**: Feedback is provided on the pull request suggesting additional changes.
+   - **Bot Response**: The bot processes the feedback and updates the pull request:
+     ```
+     Based on your feedback, the following changes have been made: [list of changes]. Please review the updated pull request.
+     ```
+
+This workflow demonstrates the bot's capabilities in automating the monitoring and response process for GitHub issues, with examples of interactions between users and the bot.
+
 ## Code Structure
 
 - `src/response_agent.py`: Main bot logic and Autogen agents
