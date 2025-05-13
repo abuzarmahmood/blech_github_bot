@@ -134,15 +134,14 @@ def create_user_agent():
 
 def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
     """Create and configure the autogen agents"""
-
+    agent_config = llm_config.get(agent_name, {})
+    agent_config = llm_config.get(agent_name, {})
     agent = AssistantAgent(
         name=agent_name,
-        llm_config=llm_config,
+        llm_config=agent_config,
         system_message=agent_system_messages[agent_name],
     )
-
     agent = register_functions(agent, register_how="llm")
-
     return agent
 
 ############################################################
