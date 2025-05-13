@@ -3,7 +3,6 @@ Agent creation and configuration for the GitHub bot
 """
 import os
 import autogen
-import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
 from src import bot_tools
 from src.git_utils import (
