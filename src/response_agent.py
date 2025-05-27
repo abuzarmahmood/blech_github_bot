@@ -1001,6 +1001,10 @@ def process_issue(
     print(f"Processing {entity_type} #{issue_or_pr.number}")
 
     try:
+        if triggers.has_ignore_comment(issue_or_pr):
+            # This is a skip outcome, not an error
+            return False, f"{entity_type} #{issue_or_pr.number} contains ignore pattern"
+
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
