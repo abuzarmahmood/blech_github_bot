@@ -1124,7 +1124,7 @@ def run_aider(message: str, repo_path: str) -> str:
         # Check if there are any changes
         updated_commit = git.Repo(repo_path).head.object.hexsha
         if current_commit == updated_commit:
-            raise RuntimeError("No changes made by Aider")
+            raise RuntimeError(f"No changes made by Aider. Command used: {message}")
 
         # Return to original directory
         os.chdir(original_dir)
