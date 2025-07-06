@@ -26,7 +26,9 @@ def get_local_repo_path(repo_name: str) -> str:
         - Path to the local repository
     """
     repo_name_split = repo_name.split('/')
-    repo_path = os.path.join(base_dir, 'repos', repo_name_split[0], repo_name_split[1])  # Use base_dir
+    repo_path = os.path.join(
+        # Use base_dir
+        base_dir, 'repos', repo_name_split[0], repo_name_split[1])
     if os.path.exists(repo_path):
         return repo_path
     else:

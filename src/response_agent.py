@@ -286,7 +286,8 @@ def summarize_relevant_comments(
     Returns:
         Tuple of (summary text, full conversation history)
     """
-    repo_path = bot_tools.get_local_repo_path(repo_name)  # Ensure consistent path retrieval
+    repo_path = bot_tools.get_local_repo_path(
+        repo_name)  # Ensure consistent path retrieval
     details = get_issue_details(issue)
 
     # user, file_assistant, edit_assistant = create_agents()
