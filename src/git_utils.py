@@ -209,8 +209,7 @@ def clone_repository(repo: Repository) -> str:
 
     full_repo_name = repo.full_name
     repo_split = full_repo_name.split('/')
-    # Ensure base_dir is used
-    local_path = os.path.join(base_dir, 'repos', repo_split[0])
+    local_path = os.path.join(base_dir, 'repos', repo_split[0], repo_split[1])
 
     # Create directory if it doesn't exist
     os.makedirs(local_path, exist_ok=True)
