@@ -15,7 +15,12 @@ from src.branch_handler import (
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
+import os
 from github.IssueComment import IssueComment
+
+# Determine base directory
+src_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(src_dir)
 from github.PullRequest import PullRequest
 from dotenv import load_dotenv
 import re
