@@ -1,6 +1,10 @@
 """
 Utility functions for interacting with GitHub API
 """
+import string
+import re
+from dotenv import load_dotenv
+from github.PullRequest import PullRequest
 from typing import List, Dict, Optional, Tuple, Union
 import os
 import subprocess
@@ -15,11 +19,12 @@ from src.branch_handler import (
 from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
+import os
 from github.IssueComment import IssueComment
-from github.PullRequest import PullRequest
-from dotenv import load_dotenv
-import re
-import string
+
+# Determine base directory
+src_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(src_dir)
 
 
 def clean_response(response: str) -> str:
@@ -203,14 +208,13 @@ def clone_repository(repo: Repository) -> str:
     import git
 
     full_repo_name = repo.full_name
-    repo_split = full_repo_name.split('/')
-    local_path = os.path.join('repos', repo_split[0])
+    local_path = os.path.join(base_dir, 'repos')
 
     # Create directory if it doesn't exist
     os.makedirs(local_path, exist_ok=True)
 
     # Construct full path for clone
-    repo_dir = os.path.join(local_path, repo.name)
+    repo_dir = os.path.join(local_path, full_repo_name)
 
     # Clone if doesn't exist, or return existing path
     if not os.path.exists(repo_dir):
