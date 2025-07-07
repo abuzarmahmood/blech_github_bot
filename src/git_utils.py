@@ -208,14 +208,13 @@ def clone_repository(repo: Repository) -> str:
     import git
 
     full_repo_name = repo.full_name
-    repo_split = full_repo_name.split('/')
-    local_path = os.path.join(base_dir, 'repos', repo_split[0], repo_split[1])
+    local_path = os.path.join(base_dir, 'repos')
 
     # Create directory if it doesn't exist
     os.makedirs(local_path, exist_ok=True)
 
     # Construct full path for clone
-    repo_dir = os.path.join(local_path, repo.name)
+    repo_dir = os.path.join(local_path, full_repo_name)
 
     # Clone if doesn't exist, or return existing path
     if not os.path.exists(repo_dir):
