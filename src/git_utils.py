@@ -489,8 +489,8 @@ def push_changes_with_authentication(
     if branch_name is None:
         branch_name = repo.active_branch.name
 
-    # Amend the last commit to include the bot signature
-    repo.git.commit('--amend', '--no-edit',
+    # Amend the last commit to append the bot signature
+    repo.git.commit('--amend', '--no-edit', '--allow-empty-message',
                     '--author="blech-bot <blechbot1@gmail.com>"',
                     '--message="Co-authored-by: blech-bot <blechbot1@gmail.com>"')
 
