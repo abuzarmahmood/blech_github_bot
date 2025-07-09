@@ -490,7 +490,8 @@ def push_changes_with_authentication(
         branch_name = repo.active_branch.name
 
     # Amend the last commit to include the bot signature
-    repo.git.commit('--amend', '--no-edit', '--author="blech-bot <blechbot1@gmail.com>"')
+    repo.git.commit('--amend', '--no-edit',
+                    '--author="blech-bot <blechbot1@gmail.com>"')
 
     remote = repo.remote(name='origin')
     repo_url = remote.url
