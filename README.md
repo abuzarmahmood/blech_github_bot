@@ -28,7 +28,7 @@ A Python bot that monitors GitHub repositories and automatically responds to iss
 - GitHub CLI (gh)
 - Aider CLI
 - Required Python packages (see requirements.txt):
-  - pyautogen
+  - ag2
   - PyGithub
   - python-dotenv
   - gitpython
