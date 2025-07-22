@@ -24,6 +24,8 @@ from autogen import AssistantAgent
 import bot_tools
 
 from git_utils import (
+    get_workflow_logs,
+    create_branch_for_fixes,
     get_github_client,
     get_repository,
     write_issue_response,
@@ -85,6 +87,14 @@ def check_not_empty(data: str) -> bool:
     else:
         return False
 
+
+def extract_errors_from_logs(log_content):
+    """Parse the fetched logs and extract error messages"""
+    errors = []
+    for line in log_content.splitlines():
+        if "error" in line.lower():
+            errors.append(line)
+    return errors
 
 def generate_feedback_response(
         issue: Issue,

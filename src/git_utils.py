@@ -9,6 +9,21 @@ import requests
 import re
 from github.PullRequest import PullRequest
 
+def get_workflow_logs(repo_full_name, run_id, token):
+    """Fetch logs for a specific GitHub Actions workflow run"""
+    url = f"https://api.github.com/repos/{repo_full_name}/actions/runs/{run_id}/logs"
+    headers = {"Authorization": f"token {token}"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.content
+    else:
+        raise Exception(f"Failed to fetch logs: {response.status_code}")
+
+def create_branch_for_fixes(repo, base_branch, new_branch_name):
+    """Create a new branch based on the existing branch"""
+    repo.git.checkout(base_branch)
+    repo.git.checkout('-b', new_branch_name)
+
 
 def clean_response(response: str) -> str:
     """Remove any existing signatures or TERMINATE flags from response text"""
