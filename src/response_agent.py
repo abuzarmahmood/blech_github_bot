@@ -24,6 +24,7 @@ from autogen import AssistantAgent
 import bot_tools
 import os
 
+import src.git_utils as git_utils
 from src.git_utils import (
     get_github_client,
     get_repository,
