@@ -138,6 +138,20 @@ def has_error_comment(issue: Issue) -> bool:
     return 'Traceback (most recent call last):' in comments[-1].body if comments else False
 
 
+def has_ignore_comment(issue: Issue) -> bool:
+    """
+    Check if any comment contains the ignore pattern [ blech_bot ignore ]
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the ignore pattern is found in any comment
+    """
+    comments = get_issue_comments(issue)
+    return any("[ blech_bot ignore ]" in comment.body for comment in comments)
+
+
 def has_user_comment_on_pr(issue: Issue) -> bool:
     """
     Check if there is a user comment on a pull request that needs processing
