@@ -6,6 +6,7 @@ import sys  # noqa: E501
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # noqa: E501
 from github import Issue
 from src.git_utils import get_issue_comments, has_linked_pr, get_linked_pr
+from src.response_agent import filter_comments
 
 
 def has_blech_bot_tag(issue: Issue) -> bool:
@@ -32,6 +33,7 @@ def has_generate_edit_command_trigger(issue: Issue) -> bool:
         True if the trigger phrase is found in any comment
     """
     comments = get_issue_comments(issue)
+    comments = filter_comments(comments)
     return any("[ generate_edit_command ]" in comment.body for comment in comments)
 
 
