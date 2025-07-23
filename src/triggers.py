@@ -21,6 +21,19 @@ def has_blech_bot_tag(issue: Issue) -> bool:
     return any(label.name == "blech_bot" for label in issue.labels)
 
 
+def has_catch_log_label(issue: Issue) -> bool:
+    """
+    Check if the issue has the 'catch_log' label
+
+    Args:
+        issue: The GitHub issue to check
+
+    Returns:
+        True if the issue has the 'catch_log' label, False otherwise
+    """
+    return any(label.name == "catch_log" for label in issue.labels)
+
+
 def has_generate_edit_command_trigger(issue: Issue) -> bool:
     """
     Check if the issue comments contain the trigger for generate_edit_command

@@ -20,7 +20,39 @@ from github import Github
 from github.Issue import Issue
 from github.Repository import Repository
 import os
+import requests
+import os
 from github.IssueComment import IssueComment
+
+
+def fetch_and_parse_github_actions_log(issue: Issue) -> str:
+    """
+    Fetch and parse the GitHub Actions log for errors or tracebacks.
+
+    Args:
+        issue: The GitHub issue to fetch logs for.
+
+    Returns:
+        A string containing the parsed error or traceback.
+    """
+    repo = issue.repository
+    workflow_runs = repo.get_workflow_runs(event='pull_request', branch=issue.pull_request.head.ref)
+    
+    if workflow_runs.total_count == 0:
+        return "No workflow runs found for this pull request."
+
+    latest_run = workflow_runs[0]
+    logs_url = latest_run.logs_url
+
+    headers = {'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'}
+    response = requests.get(logs_url, headers=headers)
+
+    if response.status_code != 200:
+        return f"Failed to fetch logs: {response.status_code} {response.reason}"
+
+    logs = response.text
+    return parse_github_action_logs(logs)
+
 
 # Determine base directory
 src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -88,6 +120,27 @@ def get_open_issues(repo: Repository) -> List[Issue]:
     """Get all open issues and pull requests from repository"""
     # This already returns both issues and PRs with the GitHub API
     return list(repo.get_issues(state='open', sort='created', direction='asc'))
+
+
+def parse_github_action_logs(logs: str) -> str:
+    """
+    Parse GitHub Actions logs for errors or tracebacks.
+
+    Args:
+        logs: The logs from a GitHub Actions workflow run.
+
+    Returns:
+        A string containing the parsed error or traceback messages.
+    """
+    error_lines = []
+    for line in logs.splitlines():
+        if "error" in line.lower() or "traceback" in line.lower():
+            error_lines.append(line)
+
+    if not error_lines:
+        return "No errors or tracebacks found in logs."
+
+    return "\n".join(error_lines)
 
 
 def get_issue_comments(issue: Issue) -> List[IssueComment]:

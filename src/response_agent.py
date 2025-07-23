@@ -1001,6 +1001,11 @@ def process_issue(
     print(f"Processing {entity_type} #{issue_or_pr.number}")
 
     try:
+        if triggers.has_catch_log_label(issue_or_pr):
+            parsed_log = git_utils.fetch_and_parse_github_actions_log(issue_or_pr)
+            write_issue_response(issue_or_pr, f"Error log:\n```\n{parsed_log}\n```")
+            return True, None
+
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
