@@ -11,6 +11,7 @@ from src.git_utils import (
     get_repository,
     get_issue_comments,
 )
+from branch_handler import get_current_branch
 from github.Issue import Issue
 import random
 import string
@@ -148,6 +149,36 @@ def create_agent(agent_name: str, llm_config: dict) -> AssistantAgent:
 ############################################################
 # Prompt generation
 ############################################################
+
+
+def can_push_to_branch(repo_path: str, branch_name: str = None) -> bool:
+    """
+    Check if the branch can be pushed to the remote repository.
+
+    Args:
+        repo_path: Path to the local repository.
+        branch_name: Name of the branch to check. If None, uses current branch.
+
+    Returns:
+        True if the branch can be pushed, False otherwise.
+    """
+    try:
+        if branch_name is None:
+            branch_name = get_current_branch(repo_path)
+
+        # Use git push --dry-run to check pushability
+        result = subprocess.run(
+            ['git', 'push', '--dry-run', 'origin', branch_name],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        # If "Everything up-to-date" is in the output, there's nothing to push
+        # If there's no error and something to push, we can push
+        return "Everything up-to-date" not in result.stdout
+    except subprocess.CalledProcessError:
+        return False
 
 
 def parse_comments(repo_name: str, repo_path: str, details: dict, issue: Issue) -> str:
