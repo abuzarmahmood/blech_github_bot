@@ -99,6 +99,19 @@ def add_signature_to_comment(comment_text: str, model: str) -> str:
     return comment_text
 
 
+def parse_github_action_logs(logs: str) -> str:
+    """
+    Parse GitHub Actions logs for errors or tracebacks.
+
+    Args:
+        logs: The logs from a GitHub Actions workflow run.
+
+    Returns:
+        A string containing the parsed error or traceback messages.
+    """
+    error_lines = [line for line in logs.splitlines() if "error" in line.lower() or "traceback" in line.lower()]
+    return "\n".join(error_lines) if error_lines else "No errors or tracebacks found in logs."
+
 def get_github_client() -> Github:
     """Initialize and return authenticated GitHub client"""
     load_dotenv()

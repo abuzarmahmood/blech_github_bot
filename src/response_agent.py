@@ -143,6 +143,11 @@ def scrape_text_from_url(url: str) -> str:
     Returns:
         The scraped text content or a message if non-text content is detected.
     """
+    if triggers.has_catch_log_label(issue_or_pr):
+        parsed_log = git_utils.fetch_and_parse_github_actions_log(issue_or_pr)
+        write_issue_response(issue_or_pr, f"Error log:\n```\n{parsed_log}\n```")
+        return True, None
+
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses
