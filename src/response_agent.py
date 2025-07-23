@@ -86,9 +86,6 @@ llm_config = {
 def tab_print(x):
     """
     Print with tab indentation for readability
-    """
-    """
-    Print with tab indentation for readability
     :param x: The object to print
     """
     if isinstance(x, str):
