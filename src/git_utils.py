@@ -52,6 +52,7 @@ def fetch_and_parse_github_actions_log(issue: Issue) -> str:
 
     logs = response.text
     return parse_github_action_logs(logs)
+    return parse_github_action_logs(logs)
 
 
 # Determine base directory
