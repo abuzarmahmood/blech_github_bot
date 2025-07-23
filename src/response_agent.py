@@ -24,6 +24,7 @@ from autogen import AssistantAgent
 import bot_tools
 import os
 
+import src.git_utils as git_utils
 from src.git_utils import (
     get_github_client,
     get_repository,
@@ -142,6 +143,11 @@ def scrape_text_from_url(url: str) -> str:
     Returns:
         The scraped text content or a message if non-text content is detected.
     """
+    if triggers.has_catch_log_label(issue_or_pr):
+        parsed_log = git_utils.fetch_and_parse_github_actions_log(issue_or_pr)
+        write_issue_response(issue_or_pr, f"Error log:\n```\n{parsed_log}\n```")
+        return True, None
+
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses
@@ -1001,6 +1007,11 @@ def process_issue(
     print(f"Processing {entity_type} #{issue_or_pr.number}")
 
     try:
+        if triggers.has_catch_log_label(issue_or_pr):
+            parsed_log = git_utils.fetch_and_parse_github_actions_log(issue_or_pr)
+            write_issue_response(issue_or_pr, f"Error log:\n```\n{parsed_log}\n```")
+            return True, None
+
         has_bot_mention = triggers.has_blech_bot_tag(issue_or_pr) \
             or '[ blech_bot ]' in (issue_or_pr.title or '').lower()
         if not has_bot_mention:
