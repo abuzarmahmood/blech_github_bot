@@ -140,43 +140,43 @@ python src/response_agent.py
 
 #### 🔄 Working Phase
 3. **Issue Analysis & Response**
-   
+
    **User creates an issue:**
    > "[ blech_bot ] Feature Request: Add logging system for better debugging"
-   
+
    **Blech Bot responds:**
    > "I've analyzed your logging feature request and found these relevant files:
-   > 
+   >
    > 1. `src/utils.py` - Current error handling
    > 2. `src/config.py` - Configuration settings
-   > 
+   >
    > **Recommendation:** We can implement a structured logging system using Python's `logging` module with configurable levels. Here's how we could approach this..."
 
 4. **Automatic Implementation**
-   
+
    **User comments:**
    > "[ develop_issue ] This looks good, please implement it"
-   
+
    **Blech Bot creates a solution:**
    > "✅ Created branch `feature/logging-system`
-   > 
+   >
    > ✅ Implemented logging with configurable levels
-   > 
+   >
    > ✅ Pull request #42 is now open for review
-   > 
+   >
    > The changes include a new `logger.py` module and updates to existing files to use the new logging system."
 
 5. **Refinement Based on Feedback**
-   
+
    **User comments on PR:**
    > "Could we add file rotation to prevent logs from growing too large?"
-   
+
    **Blech Bot improves the solution:**
    > "Updated PR #42 with log rotation functionality:
    > - Added `TimedRotatingFileHandler`
    > - Set 7-day rotation period
    > - Configured compression for old logs
-   > 
+   >
    > The changes are ready for your review."
 
 This real-world workflow shows how Blech Bot transforms issue management into an automated, AI-powered process that saves time and improves code quality.
