@@ -10,6 +10,8 @@ import os
 import subprocess
 import git
 import traceback
+from src import bot_tools
+from src.agents import get_github_client
 from src.bot_tools import read_markdown, read_pdf, read_text
 from src.branch_handler import (
     get_issue_related_branches,
