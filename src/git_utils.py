@@ -10,7 +10,7 @@ import os
 import subprocess
 import git
 import traceback
-from src import bot_tools
+from src.bot_tools import read_markdown, read_pdf, read_text
 from src.branch_handler import (
     get_issue_related_branches,
     get_current_branch,
@@ -68,15 +68,16 @@ def add_signature_to_comment(comment_text: str, model: str) -> str:
     return comment_text
 
 
-def process_file_content(filepath: str, file_type: str) -> str:
-    if file_type == 'markdown':
-        return bot_tools.read_markdown_file(filepath)
-    elif file_type == 'text':
-        return bot_tools.read_text_file(filepath)
-    elif file_type == 'pdf':
-        return bot_tools.read_pdf_file(filepath)
-    else:
-        raise ValueError("Unsupported file type")
+def process_github_files(file_paths: list) -> None:
+    """Process GitHub files based on their type."""
+    for file_path in file_paths:
+        if file_path.endswith('.md'):
+            content = read_markdown(file_path)
+        elif file_path.endswith('.pdf'):
+            content = read_pdf(file_path)
+        else:
+            content = read_text(file_path)
+        # Further processing can be done here
 
 
 def find_files_of_type(directory: str, file_type: str) -> list:

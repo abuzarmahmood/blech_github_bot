@@ -9,6 +9,7 @@ import glob
 import os
 import sys
 import markdown
+import markdown
 from PyPDF2 import PdfReader
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -82,33 +83,31 @@ def search_for_file(
         return "File not found"
 
 
-def read_markdown_file(filepath: str) -> str:
+def read_markdown(file_path: str) -> str:
     """Read a markdown file and return its content as HTML."""
-    with open(filepath, 'r') as file:
+    with open(file_path, 'r') as file:
         text = file.read()
-    html = markdown.markdown(text)
-    return html
+    return markdown.markdown(text)
 
 
-def read_text_file(filepath: str) -> str:
+def read_pdf(file_path: str) -> str:
+    """Read a PDF file and return its content."""
+    reader = PdfReader(file_path)
+    text = ''
+    for page in reader.pages:
+        text += page.extract_text()
+    return text
+
+
+def read_text(file_path: str) -> str:
     """Read a text file and return its content."""
-    with open(filepath, 'r') as file:
+    with open(file_path, 'r') as file:
         return file.read()
 
 
-def search_for_markdown_files(directory: str) -> list:
-    """Search for markdown files in a directory."""
-    return glob.glob(os.path.join(directory, '**', '*.md'), recursive=True)
-
-
-def search_for_text_files(directory: str) -> list:
-    """Search for text files in a directory."""
-    return glob.glob(os.path.join(directory, '**', '*.txt'), recursive=True)
-
-
-def search_for_pdf_files(directory: str) -> list:
-    """Search for PDF files in a directory."""
-    return glob.glob(os.path.join(directory, '**', '*.pdf'), recursive=True)
+def search_files(directory: str, extension: str) -> list:
+    """Search for files with a specific extension in a directory."""
+    return glob.glob(os.path.join(directory, '**', f'*.{extension}'), recursive=True)
 
 
 def estimate_tokens(text: str) -> int:

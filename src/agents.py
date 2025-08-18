@@ -5,7 +5,7 @@ import os
 import autogen
 import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
-from src import bot_tools
+from src.bot_tools import read_markdown, read_pdf, read_text, search_files
 from src import bot_tools
 from src.git_utils import (
     get_github_client,
