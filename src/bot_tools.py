@@ -5,6 +5,7 @@ DO NOT PUT ANYTHING HERE THAT IS NOT SAFE FOR THE AGENT TO USE.
 ALSO CAN'T HAVE CALLABLE MODULES.
 """
 
+import glob
 import os
 import sys
 import markdown
@@ -88,24 +89,27 @@ def read_markdown_file(filepath: str) -> str:
     html = markdown.markdown(text)
     return html
 
+
 def read_text_file(filepath: str) -> str:
     """Read a text file and return its content."""
     with open(filepath, 'r') as file:
         return file.read()
 
-import glob
 
 def search_for_markdown_files(directory: str) -> list:
     """Search for markdown files in a directory."""
     return glob.glob(os.path.join(directory, '**', '*.md'), recursive=True)
 
+
 def search_for_text_files(directory: str) -> list:
     """Search for text files in a directory."""
     return glob.glob(os.path.join(directory, '**', '*.txt'), recursive=True)
 
+
 def search_for_pdf_files(directory: str) -> list:
     """Search for PDF files in a directory."""
     return glob.glob(os.path.join(directory, '**', '*.pdf'), recursive=True)
+
 
 def estimate_tokens(text: str) -> int:
     """Estimate the number of tokens in text by splitting on whitespace

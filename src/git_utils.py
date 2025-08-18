@@ -78,6 +78,7 @@ def process_file_content(filepath: str, file_type: str) -> str:
     else:
         raise ValueError("Unsupported file type")
 
+
 def find_files_of_type(directory: str, file_type: str) -> list:
     if file_type == 'markdown':
         return bot_tools.search_for_markdown_files(directory)
