@@ -93,13 +93,19 @@ def read_text_file(filepath: str) -> str:
     with open(filepath, 'r') as file:
         return file.read()
 
-def read_pdf_file(filepath: str) -> str:
-    """Read a PDF file and return its content."""
-    reader = PdfReader(filepath)
-    text = ''
-    for page in reader.pages:
-        text += page.extract_text()
-    return text
+import glob
+
+def search_for_markdown_files(directory: str) -> list:
+    """Search for markdown files in a directory."""
+    return glob.glob(os.path.join(directory, '**', '*.md'), recursive=True)
+
+def search_for_text_files(directory: str) -> list:
+    """Search for text files in a directory."""
+    return glob.glob(os.path.join(directory, '**', '*.txt'), recursive=True)
+
+def search_for_pdf_files(directory: str) -> list:
+    """Search for PDF files in a directory."""
+    return glob.glob(os.path.join(directory, '**', '*.pdf'), recursive=True)
     """Estimate the number of tokens in text by splitting on whitespace
 
     Args:
