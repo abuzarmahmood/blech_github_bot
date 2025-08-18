@@ -5,8 +5,12 @@ DO NOT PUT ANYTHING HERE THAT IS NOT SAFE FOR THE AGENT TO USE.
 ALSO CAN'T HAVE CALLABLE MODULES.
 """
 
+import glob
 import os
 import sys
+import markdown
+import markdown
+from PyPDF2 import PdfReader
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
@@ -79,7 +83,45 @@ def search_for_file(
         return "File not found"
 
 
+def read_markdown(file_path: str) -> str:
+    """Read a markdown file and return its content as HTML."""
+    with open(file_path, 'r') as file:
+        text = file.read()
+    return markdown.markdown(text)
+
+
+def read_pdf(file_path: str) -> str:
+    """Read a PDF file and return its content."""
+    reader = PdfReader(file_path)
+    text = ''
+    for page in reader.pages:
+        text += page.extract_text()
+    return text
+
+
+def read_text(file_path: str) -> str:
+    """Read a text file and return its content."""
+    with open(file_path, 'r') as file:
+        return file.read()
+
+
+def search_files(directory: str, extension: str) -> list:
+    """Search for files with a specific extension in a directory."""
+    return glob.glob(os.path.join(directory, '**', f'*.{extension}'), recursive=True)
+
+
 def estimate_tokens(text: str) -> int:
+    """Estimate the number of tokens in text by splitting on whitespace
+
+    Args:
+        text: Text to estimate tokens for
+
+    Returns:
+        Estimated token count
+    """
+    if not text:
+        return 0
+    return len(text.split())
     """Estimate the number of tokens in text by splitting on whitespace
 
     Args:

@@ -5,6 +5,7 @@ import os
 import autogen
 import subprocess
 from autogen import ConversableAgent, AssistantAgent, UserProxyAgent
+from src.bot_tools import read_markdown, read_pdf, read_text, search_files
 from src import bot_tools
 from src.git_utils import (
     get_github_client,
@@ -96,6 +97,15 @@ def register_functions(
         else:
             raise ValueError(
                 "Invalid registration method, must be 'llm' or 'execution'")
+    # Add new functions to tool_funcs
+    tool_funcs.extend([
+        bot_tools.read_markdown_file,
+        bot_tools.read_text_file,
+        bot_tools.read_pdf_file,
+        bot_tools.search_for_markdown_files,
+        bot_tools.search_for_text_files,
+        bot_tools.search_for_pdf_files
+    ])
     return agent
 
 ############################################################
