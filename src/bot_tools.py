@@ -7,6 +7,8 @@ ALSO CAN'T HAVE CALLABLE MODULES.
 
 import os
 import sys
+import markdown
+from PyPDF2 import PdfReader
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(src_dir)
@@ -79,7 +81,25 @@ def search_for_file(
         return "File not found"
 
 
-def estimate_tokens(text: str) -> int:
+def read_markdown_file(filepath: str) -> str:
+    """Read a markdown file and return its content as HTML."""
+    with open(filepath, 'r') as file:
+        text = file.read()
+    html = markdown.markdown(text)
+    return html
+
+def read_text_file(filepath: str) -> str:
+    """Read a text file and return its content."""
+    with open(filepath, 'r') as file:
+        return file.read()
+
+def read_pdf_file(filepath: str) -> str:
+    """Read a PDF file and return its content."""
+    reader = PdfReader(filepath)
+    text = ''
+    for page in reader.pages:
+        text += page.extract_text()
+    return text
     """Estimate the number of tokens in text by splitting on whitespace
 
     Args:
