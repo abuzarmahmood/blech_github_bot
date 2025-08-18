@@ -106,6 +106,19 @@ def search_for_text_files(directory: str) -> list:
 def search_for_pdf_files(directory: str) -> list:
     """Search for PDF files in a directory."""
     return glob.glob(os.path.join(directory, '**', '*.pdf'), recursive=True)
+
+def estimate_tokens(text: str) -> int:
+    """Estimate the number of tokens in text by splitting on whitespace
+
+    Args:
+        text: Text to estimate tokens for
+
+    Returns:
+        Estimated token count
+    """
+    if not text:
+        return 0
+    return len(text.split())
     """Estimate the number of tokens in text by splitting on whitespace
 
     Args:
